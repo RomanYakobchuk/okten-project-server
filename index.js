@@ -4,7 +4,8 @@ const expressFileUpload = require('express-fileupload');
 const path = require('path');
 const bodyParser = require('body-parser');
 const cors = require("cors");
-require('dotenv').config({ path: path.join(process.cwd(), 'environments', `${process.env.MODE}.env`)})
+require('dotenv').config()
+// { path: path.join(process.cwd(), 'environments', `${process.env.MODE}.env`)}
 
 const { authRouter, userRouter, institutionRouter } = require('./routes');
 const { configs } = require('./configs');
