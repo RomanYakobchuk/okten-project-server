@@ -11,7 +11,6 @@ router.post('/login',
 
 router.post('/register',
     commonMiddleware.isDateValid(userValidator.newUserValidator),
-    fileMiddleware.checkUserAvatar,
     userMiddleware.isUserUniq,
     authController.register);
 
