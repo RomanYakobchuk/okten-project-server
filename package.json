@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "nodemon index.js",
     "start:dev": "MODE=dev nodemon index.js",
     "start:prod": "MODE=prod nodemon index.js"
   },
