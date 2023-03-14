@@ -18,7 +18,7 @@ app.use(bodyParser.json());
 app.use(expressFileUpload());
 
 app.use(cors({
-    origin: ['http://localhost:3000', 'https://a23f-78-25-5-136.eu.ngrok.io']
+    origin: ['http://localhost:3000', process.env.CLIENT_URL]
 }))
 
 
