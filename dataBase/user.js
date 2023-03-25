@@ -1,7 +1,6 @@
 const {Schema, model} = require('mongoose');
 
-const UserSchema = new Schema(
-        {
+const UserSchema = new Schema({
             name: {
                 type: String,
                 required: true,
@@ -65,10 +64,16 @@ const UserSchema = new Schema(
                     ref: "institution"
                 }
             ],
+            myRatings: [
+                {
+                    type: Schema.Types.ObjectId,
+                    ref: "rating"
+                }
+            ],
             myReviews: [
                 {
                     type: Schema.Types.ObjectId,
-                    ref: "review"
+                    ref: 'review'
                 }
             ]
         },

@@ -1,7 +1,7 @@
 const router = require('express').Router();
 
 const { userController } = require('../controllers');
-const { commonMiddleware, userMiddleware, authMiddleware, fileMiddleware } = require('../middlewares');
+const { commonMiddleware, userMiddleware, authMiddleware, fileMiddleware, institutionMiddleware} = require('../middlewares');
 const { userValidator, userQueryValidator } = require('../validators');
 
 router.get('/',
@@ -14,6 +14,18 @@ router.get('/:id',
     authMiddleware.checkAccessToken,
     // userMiddleware.isUserPresent,
     userController.getUserById);
+
+router.get('/userInfo/:id',
+    commonMiddleware.isIdValid,
+    authMiddleware.checkAccessToken,
+    // userMiddleware.isUserPresent,
+    userController.getUserInfo);
+
+router.get(
+    `/findUserByQuery`,
+    authMiddleware.checkAccessToken,
+    userController.findUserByQuery
+)
 
 router.patch('/:id',
     commonMiddleware.isIdValid,
@@ -29,9 +41,10 @@ router.delete('/:id',
     userMiddleware.isUserPresent,
     userController.deleteUserById);
 
-router.patch(
+router.post(
     '/addDeleteFavoritePlace',
     authMiddleware.checkAccessToken,
+    institutionMiddleware.checkInstitution,
     userController.addDeleteFavoritePlace
 )
 

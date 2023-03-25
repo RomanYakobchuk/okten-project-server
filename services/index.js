@@ -5,4 +5,6 @@ module.exports = {
     userService: require('./user.service'),
     passwordService: require('./password.service'),
     institutionService: require('./institution.service'),
+    ratingService: require('./rating.service'),
+    newsService: require('./news.service'),
 }

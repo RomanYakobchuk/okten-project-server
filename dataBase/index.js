@@ -3,5 +3,6 @@ module.exports = {
     OAuth: require('./oauth'),
     Institution: require('./institution'),
     InstitutionNews: require('./institutionNews'),
-    Review: require("./review")
+    Rating: require("./rating"),
+    Comment: require("./review")
 }

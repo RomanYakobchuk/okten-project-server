@@ -1,11 +1,13 @@
 const {Schema, model} = require("mongoose");
-const ReviewsSchema = new Schema({
+const RatingSchema = new Schema({
     createdBy: {
         type: Schema.Types.ObjectId,
         ref: "user"
     },
-    text: {
-        type: String
+    grade: {
+        type: Number,
+        min: 1,
+        max: 5
     },
     institutionId: {
         type: Schema.Types.ObjectId,
@@ -13,4 +15,4 @@ const ReviewsSchema = new Schema({
     },
 }, {timestamps: true})
 
-module.exports = model('review', ReviewsSchema);
+module.exports = model('rating', RatingSchema);

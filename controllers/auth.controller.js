@@ -47,35 +47,18 @@ module.exports = {
 
             const activationLink = uuid.v4()
 
-            let code = Math.floor(Math.random() * 90000) + 10000;
+            // let code = Math.floor(Math.random() * 90000) + 10000;
+            //
+            // const verifyCode = await passwordService.hashVerifyCode(code.toString());
 
-            const verifyCode = await passwordService.hashVerifyCode(code.toString());
+            await userService.createUser({...req.body, password: hash, activationLink});
 
-            await userService.createUser({...req.body, password: hash, activationLink, verifyCode});
-
-            const sms = smsTemplateBuilder[smsActionTypeEnum.WELCOME](name, code);
-            // if (req?.files?.avatar) {
-            //
-            //     const {Location} = await s3Service.uploadFile(req.files.avatar, 'user', user._id);
-            //     // console.log(Location)
-            //
-            //     const userWithPhoto = await userService.updateOneUser({_id: user._id}, {avatar: Location});
-            //
-            //
-            //     await Promise.allSettled([
-            //         smsService.sendSMS(phone, sms),
-            //         emailService.sendMail(email, emailActionTypeEnum.WELCOME, {name}, `${configs.API_URL}/api/auth/activate/${activationLink}`)
-            //     ]);
-            //
-            //     const userForResponse = userPresenter(userWithPhoto);
-            //     res.status(201).json(userForResponse);
-            // } else {
+            // const sms = smsTemplateBuilder[smsActionTypeEnum.WELCOME](name, code);
 
             await Promise.allSettled([
-                smsService.sendSMS(phone, sms),
+                // smsService.sendSMS(phone, sms),
                 emailService.sendMail(email, emailActionTypeEnum.WELCOME, {name}, `${configs.API_URL}/api/v1/auth/activate/${activationLink}`)
             ]);
-
 
             res.status(201).json({message: 'Welcome, you need to confirm your data'});
 

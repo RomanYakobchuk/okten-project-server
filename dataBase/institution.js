@@ -22,7 +22,7 @@ const InstitutionSchema = new Schema({
     workSchedule: {
         type: Object,
         required: true,
-        workDays: {
+        workDays: [{
             type: Object,
             days: {
                 type: Object,
@@ -42,7 +42,7 @@ const InstitutionSchema = new Schema({
                     type: Date
                 },
             }
-        },
+        }],
         weekend: {
             type: String,
         }
@@ -58,9 +58,16 @@ const InstitutionSchema = new Schema({
             required: true
         }
     },
-    city: {
-        type: String,
-        required: true
+    place: {
+        type: Object,
+        city: {
+            type: String,
+            required: true
+        },
+        street: {
+            type: String,
+            required: true
+        }
     },
     type: {
         type: String,
@@ -83,20 +90,20 @@ const InstitutionSchema = new Schema({
         },
     },
     verify: {
-        type: Boolean,
-        default: false
+        type: String,
+        default: "draft"
     },
     verifyBy: {
         type: Schema.Types.ObjectId,
         ref: 'user',
     },
     rating: {
-        type: Object,
+        type: Number,
         default: 0,
     },
     ratings: [{
         type: Schema.Types.ObjectId,
-        ref: 'review',
+        ref: 'rating',
     }],
     averageCheck: {
         type: String,
@@ -115,7 +122,13 @@ const InstitutionSchema = new Schema({
     news: [{
         type: Schema.Types.ObjectId,
         ref: 'institutionNews',
-    }]
+    }],
+    reviews: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'review'
+        }
+    ]
 }, {timestamps: true})
 
 module.exports = model('institution', InstitutionSchema);

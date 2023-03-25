@@ -12,6 +12,8 @@ module.exports = {
             phoneVerify: user.phoneVerify,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt,
+            favoritePlaces: user.favoritePlaces,
+            myReviews: user.myReviews,
             allInstitutions: user.allInstitutions
         }
     },

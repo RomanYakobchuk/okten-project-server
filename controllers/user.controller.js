@@ -1,10 +1,14 @@
-const {userService, passwordService, emailService, smsService, s3Service, institutionService} = require('../services');
+const {userService, s3Service, institutionService} = require('../services');
 const {userPresenter} = require('../presenters/user.presenter');
 const {getWithPagination} = require("../services/institution.service");
 const {User} = require("../dataBase");
 const {CustomError} = require("../errors");
 const {tokenWithData} = require("../services/token.service");
 const {startSession} = require("mongoose");
+// const Ably = require("ably");
+
+// const ably = new Ably.Realtime(`${process.env.ABLY_API_KEY}`);
+// const channel = ably.channels.get('my-channel');
 
 
 module.exports = {
@@ -22,12 +26,29 @@ module.exports = {
         }
     },
 
-
     getUserById: async (req, res, next) => {
         try {
             const {id} = req.params;
 
-            const user = await userService.findOneUser({_id: id}).populate("allInstitutions").populate("favoritePlaces").populate("myReviews");
+            const user = await userService.findOneUser({_id: id}).populate("allInstitutions").populate("favoritePlaces").populate("myRatings").populate('myReviews');
+
+            if (!user) {
+                return next(new CustomError('User not found'));
+            }
+
+            const userForResponse = userPresenter(user);
+
+            res.status(200).json(userForResponse);
+        } catch (e) {
+            next(e);
+        }
+    },
+
+    getUserInfo: async (req, res, next) => {
+        try {
+            const {id} = req.params;
+
+            const user = await userService.findOneUser({_id: id});
 
             if (!user) {
                 return next(new CustomError('User not found'));
@@ -83,15 +104,13 @@ module.exports = {
 
     addDeleteFavoritePlace: async (req, res, next) => {
         try {
-
-            const {institutionId} = req.body;
+            // channel.publish('favorite', id)
 
             const {userId: user} = req.user;
+            const institution = req.institution;
 
             const session = await startSession();
             session.startTransaction();
-
-            const institution = await institutionService.getOneInstitution({_id: institutionId}).session(session);
 
             if (!institution) {
                 return next(new CustomError('Institution not found'));
@@ -100,24 +119,49 @@ module.exports = {
             const isInclude = user?.favoritePlaces?.includes(institution._id)
 
             if (isInclude) {
-                // const item = user?.favoritePlaces.indexOf(institution._id);
-                // if (item !== -1) {
-                //     await user?.favoritePlaces.splice(item, 1)
-                // }
+                // channel.publish('favorite', {institutionId: id})
                 await user?.favoritePlaces?.pull(institution._id)
                 await user.save({session})
                 await session.commitTransaction();
-                return  res.status(200).json({message: "Institution has been removed from the favorites successfully "})
+                const userForResponse = userPresenter(user);
+
+                const {token} = tokenWithData(userForResponse, "12h");
+
+                return res.status(201).json({user: token});
             } else if (!isInclude) {
+                // channel.publish('favorite', {institutionId: id})
                 await user?.favoritePlaces?.push(institution._id);
                 await user.save({session})
                 await session.commitTransaction();
-                return  res.status(200).json({message: "Institution has been added to the favorites successfully "})
+                const userForResponse = userPresenter(user);
+
+                const {token} = tokenWithData(userForResponse, "12h");
+
+                return res.status(201).json({user: token, institution: institution});
             } else {
                 return next(new CustomError("Some wrong"))
             }
+        } catch (e) {
+            next(e)
+        }
+    },
 
+    findUserByQuery: async (req, res, next) => {
+        try {
+            const {userId: user} = req.user;
+            const {search_like} = req.query;
 
+            if (!user?.isAdmin) {
+                return next(new CustomError("Forbidden", 403))
+            }
+
+            const query = {};
+            const {count, items} = await userService.getUsersByQuery(User, query, search_like)
+
+            res.header('x-total-count', count);
+            res.header('Access-Control-Expose-Headers', 'x-total-count');
+
+            res.status(200).json(items)
         } catch (e) {
             next(e)
         }

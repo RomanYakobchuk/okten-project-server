@@ -4,21 +4,23 @@ const expressFileUpload = require('express-fileupload');
 const path = require('path');
 const bodyParser = require('body-parser');
 const cors = require("cors");
-require('dotenv').config()
-// { path: path.join(process.cwd(), 'environments', `${process.env.MODE}.env`)}
+require('dotenv').config({ path: path.join(process.cwd(), 'environments', `${process.env.MODE}.env`)})
 
-const { authRouter, userRouter, institutionRouter } = require('./routes');
+
+const { authRouter, userRouter, institutionRouter, ratingRouter, newsRouter} = require('./routes');
 const { configs } = require('./configs');
 
-mongoose.connect(configs.MONGO_URL);
+mongoose?.connect(configs.MONGO_URL);
 
 const app = express();
+
+
 app.use(bodyParser.urlencoded({extended: true }));
 app.use(bodyParser.json());
 app.use(expressFileUpload());
 
 app.use(cors({
-    origin: '*'
+    origin: ['http://localhost:3000', 'https://50d6-46-219-230-58.eu.ngrok.io']
 }))
 
 
@@ -30,10 +32,12 @@ app.use(function(req, res, next) {
 })
 
 app.use('/ping', (req, res) => res.json('THE SERVER WORKS STABLY'));
-app.use('/qwe', (req, res) => res.json('asdasdasdasdasdasd'));
+
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/institution', institutionRouter);
+app.use('/api/v1/rating', ratingRouter);
+app.use('/api/v1/news', newsRouter);
 
 app.use('*', (req, res) => {
     res.status(404).json('Route not found');
@@ -42,10 +46,10 @@ app.use('*', (req, res) => {
 app.use((err, req, res, next) => {
     console.log(err)
     res
-        .status(err.status || 500)
+        ?.status(err?.status || 500)
         .json({
-            error: err.message || 'Unknown Error',
-            code: err.status || 500
+            error: err?.message || 'Unknown Error',
+            code: err?.status || 500
         });
 });
 
