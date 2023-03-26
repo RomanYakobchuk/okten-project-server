@@ -20,7 +20,7 @@ app.use(bodyParser.json());
 app.use(expressFileUpload());
 
 app.use(cors({
-    origin: ['http://localhost:3000', 'https://a7e7-46-219-230-58.eu.ngrok.io']
+    origin: ['http://localhost:3000', 'https://4872-46-219-230-58.eu.ngrok.io']
 }))
 
 
