@@ -4,4 +4,6 @@ module.exports = {
     institutionController: require('./institution.controller'),
     ratingController: require('./rating.controller'),
     newsController: require('./news.controller'),
+    reviewController: require('./review.controller'),
+    commentController: require('./comment.controller'),
 }

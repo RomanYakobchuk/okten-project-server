@@ -47,16 +47,9 @@ module.exports = {
 
             const activationLink = uuid.v4()
 
-            // let code = Math.floor(Math.random() * 90000) + 10000;
-            //
-            // const verifyCode = await passwordService.hashVerifyCode(code.toString());
-
             await userService.createUser({...req.body, password: hash, activationLink});
 
-            // const sms = smsTemplateBuilder[smsActionTypeEnum.WELCOME](name, code);
-
             await Promise.allSettled([
-                // smsService.sendSMS(phone, sms),
                 emailService.sendMail(email, emailActionTypeEnum.WELCOME, {name}, `${configs.API_URL}/api/v1/auth/activate/${activationLink}`)
             ]);
 
@@ -143,9 +136,9 @@ module.exports = {
 
 
             await OAuth.deleteOne({access_token});
-            await Promise.allSettled([
-                await emailService.sendMail(email, emailActionTypeEnum.LOGOUT, {name, count: 1})
-            ])
+            // await Promise.allSettled([
+            //     await emailService.sendMail(email, emailActionTypeEnum.LOGOUT, {name, count: 1})
+            // ])
 
             res.sendStatus(204);
         } catch (e) {

@@ -4,4 +4,6 @@ module.exports = {
     institutionRouter: require('./institution.router'),
     ratingRouter: require('./rating.router'),
     newsRouter: require('./news.router'),
+    reviewRouter: require('./review.router'),
+    commentRouter: require('./comment.router'),
 }

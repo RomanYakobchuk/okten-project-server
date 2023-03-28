@@ -1,5 +1,5 @@
 const {Institution} = require("../dataBase");
-const {s3Service, userService, institutionService} = require('../services');
+const {s3Service, userService, institutionService, reviewService, commentService} = require('../services');
 const {startSession} = require("mongoose");
 const {CustomError} = require("../errors");
 const {userPresenter} = require("../presenters/user.presenter");
@@ -150,7 +150,7 @@ module.exports = {
             const {id} = req.params;
             const {userId: user} = req.user;
 
-            const institution = await institutionService.getOneInstitution({_id: id}).populate("news").populate("reviews").populate("ratings");
+            const institution = await institutionService.getOneInstitution({_id: id}).populate("news");
 
             if (!institution) {
                 return next(new CustomError('Institution not found'));
@@ -159,7 +159,17 @@ module.exports = {
                 return res.status(404).json({message: "Institution not found"});
             }
 
-            res.status(200).json(institution)
+            const reviews = await reviewService.getAllByParams({institutionId: id})
+                .populate({path: 'createdBy', select: 'name avatar _id'})
+
+            const comments = await commentService.getAllByParams({institutionId: id})
+                .populate({path: 'createdBy', select: 'name avatar _id'})
+
+            res.status(200).json({
+                institution,
+                reviews: reviews ?? [],
+                comments: comments ?? []
+            })
         } catch (e) {
             next(e)
         }

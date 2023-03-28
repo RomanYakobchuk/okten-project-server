@@ -4,5 +4,7 @@ module.exports = {
     Institution: require('./institution'),
     InstitutionNews: require('./institutionNews'),
     Rating: require("./rating"),
-    Comment: require("./review")
+    Review: require("./review"),
+    Comment: require("./comment"),
+    Action: require("./action"),
 }

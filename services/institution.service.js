@@ -7,7 +7,7 @@ module.exports = {
 
         const filterQuery = _getFilterQuery({title_like, type, tags}, isVerify);
 
-        const count = await model.countDocuments({...filterQuery, verify: isVerify && "published"});
+        const count = await model.countDocuments({...filterQuery, verify: isVerify && isVerify});
 
         if (!_sort || !_order) {
             _sort = "createdAt"
@@ -71,31 +71,7 @@ function _getFilterQuery(otherFilter, isVerify) {
         })
     }
 
-    Object.assign(searchObject, {verify: "published"});
+    Object.assign(searchObject, {verify: isVerify});
 
     return searchObject;
-}
-
-//Перевірка на вірність введення номеру сторінки і кількості елементів на сторінці
-
-function _pageFilter(page, perPage) {
-    if (page <= 0) {
-        throw new CustomError('Page not found, page must be greater than 0', 404);
-    }
-
-    if (/^[a-zA-Z]+$/.test(page)) {
-        throw new CustomError('Page should be a number', 404);
-    }
-    if (perPage <= 0) {
-        throw new CustomError('PerPage must be greater than 0', 404);
-    }
-
-    if (/^[a-zA-Z]+$/.test(perPage)) {
-        throw new CustomError('PerPage should be a number', 404);
-    }
-
-    return {
-        page,
-        perPage
-    }
 }

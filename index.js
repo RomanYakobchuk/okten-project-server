@@ -7,7 +7,7 @@ const cors = require("cors");
 require('dotenv').config({ path: path.join(process.cwd(), 'environments', `${process.env.MODE}.env`)})
 
 
-const { authRouter, userRouter, institutionRouter, ratingRouter, newsRouter} = require('./routes');
+const { authRouter, userRouter, institutionRouter, ratingRouter, newsRouter, reviewRouter, commentRouter} = require('./routes');
 const { configs } = require('./configs');
 
 mongoose?.connect(configs.MONGO_URL);
@@ -20,7 +20,7 @@ app.use(bodyParser.json());
 app.use(expressFileUpload());
 
 app.use(cors({
-    origin: ['http://localhost:3000', 'https://50d6-46-219-230-58.eu.ngrok.io']
+    origin: ['http://localhost:3000', 'https://b0d6-46-219-230-58.eu.ngrok.io']
 }))
 
 
@@ -38,6 +38,8 @@ app.use('/api/v1/users', userRouter);
 app.use('/api/v1/institution', institutionRouter);
 app.use('/api/v1/rating', ratingRouter);
 app.use('/api/v1/news', newsRouter);
+app.use('/api/v1/review', reviewRouter);
+app.use('/api/v1/comment', commentRouter);
 
 app.use('*', (req, res) => {
     res.status(404).json('Route not found');

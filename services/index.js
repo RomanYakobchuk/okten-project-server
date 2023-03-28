@@ -7,4 +7,6 @@ module.exports = {
     institutionService: require('./institution.service'),
     ratingService: require('./rating.service'),
     newsService: require('./news.service'),
+    reviewService: require('./review.service'),
+    commentService: require('./comment.service'),
 }

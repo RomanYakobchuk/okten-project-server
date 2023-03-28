@@ -1,6 +1,6 @@
+const router = require('express').Router();
 const {authMiddleware, institutionMiddleware, ratingMiddleware} = require("../middlewares");
 const {ratingController} = require("../controllers");
-const router = require('express').Router();
 
 router.post(
     `/addRating`,
