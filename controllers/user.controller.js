@@ -1,44 +1,15 @@
-const {userService, s3Service, institutionService} = require('../services');
+const {startSession} = require("mongoose");
+
+const {userService, s3Service, institutionService, reviewService} = require('../services');
 const {userPresenter} = require('../presenters/user.presenter');
-const {getWithPagination} = require("../services/institution.service");
 const {User} = require("../dataBase");
 const {CustomError} = require("../errors");
 const {tokenWithData} = require("../services/token.service");
-const {startSession} = require("mongoose");
-// const Ably = require("ably");
-
-// const ably = new Ably.Realtime(`${process.env.ABLY_API_KEY}`);
-// const channel = ably.channels.get('my-channel');
-
 
 module.exports = {
     findUsers: async (req, res, next) => {
         try {
-            const {_end, _start, _sort, title_like = "", type = "", _order} = req.query;
-            const {items, count} = await getWithPagination(User, _end, _order, _start, _sort, title_like, type);
-
-            res.header('x-total-count', count);
-            res.header('Access-Control-Expose-Headers', 'x-total-count');
-
-            res.status(200).json(items);
-        } catch (e) {
-            next(e);
-        }
-    },
-
-    getUserById: async (req, res, next) => {
-        try {
-            const {id} = req.params;
-
-            const user = await userService.findOneUser({_id: id}).populate("allInstitutions").populate("favoritePlaces").populate("myRatings").populate('myReviews');
-
-            if (!user) {
-                return next(new CustomError('User not found'));
-            }
-
-            const userForResponse = userPresenter(user);
-
-            res.status(200).json(userForResponse);
+            res.status(200).json('users')
         } catch (e) {
             next(e);
         }
@@ -47,16 +18,21 @@ module.exports = {
     getUserInfo: async (req, res, next) => {
         try {
             const {id} = req.params;
+            const userStatus = req.newStatus;
+            const {userId: currentUser} = req.user;
 
-            const user = await userService.findOneUser({_id: id});
+            const user = await userService
+                .findOneUser({_id: id})
+                .populate("favoritePlaces");
 
             if (!user) {
-                return next(new CustomError('User not found'));
+                return next(new CustomError('User not found', 404));
+            }
+            if (currentUser?._id?.toString() !== user?._id.toString() && userStatus !== 'admin') {
+                return next(new CustomError("Access denied", 403));
             }
 
-            const userForResponse = userPresenter(user);
-
-            res.status(200).json(userForResponse);
+            res.status(200).json(userPresenter(user));
         } catch (e) {
             next(e);
         }
@@ -70,7 +46,7 @@ module.exports = {
 
             const {avatar, phone, name, dOB, currentId} = req.body;
 
-            if (!userId?.isAdmin && id !== currentId) {
+            if (userId?.status !== 'admin' && id !== currentId) {
                 return res.status(403).json({message: 'Access Denied'})
             }
 
@@ -80,7 +56,7 @@ module.exports = {
 
             const {token} = tokenWithData(userForResponse, "12h");
 
-            res.status(201).json({user: token});
+            res.status(201).json({user: token, message: 'User data updated successfully'});
         } catch (e) {
             next(e);
         }
@@ -88,7 +64,12 @@ module.exports = {
 
     deleteUserById: async (req, res, next) => {
         try {
-            const {_id} = req.user;
+            const {_id} = req.userExist;
+            const {userId: user} = req.user;
+
+            if (user?.status !== "admin") {
+                return next(new CustomError("Access denied", 403))
+            }
 
             if (req.user.avatar) {
                 await s3Service.deleteFile(req.user.avatar);
@@ -104,10 +85,10 @@ module.exports = {
 
     addDeleteFavoritePlace: async (req, res, next) => {
         try {
-            // channel.publish('favorite', id)
-
             const {userId: user} = req.user;
-            const institution = req.institution;
+            const {id} = req.body;
+
+            const institution = await institutionService.getOneInstitution({_id: id})
 
             const session = await startSession();
             session.startTransaction();
@@ -119,7 +100,6 @@ module.exports = {
             const isInclude = user?.favoritePlaces?.includes(institution._id)
 
             if (isInclude) {
-                // channel.publish('favorite', {institutionId: id})
                 await user?.favoritePlaces?.pull(institution._id)
                 await user.save({session})
                 await session.commitTransaction();
@@ -129,7 +109,6 @@ module.exports = {
 
                 return res.status(201).json({user: token});
             } else if (!isInclude) {
-                // channel.publish('favorite', {institutionId: id})
                 await user?.favoritePlaces?.push(institution._id);
                 await user.save({session})
                 await session.commitTransaction();
@@ -147,21 +126,40 @@ module.exports = {
     },
 
     findUserByQuery: async (req, res, next) => {
+        const {_end, _start, _sort, title_like = "", _order, status, isActivated, phoneVerify, isBlocked} = req.query;
+        const userStatus = req.newStatus;
+        if (userStatus !== 'admin') {
+            return next(new CustomError("Access denied", 403));
+        }
+
+        const query = {};
+        if (title_like) query.title_like = title_like;
+        if (status) query.status = status;
+        if (isActivated === true || isActivated === false) query.isActivated = isActivated;
+        if (phoneVerify === true || phoneVerify === false) query.phoneVerify = phoneVerify;
+        if (isBlocked === true || isBlocked === false) query.blocked = {isBlocked};
         try {
-            const {userId: user} = req.user;
-            const {search_like} = req.query;
-
-            if (!user?.isAdmin) {
-                return next(new CustomError("Forbidden", 403))
-            }
-
-            const query = {};
-            const {count, items} = await userService.getUsersByQuery(User, query, search_like)
+            const {items, count} = await userService.getUsersByQuery(_end, _order, _start, _sort, title_like, status, isActivated, phoneVerify, isBlocked);
 
             res.header('x-total-count', count);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
 
-            res.status(200).json(items)
+            res.status(200).json(items);
+        } catch (e) {
+            next(e)
+        }
+    },
+
+    updateUserByAdmin: async (req, res, next) => {
+        const userStatus = req.newStatus;
+        const userForUpdate = req.userExist;
+
+        if (userStatus !== 'admin') {
+            return next(new CustomError('Access denied', 403));
+        }
+        try {
+            // const {name, email, status, phone, dOB, isActivated, phoneVerify, blocked} = req.body;
+            const {...dataToUpdate} = req.body;
         } catch (e) {
             next(e)
         }

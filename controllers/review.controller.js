@@ -1,5 +1,34 @@
+const moment = require("moment");
+
 const {reviewService} = require("../services");
 const {CustomError} = require("../errors");
+const {Review} = require("../dataBase");
+
+async function calculateAverageRating(institution) {
+    try {
+        const pipeline = [
+            {
+                $match: {institutionId: institution?._id}
+            },
+            {
+                $group: {
+                    _id: null,
+                    averageRating: {$avg: '$grade'}
+                }
+            }
+        ];
+
+        const result = await Review.aggregate(pipeline);
+
+        if (result?.length > 0) {
+            institution.rating = result[0].averageRating;
+            await institution.save();
+        }
+    } catch (e) {
+        console.log(e)
+    }
+}
+
 module.exports = {
     allReviews: async (req, res, next) => {
         try {
@@ -9,87 +38,109 @@ module.exports = {
         }
     },
     allReviewByInstitutionId: async (req, res, next) => {
+        const institution = req.data_info;
+
+        const {_order, _sort, _end, _start} = req.query;
+
         try {
-            const institution = req.institution;
 
-            const reviews = await reviewService.getAllByParams({institutionId: institution?._id})
-                .populate({path: 'createdBy', select: 'name avatar _id'})
+            const {
+                items,
+                count
+            } = await reviewService.getAllByPlaceWithPagination(institution?._id, _end, _start, _sort, _order, "institutionId", 'createdBy', '_id avatar name');
 
-            res.status(200).json({
-                reviews: reviews ?? []
-            })
+            res.header('x-total-count', count);
+            res.header('Access-Control-Expose-Headers', 'x-total-count');
 
+            res.status(200).json(items);
+        } catch (e) {
+            next(e)
+        }
+    },
+    latestUserReview: (type) => async (req, res, next) => {
+        const institution = req.data_info;
+        const {userId: user} = req.user;
+        try {
+            const userLatestReview = await reviewService
+                .getOneByParams({institutionId: institution?._id, createdBy: user?._id})
+                .sort({createdAt: -1});
+
+            let isAllowedNewReview;
+            if (userLatestReview) {
+                if (type === 'check') {
+                    const oneWeekAgo = moment().subtract(1, 'week');
+                    isAllowedNewReview = moment(userLatestReview.createdAt).isBefore(oneWeekAgo);
+                    req.isAllowedNewReview = isAllowedNewReview;
+                    return next();
+                } else if (type === 'info') {
+                    const oneWeekAgo = moment().subtract(1, 'week');
+                    isAllowedNewReview = moment(userLatestReview.createdAt).isBefore(oneWeekAgo);
+                    res.status(200).json({
+                        isAllowedNewReview: isAllowedNewReview
+                    })
+                }
+            } else {
+                if (type === 'check') {
+                    req.isAllowedNewReview = true;
+                    return next();
+                } else if (type === 'info') {
+                    res.status(200).json({isAllowedNewReview: true})
+                }
+            }
         } catch (e) {
             next(e)
         }
     },
 
     allReviewByUserId: async (req, res, next) => {
+        const {_order, _sort, _end, _start} = req.query;
+        const {userId: user} = req.user;
+        const userExist = req.userExist;
+
         try {
-            const {userId: user} = req.user;
 
-            const reviews = await reviewService.getAllByParams({createdBy: user?._id})
-                .populate({path: 'institutionId', select: 'title mainPhoto type _id'})
-
-            if (!reviews) {
-                return next(new CustomError("Reviews not found", 404))
+            if (userExist?._id?.toString() !== user?._id?.toString() && user?.status !== 'admin') {
+                return next(new CustomError("Access denied", 403))
             }
 
-            res.status(200).json({reviews})
+            const {
+                items,
+                count
+            } = await reviewService.getAllByPlaceWithPagination(userExist?._id, _end, _start, _sort, _order, "createdBy", "institutionId", 'title mainPhoto type _id');
+
+            res.header('x-total-count', count);
+            res.header('Access-Control-Expose-Headers', 'x-total-count');
+
+            res.status(200).json(items);
         } catch (e) {
             next(e)
         }
     },
     createReview: async (req, res, next) => {
+        const {grade, text} = req.body;
+        const {userId: user} = req.user;
+        const institution = req.data_info;
+        const isAllowedNewReview = req.isAllowedNewReview;
         try {
-            const {like, notLike, grade} = req.body;
-            const {userId: user} = req.user;
-            const institution = req.institution;
 
-            const myInstitution = user.allInstitutions.includes(institution?._id);
-
-            const myUser = institution.createdBy === user?._id && true;
-
-            if (myInstitution || myUser) {
-                return next(new CustomError("You cannot rate your own institution", 403))
+            if (!isAllowedNewReview) {
+                return next(new CustomError("Allowed block", 403))
             }
 
-            const review = await reviewService.createReview({
-                text: {
-                    like,
-                    notLike
-                },
+            if (institution.createdBy?.toString() === user?._id?.toString()) {
+                return next(new CustomError("You cannot evaluate your own institution", 403))
+            }
+
+            await reviewService.createReview({
+                text: text,
                 grade,
                 createdBy: user?._id,
                 institutionId: institution?._id
             })
 
-            user?.myRatings?.push(review?._id);
+            await calculateAverageRating(institution);
 
-            institution?.ratings?.push(review?._id);
-
-            if (institution.ratings === 0) {
-                institution.rating = institution.rating + grade;
-            } else {
-                const allPlaceReviews = await reviewService.getAllByParams({institutionId: institution?._id});
-                let grades = 0;
-                for (const allPlaceReview of allPlaceReviews) {
-                    grades += allPlaceReview?.grade
-                }
-                institution.rating = grades / allPlaceReviews?.length;
-            }
-
-            await user.save();
-            await institution.save();
-
-            res.status(200).json({
-                ...review,
-                createdBy: {
-                    _id: user?._id,
-                    avatar: user?.avatar,
-                    name: user?.name
-                }
-            })
+            res.status(200).json({message: 'Review added successfully'})
         } catch (e) {
             next(e)
         }

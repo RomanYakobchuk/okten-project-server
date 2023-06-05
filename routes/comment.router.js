@@ -1,35 +1,53 @@
 const router = require('express').Router();
 
-const {authMiddleware, institutionMiddleware} = require("../middlewares");
+const {authMiddleware, institutionMiddleware, commentMiddleware, userMiddleware} = require("../middlewares");
 const {commentController} = require("../controllers");
 
-
+// create comment
 router.post(
     `/create`,
     authMiddleware.checkAccessToken,
-    institutionMiddleware.checkInstitution,
+    institutionMiddleware.checkInstitution('info'),
     commentController.createComment
 )
 
+// all institution`s comments
 router.get(
-    `/allByInstitutionId/:institutionId`,
+    `/allByInstitutionId/:id`,
     authMiddleware.checkAccessToken,
-    institutionMiddleware.checkInstitution,
-    commentController.allCommentsByInstitutionId
+    institutionMiddleware.checkInstitution('info'),
+    commentController.allCommentsByInstitutionUserId('institutionId')
 )
 
-
+// all user`s comments
 router.get(
-    `/allByUserId`,
+    `/allByUserId/:id`,
     authMiddleware.checkAccessToken,
-    commentController.allCommentsByUserId
+    userMiddleware.isUserPresent,
+    commentController.allCommentsByInstitutionUserId('createdBy')
 )
 
+// all comments
 router.get(
     `/all_comments`,
     authMiddleware.checkAccessToken,
-    institutionMiddleware.checkInstitution,
+    authMiddleware.checkStatus('check'),
     commentController.allComments
+)
+
+// delete comment
+router.delete(
+    `/deleteComment/:id`,
+    authMiddleware.checkAccessToken,
+    commentMiddleware.checkCommentById,
+    commentController.deleteComment
+)
+
+router.get(
+    `/allAnsweredCommentById/:id`,
+    authMiddleware.checkAccessToken,
+    commentMiddleware.checkCommentById,
+    commentController.allAnsweredCommentById
 )
 
 module.exports = router;

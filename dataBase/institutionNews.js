@@ -10,13 +10,41 @@ const InstitutionNewsSchema = new Schema({
         type: String,
         required: true
     },
+    place: {
+        type: Object,
+        isPlace: Boolean,
+        location: {
+            type: Object,
+            lng: {
+                type: Number,
+            },
+            lat: {
+                type: Number,
+            }
+        },
+        city: {
+            type: String,
+            required: true
+        },
+        address: {
+            type: String,
+            required: true
+        }
+    },
+    publishAt: {
+        isPublish: {
+            type: Boolean
+        },
+        datePublish: {
+            type: Date
+        }
+    },
     dateEvent: [{
         type: Object,
-        date: Date,
         schedule: {
             type: Object,
-            from: String,
-            to: String,
+            from: Date,
+            to: Date,
         },
         time: {
             type: Object,
@@ -25,13 +53,13 @@ const InstitutionNewsSchema = new Schema({
         }
     }],
     mainPhoto: {
-       type: String
+        type: String
     },
     category: {
         type: String,
         default: "general"
     },
-    photos: [{
+    otherPhoto: [{
         type: Object,
         required: true,
         url: {
@@ -53,7 +81,11 @@ const InstitutionNewsSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'user',
         required: true
-    }
+    },
+    variantForDisplay: {
+        type: String,
+        default: '1'
+    },
 }, {timestamps: true});
 
 module.exports = model('institutionNews', InstitutionNewsSchema);

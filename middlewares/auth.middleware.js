@@ -1,5 +1,5 @@
 const {checkToken} = require("../services/token.service");
-const {OAuth, User} = require("../dataBase");
+const {OAuth, User, Manager, Admin} = require("../dataBase");
 const {CustomError} = require('../errors');
 const {userService, passwordService} = require('../services');
 const {authValidator} = require('../validators');
@@ -34,8 +34,6 @@ module.exports = {
 
     checkRefreshToken: async (req, res, next) => {
         try {
-            // const refresh_token = req.get(constants.AUTHORIZATION);
-            //
             const {refresh_token} = req.body;
 
             if (!refresh_token) {
@@ -59,7 +57,6 @@ module.exports = {
     isUserPresentForAuth: async (req, res, next) => {
         try {
             const {email} = req.body;
-
             const user = await userService.findOneUser({email});
 
             if (!user) {
@@ -78,7 +75,6 @@ module.exports = {
     isLoginBodyValid: async (req, res, next) => {
         try {
             const {error, value} = await authValidator.login.validate(req.body);
-
             if (error) {
                 return next(new CustomError('Wrong email or password'));
             }
@@ -147,5 +143,50 @@ module.exports = {
         user.phoneVerify = true;
 
         await userService.updateOneUser({_id: user?._id}, user);
+    },
+
+    checkStatus: (type) => async (req, res, next) => {
+        try {
+            let status, _id;
+            if (type === 'login') {
+                const {status: userStatus, _id: userId} = req.user;
+                status = userStatus;
+                _id = userId;
+            } else if(type === 'check') {
+                const {userId: user} = req.user;
+                status = user?.status;
+                _id = user?._id;
+            }
+
+            if (status === 'manager') {
+                const isManager = await Manager.findOne({user: _id});
+
+                if (isManager.verify?.isVerify) {
+                    req.newStatus = status
+                    next()
+                } else {
+                    req.newsStatus = 'user';
+                    next();
+                }
+            } else if (status === 'admin') {
+
+                const isAdmin = await Admin.findOne({user: _id});
+
+                if (isAdmin) {
+                    req.newStatus = status
+                    next()
+                } else {
+                    req.newsStatus = 'user';
+                    next()
+                }
+            } else if (status === 'user') {
+                req.newStatus = status
+                next()
+            } else {
+                next(new CustomError('Something is wrong', 500))
+            }
+        } catch (e) {
+            next(e)
+        }
     }
 }

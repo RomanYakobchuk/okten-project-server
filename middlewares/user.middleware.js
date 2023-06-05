@@ -5,13 +5,21 @@ module.exports = {
     isUserPresent: async (req, res, next) => {
         try {
             const { id } = req.params;
+            const { userId } = req.body;
 
-            const user = await userService.findOneUser({ _id: id });
+            let currentId;
+
+            if (id) {
+                currentId = id
+            } else if (!id && userId) {
+                currentId = userId
+            }
+            const user = await userService.findOneUser({ _id: currentId });
             if (!user) {
                 return next(new CustomError('User not found'));
             }
 
-            req.user = user;
+            req.userExist = user;
             next();
         } catch (e) {
             console.log(`isUserPresent user.middleware`)

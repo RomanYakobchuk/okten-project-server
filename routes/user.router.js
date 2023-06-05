@@ -1,51 +1,70 @@
 const router = require('express').Router();
 
-const { userController } = require('../controllers');
-const { commonMiddleware, userMiddleware, authMiddleware, fileMiddleware, institutionMiddleware} = require('../middlewares');
-const { userValidator, userQueryValidator } = require('../validators');
+const { userController, reviewController, commentController} = require('../controllers');
+const { commonMiddleware, userMiddleware, authMiddleware, fileMiddleware} = require('../middlewares');
+const { userQueryValidator } = require('../validators');
 
-router.get('/',
+router.get(
+    '/',
     commonMiddleware.isDateValid(userQueryValidator.findAll, 'query'),
-    userController.findUsers);
+    userController.findUsers
+);
 
-
-router.get('/:id',
+router.get(
+    '/userInfo/:id',
     commonMiddleware.isIdValid,
     authMiddleware.checkAccessToken,
+    authMiddleware.checkStatus("check"),
     // userMiddleware.isUserPresent,
-    userController.getUserById);
+    userController.getUserInfo
+);
 
-router.get('/userInfo/:id',
-    commonMiddleware.isIdValid,
-    authMiddleware.checkAccessToken,
-    // userMiddleware.isUserPresent,
-    userController.getUserInfo);
-
+// find user with query
 router.get(
     `/findUserByQuery`,
     authMiddleware.checkAccessToken,
+    authMiddleware.checkStatus("check"),
     userController.findUserByQuery
 )
 
-router.patch('/:id',
+// update user info
+router.patch(
+    '/userInfo/:id',
     commonMiddleware.isIdValid,
     authMiddleware.checkAccessToken,
     fileMiddleware.checkUserAvatar,
-    // commonMiddleware.isDateValid(userValidator.updateUserValidator),
-    // userMiddleware.isUserPresent,
-    userController.updateUserById);
+    userController.updateUserById
+);
 
+// delete user
 router.delete('/:id',
     commonMiddleware.isIdValid,
     authMiddleware.checkAccessToken,
     userMiddleware.isUserPresent,
-    userController.deleteUserById);
+    userController.deleteUserById
+);
 
+// add or del fav place
 router.post(
     '/addDeleteFavoritePlace',
     authMiddleware.checkAccessToken,
-    institutionMiddleware.checkInstitution,
     userController.addDeleteFavoritePlace
+);
+
+// add or del fav news
+router.post(
+    '/addDeleteFavoriteNews',
+    authMiddleware.checkAccessToken,
+    userController.addDeleteFavoritePlace
+);
+
+router.patch(
+    `/updateUserByAdmin/:id`,
+    authMiddleware.checkAccessToken,
+    authMiddleware.checkStatus('check'),
+    userMiddleware.isUserPresent,
+    userController.updateUserByAdmin
 )
+
 
 module.exports = router;

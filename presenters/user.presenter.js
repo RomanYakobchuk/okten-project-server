@@ -6,7 +6,6 @@ module.exports = {
             email: user.email,
             dOB: user.dOB,
             isActivated: user.isActivated,
-            isAdmin: user.isAdmin,
             avatar: user.avatar,
             phone: user.phone,
             phoneVerify: user.phoneVerify,
@@ -14,7 +13,8 @@ module.exports = {
             updatedAt: user.updatedAt,
             favoritePlaces: user.favoritePlaces,
             myReviews: user.myReviews,
-            allInstitutions: user.allInstitutions
+            allInstitutions: user.allInstitutions,
+            status: user.status
         }
     },
 };

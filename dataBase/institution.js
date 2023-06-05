@@ -9,13 +9,21 @@ const InstitutionSchema = new Schema({
         type: String,
         default: ""
     },
+    variantForDisplay: {
+        type: String,
+        default: '1'
+    },
+    views: {
+        type: Schema.Types.ObjectId,
+        ref: 'views'
+    },
     otherPhoto: [{
         type: Object,
         required: true,
         url: {
             type: String
         },
-        order: {
+        name: {
             type: String
         }
     }],
@@ -23,7 +31,7 @@ const InstitutionSchema = new Schema({
         type: Object,
         required: true,
         workDays: [{
-            type: Object,
+            type: Array,
             days: {
                 type: Object,
                 from: {
@@ -64,7 +72,7 @@ const InstitutionSchema = new Schema({
             type: String,
             required: true
         },
-        street: {
+        address: {
             type: String,
             required: true
         }
@@ -101,12 +109,8 @@ const InstitutionSchema = new Schema({
         type: Number,
         default: 0,
     },
-    ratings: [{
-        type: Schema.Types.ObjectId,
-        ref: 'rating',
-    }],
     averageCheck: {
-        type: String,
+        type: Number,
     },
     features: {
         type: Object,
@@ -123,12 +127,6 @@ const InstitutionSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'institutionNews',
     }],
-    reviews: [
-        {
-            type: Schema.Types.ObjectId,
-            ref: 'review'
-        }
-    ]
 }, {timestamps: true})
 
 module.exports = model('institution', InstitutionSchema);

@@ -1,21 +1,33 @@
-const { User } = require('../dataBase');
+const {User} = require('../dataBase');
 const {CustomError} = require("../errors");
 
 module.exports = {
-    findUsers: (params = {}) => {
-        return User.find(params);
-    },
 
-    getUsersByQuery: async (model, query = {}, search_like) => {
+    getUsersByQuery: async (_end, _order, _start, _sort, search_like, status, isActivated, phoneVerify, isBlocked) => {
 
-        const filterQuery = _getFilterQuery({search_like});
+        const filterQuery = _getFilterQuery({search_like, status, isActivated, phoneVerify, isBlocked});
 
-        const count = await model.countDocuments({...filterQuery});
+        const count = await User.countDocuments({...filterQuery});
 
-        const items = await model
+        if (!_sort || !_order) {
+            _sort = "createdAt"
+            _order = -1
+        }
+        if (!_start) {
+            _start = 0
+        }
+        if (!_end) {
+            _end = 10
+        }
+
+        const newSort = _sort?.split('_')[0];
+
+        const items = await User
             .find(filterQuery)
-            .limit(20)
-            .sort({["createdAt"]: -1})
+            .select('_id name email phone dOB isActivated phoneVerify blocked status')
+            .limit(_end - _start)
+            .skip(_start)
+            .sort({[newSort]: _order})
             .exec();
 
         return {
@@ -33,7 +45,7 @@ module.exports = {
         return User.create(user);
     },
 
-    updateOneUser: (params, userData, options = { new: true }) => {
+    updateOneUser: (params, userData, options = {new: true}) => {
         return User.findOneAndUpdate(params, userData, options);
 
     },
@@ -47,65 +59,41 @@ module.exports = {
 
 function _getFilterQuery(otherFilter) {
 
-    const searchObject = {}
+    const searchObject = {};
+    const filters = [];
 
-    if (otherFilter.search) {
-        Object.assign(searchObject, {
+    if (otherFilter.search_like) {
+        filters.push({
             $or: [
-                {name: {$regex: otherFilter.search, $options: 'i'}},
-                {_id: {$regex: otherFilter.search, $options: 'i'}},
-                {phone: {$regex: otherFilter.search, $options: "i"}},
-                {email: {$regex: otherFilter.search, $options: 'i'}}
+                {name: {$regex: otherFilter.search_like, $options: 'i'}},
+                {phone: {$regex: otherFilter.search_like, $options: "i"}},
+                {email: {$regex: otherFilter.search_like, $options: 'i'}}
             ]
         })
     }
+    if (otherFilter.isActivated === 'true' || otherFilter.isActivated === 'false') {
+        filters.push({
+            isActivated: otherFilter.isActivated === 'true'
+        })
+    }
+    if (otherFilter.phoneVerify === 'true' || otherFilter.phoneVerify === 'false') {
+        filters.push({
+            phoneVerify: otherFilter.phoneVerify === 'true'
+        })
+    }
+    if (otherFilter.status) {
+        filters.push({
+            status: {$regex: otherFilter.status, $options: 'i'}
+        })
+    }
+    if (otherFilter.isBlocked === true || otherFilter.isBlocked === false) {
+        filters.push({
+            "blocked.isActivated": otherFilter.isBlocked
+        })
+    }
 
-    // if (otherFilter.ageGte) {
-    //     if (/^[a-zA-Z]+$/.test(otherFilter.ageGte)) {
-    //         throw new CustomError('ageGte should be a number, and be greater than 0', 404);
-    //     }
-    //     Object.assign(searchObject, {
-    //         age: {$gte: +otherFilter.ageGte}
-    //     })
-    // }
-    //
-    // if (otherFilter.ageLte) {
-    //     if (/^[a-zA-Z]+$/.test(otherFilter.ageLte) || otherFilter.ageLte <= 0) {
-    //         throw new CustomError('ageLte should be a number, and be greater than 0', 404);
-    //     }
-    //     Object.assign(searchObject, {
-    //         age: {
-    //             ...searchObject.age || {},
-    //             $lte: +otherFilter.ageLte
-    //         }
-    //     })
-    // }
-
-    // console.log(JSON.stringify(searchObject, null, 2))
-
+    if (filters.length > 0) {
+        Object.assign(searchObject, {$and: filters})
+    }
     return searchObject;
 }
-
-//Перевірка на вірність введення номеру сторінки і кількості елементів на сторінці
-
-function _pageFilter(page, perPage) {
-    if (page <= 0) {
-        throw new CustomError('Page not found, page must be greater than 0', 404);
-    }
-
-    if (/^[a-zA-Z]+$/.test(page)) {
-        throw new CustomError('Page should be a number', 404);
-    }
-    if (perPage <= 0) {
-        throw new CustomError('PerPage must be greater than 0', 404);
-    }
-
-    if (/^[a-zA-Z]+$/.test(perPage)) {
-        throw new CustomError('PerPage should be a number', 404);
-    }
-
-    return {
-        page,
-        perPage
-    }
-};

@@ -1,3 +1,6 @@
+const path = require("path");
+require('dotenv').config({ path: path.join(process.cwd(), 'environments', `${process.env.MODE}.env`)});
+
 module.exports = {
     PORT: process.env.PORT,
     MONGO_URL: process.env.MONGO_URL,
@@ -16,6 +19,10 @@ module.exports = {
     TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
     TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN,
     TWILIO_NUMBER: process.env.TWILIO_NUMBER,
+
+    CLOUD_NAME: process.env.CLOUD_NAME,
+    CLOUD_API_KEY: process.env.CLOUD_API_KEY,
+    CLOUD_API_SECRET: process.env.CLOUD_API_SECRET,
 
     AWS_S3_BUCKET: process.env.AWS_S3_BUCKET,
     AWS_S3_REGION: process.env.AWS_S3_REGION,

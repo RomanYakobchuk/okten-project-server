@@ -5,7 +5,6 @@ const UserSchema = new Schema({
                 type: String,
                 required: true,
             },
-
             email: {
                 type: String,
                 unique: true,
@@ -13,27 +12,27 @@ const UserSchema = new Schema({
                 trim: true,
                 lowercase: true
             },
-
+            status: {
+                type: String,
+                default: 'user' //manager, admin
+            },
             dOB: {
                 type: Date,
                 required: true,
             },
-
             password: {
                 type: String,
                 required: true
             },
-
             phone: {
                 type: String,
                 required: true
             },
-
             avatar: {
                 type: String,
                 default: ""
             },
-
+            // by gmail
             isActivated: {
                 type: Boolean,
                 default: false
@@ -45,12 +44,9 @@ const UserSchema = new Schema({
             verifyCode: {
                 type: String
             },
+            // by gmail
             activationLink: {
                 type: String
-            },
-            isAdmin: {
-                type: Boolean,
-                default: false
             },
             allInstitutions: [
                 {
@@ -64,6 +60,12 @@ const UserSchema = new Schema({
                     ref: "institution"
                 }
             ],
+            favoriteNews: [
+                {
+                    type: Schema.Types.ObjectId,
+                    ref: 'institutionNews'
+                }
+            ],
             myRatings: [
                 {
                     type: Schema.Types.ObjectId,
@@ -73,9 +75,19 @@ const UserSchema = new Schema({
             myReviews: [
                 {
                     type: Schema.Types.ObjectId,
-                    ref: 'review'
+                    ref: 'reviews'
                 }
-            ]
+            ],
+            blocked: {
+                isBlocked: {
+                    type: Boolean,
+                    default: false,
+                },
+                whyBlock: {
+                    type: String,
+                    default: ''
+                }
+            }
         },
         {
             timestamps: true

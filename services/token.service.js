@@ -14,7 +14,7 @@ function generateAuthTokens(payload = {}) {
     }
 }
 
-function checkToken(token = '', tokenType = tokenTypeEnum.ACCESS) {
+function checkToken(token = '', tokenType ) {
     try {
         let secret;
 
@@ -29,7 +29,7 @@ function checkToken(token = '', tokenType = tokenTypeEnum.ACCESS) {
 }
 
 function tokenWithData(data, live) {
-    const token = jwt.sign({...data}, configs.TOKEN_WITH_DATA, {expiresIn: `${live}`});
+    const token = jwt.sign({...data}, configs.TOKEN_WITH_DATA, {expiresIn: live});
 
     return {token}
 }

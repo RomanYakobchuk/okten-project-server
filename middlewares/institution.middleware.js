@@ -1,24 +1,51 @@
-const {institutionService} = require("../services");
+const {institutionService, s3Service} = require("../services");
 const {CustomError} = require("../errors");
+const {City} = require("../dataBase");
 module.exports = {
-    checkInstitution: async (req, res, next) => {
+    checkInstitution: (type) => async (req, res, next) => {
         try {
             const {institutionId} = req.body;
-            const {institutionId: id} = req.params;
+            const {id} = req.params;
 
-            let institution;
+            let institution, currentId;
+
             if (id) {
-                institution = await institutionService.getOneInstitution({_id: id})
-            } else if(!id && institutionId) {
-                institution = await institutionService.getOneInstitution({_id: institutionId});
+                currentId = id
+            } else if (!id && institutionId) {
+                currentId = institutionId
+            }
+            if (type === 'info') {
+                institution = await institutionService.getOneInstitution({_id: currentId})
+            } else if (type === 'all_info') {
+                institution = await institutionService.getOneInstitution({_id: currentId})
+                    .populate("news")
+                    .populate({
+                        path: 'views',
+                        select: 'viewsNumber _id'
+                    });
             }
 
             if (!institution) {
                 return next(new CustomError("Institution not found", 404))
             }
 
-            req.institution = institution;
+            req.data_info = institution;
             next();
+        } catch (e) {
+            next(e)
+        }
+    },
+
+    existCity: (city) => async (req, res, next) => {
+        try {
+            const cityExist = await City.findOne({name: {$regex: new RegExp(city, "i")}});
+
+            if (!cityExist) {
+                await City.create({
+                    name: city
+                })
+            }
+            next()
         } catch (e) {
             next(e)
         }

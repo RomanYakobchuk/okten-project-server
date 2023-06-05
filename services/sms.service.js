@@ -1,10 +1,9 @@
 const twilio = require('twilio');
 require('dotenv').config()
 
-const { configs } = require('../configs');
+const {configs } = require('../configs');
 
 const client = twilio(configs.TWILIO_ACCOUNT_SID, configs.TWILIO_AUTH_TOKEN);
-
 module.exports = {
     sendSMS: async (phone, message) => {
         try {

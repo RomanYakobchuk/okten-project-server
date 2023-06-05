@@ -1,7 +1,6 @@
-# Project exclude paths
 node_modules
 .idea
 
 /environments/*.env
-/configs/config.js
+#/configs/config.js
 /environments/dev.env

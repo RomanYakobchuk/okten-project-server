@@ -7,7 +7,9 @@ const {userValidator} = require("../validators");
 router.post('/login',
     authMiddleware.isLoginBodyValid,
     authMiddleware.isUserPresentForAuth,
-    authController.login);
+    authMiddleware.checkStatus('login'),
+    authController.login
+);
 
 router.post('/register',
     commonMiddleware.isDateValid(userValidator.newUserValidator),
@@ -20,7 +22,7 @@ router.post('/refreshToken',
 
 router.get('/logout',
     authMiddleware.checkAccessToken,
-    authController.logout);
+    authController.logoutAllDevices);
 
 router.post('/logoutAllDevices',
     authMiddleware.checkAccessToken,

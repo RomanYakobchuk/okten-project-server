@@ -1,17 +1,19 @@
 const {passwordService, emailService, userService, smsService} = require('../services');
 const {generateAuthTokens, checkToken, tokenWithData} = require('../services/token.service');
-const {OAuth} = require('../dataBase');
+const {OAuth, Manager} = require('../dataBase');
 const {emailActionTypeEnum, smsActionTypeEnum, tokenTypeEnum} = require('../enums');
 const {userPresenter} = require("../presenters/user.presenter");
 const {authMiddleware} = require("../middlewares");
 const {configs} = require("../configs");
 const uuid = require("uuid");
 const {smsTemplateBuilder} = require("../common");
+const {CustomError} = require("../errors");
 
 module.exports = {
     login: async (req, res, next) => {
         try {
             const {password: hashPassword, _id} = req.user;
+            const newStatus = req.newStatus;
             const {password} = req.body;
 
             await passwordService.comparePassword(hashPassword, password);
@@ -22,18 +24,22 @@ module.exports = {
                 userId: _id,
                 ...tokens
             })
-            res.cookie('refresh_token', tokens.refresh_token, {maxAge: 30 * 24 * 60 * 60 * 1000}, {
-                httpOnly: false,
-                secure: true,
-                signed: true
-            })
+            const user = req.user;
 
-            const resultUser = userPresenter(req.user)
-            const {token} = tokenWithData(resultUser, "12h");
+            if (user?.blocked?.isBlocked) {
+                return next(new CustomError('Account is blocked', 403));
+            }
+
+            let resultUser = userPresenter(user);
+
+            resultUser.status = newStatus;
+
+            const {token} = tokenWithData(resultUser, "3h");
 
             res.status(200).json({
                 user: token,
-                ...tokens
+                ...tokens,
+                message: 'Login success'
             });
         } catch (e) {
             next(e);
@@ -42,12 +48,29 @@ module.exports = {
 
     register: async (req, res, next) => {
         try {
-            const {email, password, name, phone, dOB} = req.body;
+            const {email, password, name, phone, dOB, status} = req.body;
             const hash = await passwordService.hashPassword(password);
 
             const activationLink = uuid.v4()
 
-            await userService.createUser({...req.body, password: hash, activationLink});
+            const newUser = await userService.createUser({
+                email,
+                name,
+                phone,
+                dOB,
+                status,
+                password: hash,
+                activationLink
+            });
+
+            if (status === 'manager') {
+                await Manager.create({
+                    user: newUser?._id,
+                    name: name,
+                    email: email,
+                    phone: phone
+                });
+            }
 
             await Promise.allSettled([
                 emailService.sendMail(email, emailActionTypeEnum.WELCOME, {name}, `${configs.API_URL}/api/v1/auth/activate/${activationLink}`)
@@ -148,12 +171,12 @@ module.exports = {
 
     logoutAllDevices: async (req, res, next) => {
         try {
-            const {_id, email, name} = req.user;
+            const {userId: {_id, email, name}} = req.user;
 
             const {deletedCount} = await OAuth.deleteMany({userId: _id});
-            await Promise.allSettled([
-                emailService.sendMail(email, emailActionTypeEnum.LOGOUT, {name, count: deletedCount})
-            ])
+            // await Promise.allSettled([
+            //     emailService.sendMail(email, emailActionTypeEnum.LOGOUT, {name, count: deletedCount})
+            // ])
 
             res.sendStatus(204);
         } catch (e) {
@@ -167,7 +190,7 @@ module.exports = {
                 _id,
                 email,
                 name,
-                isAdmin,
+                status,
                 avatar,
                 createdAt,
                 dOb,
@@ -179,7 +202,7 @@ module.exports = {
             const {token} = tokenWithData({
                 _id,
                 name,
-                isAdmin,
+                status,
                 avatar,
                 createdAt,
                 dOb,
@@ -218,7 +241,9 @@ module.exports = {
     activate: async (req, res, next) => {
         try {
             const activationLink = req.params.link;
+
             const {user} = await authMiddleware.activate(activationLink);
+
             if (user?.phoneVerify) {
                 return res.redirect(`${configs.CLIENT_URL}/login}`);
             } else if (!user?.phoneVerify) {

@@ -1,5 +1,6 @@
 const { Types } = require('mongoose');
 const { CustomError } = require('../errors');
+const {City} = require("../dataBase");
 
 module.exports = {
     isIdValid: (req, res, next) => {
