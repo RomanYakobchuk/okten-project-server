@@ -40,7 +40,7 @@ module.exports = {
                 return next(new CustomError('No token', 401));
             }
 
-            checkToken(refresh_token, tokenTypeEnum.REFRESH);
+            await checkToken(refresh_token, tokenTypeEnum.REFRESH);
 
             const tokenInfo = await OAuth.findOne({refresh_token}).populate("userId");
             if (!tokenInfo) {

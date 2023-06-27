@@ -35,12 +35,22 @@ module.exports = {
                 .limit(_end - _start)
                 .skip(_start)
                 .sort({createdAt: -1})
-                .exec()
+                .exec();
 
+            const newArr = messages?.reduce((acc, obj) => {
+                const createdAt = new Date(obj?.createdAt);
+                const dayMonthYear = `${createdAt.getDate()}-${createdAt.getMonth() + 1}-${createdAt.getFullYear()}`;
+
+                if (!acc[dayMonthYear]) {
+                    acc[dayMonthYear] = [];
+                }
+                acc[dayMonthYear].push(obj);
+                return acc;
+            }, {});
             res.header('x-total-count', count);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
 
-            res.status(200).json(messages)
+            res.status(200).json(newArr)
         } catch (e) {
             next(e)
         }

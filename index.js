@@ -6,7 +6,7 @@ const expressFileUpload = require('express-fileupload');
 const bodyParser = require('body-parser');
 const cors = require("cors");
 
-const {removeUser, removeInstitution, addUser, addInstitution, users, institutions, getUser} = require("./io.server");
+const {removeUser, addUser, users, getUser} = require("./io.server");
 
 const {scheduler, reserve} = require("./services");
 
