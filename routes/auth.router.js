@@ -22,7 +22,7 @@ router.post('/refreshToken',
 
 router.get('/logout',
     authMiddleware.checkAccessToken,
-    authController.logoutAllDevices);
+    authController.logout);
 
 router.post('/logoutAllDevices',
     authMiddleware.checkAccessToken,

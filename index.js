@@ -40,7 +40,7 @@ app.use(function (req, res, next) {
 const io = new Server(server,
     {
         cors: {
-            origin: ['http://localhost:3000'],
+            origin: configs.CLIENT_URL,
         }
     }
 )
@@ -139,7 +139,7 @@ app.use((err, req, res, next) => {
 mongoose?.connect(configs.MONGO_URL).then(() => {
     console.log("|-------------------------------------------")
     console.log('| Connect: success')
-    server.listen(configs.PORT, () => {
+    server.listen(+configs.PORT, configs.HOST, () => {
         console.log(`| Started on port http://localhost:${configs.PORT}`);
         console.log("|___________________________________________")
     });

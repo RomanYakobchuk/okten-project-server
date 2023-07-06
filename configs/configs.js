@@ -3,6 +3,8 @@ require('dotenv').config({ path: path.join(process.cwd(), 'environments', `${pro
 
 module.exports = {
     PORT: process.env.PORT,
+    HOST: process.env.HOST,
+    DB_URI: process.env.DB_URI,
     MONGO_URL: process.env.MONGO_URL,
 
     ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET,
