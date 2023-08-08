@@ -1,6 +1,0 @@
-node_modules
-.idea
-
-/environments/*.env
-#/configs/config.js
-/environments/dev.env

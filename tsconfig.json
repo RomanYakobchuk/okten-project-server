@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "esModuleInterop": true,
+    "target": "ESNext",
+    "rootDir": "src",
+    "allowJs": true,
+    "outDir": "build",
+    "noEmitOnError": false,
+    "noImplicitAny": false,
+    "pretty": false,
+    "strict": true,
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "typeRoots": ["./global.d.ts", "./node_modules/@types"]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}
