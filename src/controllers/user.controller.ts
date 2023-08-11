@@ -1,24 +1,22 @@
-import {Schema, startSession} from "mongoose";
+import {Schema} from "mongoose";
 import {NextFunction, Response} from "express";
 
 import {CustomRequest} from "../interfaces/func";
-import {UserService, InstitutionService, CloudService, TokenService} from '../services';
+import {UserService, CloudService, TokenService} from '../services';
 import {userPresenter} from '../presenters/user.presenter';
 import {CustomError} from "../errors";
 import managerController from "./manager.controller";
-import {IOauth, IUser} from "../interfaces/common";
+import {IInstitution, IOauth, IUser, IUserFavoritePlaces} from "../interfaces/common";
 
 class UserController {
 
     private tokenService: TokenService;
     private userService: UserService;
-    private institutionService: InstitutionService;
     private cloudService: CloudService;
 
     constructor() {
         this.userService = new UserService();
         this.cloudService = new CloudService();
-        this.institutionService = new InstitutionService();
         this.tokenService = new TokenService();
 
         this.findUsers = this.findUsers.bind(this);
@@ -37,6 +35,7 @@ class UserController {
             next(e);
         }
     }
+
     async getUserInfo(req: CustomRequest, res: Response, next: NextFunction) {
         try {
             const {id} = req.params;
@@ -60,6 +59,7 @@ class UserController {
             next(e);
         }
     }
+
     async updateUserById(req: CustomRequest, res: Response, next: NextFunction) {
         try {
             const {id} = req.params;
@@ -85,6 +85,7 @@ class UserController {
             next(e);
         }
     }
+
     async deleteUserById(req: CustomRequest, res: Response, next: NextFunction) {
         try {
             const {_id} = req.userExist as IUser;
@@ -107,48 +108,36 @@ class UserController {
             next(e);
         }
     }
+
     async addDeleteFavoritePlace(req: CustomRequest, res: Response, next: NextFunction) {
+        const {userId} = req.user as IOauth;
+        const user = userId as IUser;
+
+        const institution = req.data_info as IInstitution;
+        const favPlaces = req.favPlaces as IUserFavoritePlaces;
         try {
-            const {userId} = req.user as IOauth;
-            const user = userId as IUser;
-            const {id} = req.body;
 
-            const institution = await this.institutionService.getOneInstitution({_id: id})
-
-            const session = await startSession();
-            session.startTransaction();
-
-            if (!institution) {
-                return next(new CustomError('Institution not found'));
-            }
-
-            const isInclude = user?.favoritePlaces?.includes(institution._id as Schema.Types.ObjectId)
+            const isInclude = favPlaces?.places?.includes(institution._id as Schema.Types.ObjectId) as boolean;
 
             if (isInclude) {
-                user?.favoritePlaces?.pull(institution._id as Schema.Types.ObjectId)
-                await user.save({session})
-                await session.commitTransaction();
-                const userForResponse = userPresenter(user);
-
-                const {token} = await this.tokenService.tokenWithData(userForResponse, "12h");
-
-                return res.status(201).json({user: token});
+                favPlaces.places?.pull(institution._id as Schema.Types.ObjectId)
             } else if (!isInclude) {
-                user?.favoritePlaces?.push(institution._id as Schema.Types.ObjectId);
-                await user.save({session})
-                await session.commitTransaction();
-                const userForResponse = userPresenter(user);
-
-                const {token} = await this.tokenService.tokenWithData(userForResponse, "12h");
-
-                return res.status(201).json({user: token, institution: institution});
-            } else {
-                return next(new CustomError("Some wrong"))
+                favPlaces.places?.push(institution._id as Schema.Types.ObjectId);
             }
+            await favPlaces.save();
+
+            user.favoritePlaces
+
+            const userForResponse = userPresenter(user);
+
+            const {token} = await this.tokenService.tokenWithData(userForResponse, "12h");
+
+            return res.status(201).json({user: token, institution: institution, favoritePlaces: favPlaces.places});
         } catch (e) {
             next(e)
         }
     }
+
     async findUserByQuery(req: CustomRequest, res: Response, next: NextFunction) {
         const {_end, _start, _sort, title_like = "", _order, status, isActivated, phoneVerify, isBlocked} = req.query;
         const userStatus = req.newStatus;
@@ -156,17 +145,11 @@ class UserController {
             return next(new CustomError("Access denied", 403));
         }
 
-        const query: any = {};
-        if (title_like) query.title_like = title_like;
-        if (status) query.status = status;
-        if (Boolean(isActivated) || !Boolean(isActivated)) query.isActivated = isActivated;
-        if (Boolean(phoneVerify) || !Boolean(phoneVerify)) query.phoneVerify = phoneVerify;
-        if (Boolean(isBlocked) || !Boolean(isBlocked)) query.blocked = {isBlocked};
         try {
             const {
                 items,
                 count
-            } = await this.userService.getUsersByQuery(Number(_end), _order, Number(_start), _sort, title_like as string, status as string, Boolean(isActivated), Boolean(phoneVerify), Boolean(isBlocked));
+            } = await this.userService.getUsersByQuery(Number(_end), _order, Number(_start), _sort, title_like as string, status as string, isActivated, phoneVerify, isBlocked);
 
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
@@ -176,6 +159,7 @@ class UserController {
             next(e)
         }
     }
+
     async updateUserByAdmin(req: CustomRequest, res: Response, next: NextFunction) {
         const userStatus = req.newStatus;
         const userForUpdate = req.userExist;

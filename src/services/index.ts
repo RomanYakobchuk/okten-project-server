@@ -15,6 +15,7 @@ import {CommentService} from  './comment.service';
 import {MessageService} from  './message.service';
 import {ConversationService} from  './conversation.service';
 import {CaplService} from './capl.service';
+import {UserFavoritePlacesService} from './userFavoritePlaces.service';
 import * as scheduler from './scheduler';
 import * as reserve from './isActiveReserve';
 
@@ -35,6 +36,7 @@ export {
     ConversationService,
     CaplService,
     TokenService,
+    UserFavoritePlacesService,
     scheduler,
     reserve
 }

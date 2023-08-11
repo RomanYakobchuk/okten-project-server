@@ -1,4 +1,5 @@
-import {IUser} from "../interfaces/common";
+import {IObjectIdArray, IUser, IUserFavoritePlaces} from "../interfaces/common";
+import {ObjectId} from "mongoose";
 
 const userPresenter = (user: IUser) => {
     return {
@@ -12,7 +13,7 @@ const userPresenter = (user: IUser) => {
         phoneVerify: user.phoneVerify,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
-        favoritePlaces: user.favoritePlaces,
+        favoritePlaces: user.favoritePlaces as string | string & ObjectId | IUserFavoritePlaces,
         allInstitutions: user.allInstitutions,
         status: user.status
     }

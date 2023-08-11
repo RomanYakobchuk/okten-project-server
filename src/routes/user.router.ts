@@ -1,8 +1,9 @@
 import {Router} from "express";
 
 import { userController} from '../controllers';
-import { commonMiddleware, userMiddleware, authMiddleware, fileMiddleware} from '../middlewares';
+import {commonMiddleware, userMiddleware, authMiddleware, fileMiddleware, institutionMiddleware} from '../middlewares';
 import { userQueryValidator } from '../validators';
+import userFavoritePlacesMiddleware from "../middlewares/userFavoritePlaces.middleware";
 
 const router = Router();
 
@@ -48,8 +49,10 @@ router.delete('/:id',
 
 // add or del fav place
 router.post(
-    '/addDeleteFavoritePlace',
+    '/addDeleteFavoritePlace/:id',
     authMiddleware.checkAccessToken,
+    institutionMiddleware.checkInstitution('info'),
+    userFavoritePlacesMiddleware.checkUserFavPlaces,
     userController.addDeleteFavoritePlace
 );
 

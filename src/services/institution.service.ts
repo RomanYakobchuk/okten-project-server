@@ -12,17 +12,15 @@ class InstitutionService {
         _sort: any,
         title_like = "",
         type = "",
-        tags = "",
         isVerify: string,
-        averageCheck_gte = 0,
-        averageCheck_lte = 100000,
+        averageCheck_gte: any = 0,
+        averageCheck_lte: any = 100000,
         city_like: string,
         userStatus: string
     ) {
         const filterQuery = _getFilterQuery({
             title_like,
             type,
-            tags,
             averageCheck_gte,
             averageCheck_lte,
             city_like
@@ -222,73 +220,65 @@ class InstitutionService {
 
 function _getFilterQuery(otherFilter: any, isVerify: string) {
 
-    const searchObject = {}
+    const searchObject = {};
+    const filters: any[] = [];
 
-    if (otherFilter.title_like && otherFilter.title_like.length > 0 || otherFilter.type || otherFilter.averageCheck_gte || otherFilter.averageCheck_lte || otherFilter.city_like) {
-        Object.assign(searchObject, {
-            $and: [
-                {
-                    $or: [
-                        {"place.city": {$regex: otherFilter.title_like, $options: 'i'}},
-                        {"place.address": {$regex: otherFilter.title_like, $options: 'i'}},
-                        {description: {$regex: otherFilter.title_like, $options: "i"}},
-                        {title: {$regex: otherFilter.title_like, $options: 'i'}},
-                        {features: {$elemMatch: {value: {$regex: otherFilter.title_like, $options: 'i'}}}},
-                    ]
-                },
-                {
-                    $or: [
-                        {type: {$regex: otherFilter.type, $options: 'i'}}
-                    ]
-                },
-                {
-                    $or: [
-                        {averageCheck: {$gte: otherFilter.averageCheck_gte}}
-                    ]
-                },
-                {
-                    $or: [
-                        {averageCheck: {$lte: otherFilter.averageCheck_lte}}
-                    ]
-                },
-                {
-                    $or: [
-                        {"place.city": {$regex: otherFilter.city_like, $options: 'i'}}
-                    ]
-                }
+    const isTag = otherFilter?.title_like.split('')[0] === '#';
+
+    const tagValue: string = isTag ? otherFilter?.title_like.substring(1, otherFilter.title_like.length) : '';
+
+    if (otherFilter.title_like && otherFilter.title_like.length > 0 && !isTag) {
+        filters.push({
+            $or: [
+                {"place.city": {$regex: otherFilter.title_like, $options: 'i'}},
+                {"place.address": {$regex: otherFilter.title_like, $options: 'i'}},
+                {description: {$regex: otherFilter.title_like, $options: "i"}},
+                {title: {$regex: otherFilter.title_like, $options: 'i'}},
+                {features: {$elemMatch: {value: {$regex: otherFilter.title_like, $options: 'i'}}}},
             ]
-
         })
     }
-    if (otherFilter.tags) {
-        Object.assign(searchObject, {
-            $and: [
-                {
-                    $or: [
-                        {tags: {$elemMatch: {value: {$regex: otherFilter.tags, $options: 'i'}}}},
-                    ]
-                },
-                {
-                    $or: [
-                        {type: {$regex: otherFilter.type, $options: 'i'}}
-                    ]
-                },
-                {
-                    $or: [
-                        {averageCheck: {$gte: otherFilter.averageCheck_gte}}
-                    ]
-                },
-                {
-                    $or: [
-                        {averageCheck: {$lte: otherFilter.averageCheck_lte}}
-                    ]
-                },
+    if (otherFilter.type) {
+        filters.push({
+            $or: [
+                {type: {$regex: otherFilter.type, $options: 'i'}}
+            ]
+        })
+    }
+    if (otherFilter.averageCheck_gte) {
+        filters.push({
+            $or: [
+                {averageCheck: {$gte: Number(otherFilter.averageCheck_gte)}}
+            ]
+        })
+    }
+    if (otherFilter.averageCheck_lte) {
+        filters.push({
+            $or: [
+                {averageCheck: {$lte: Number(otherFilter.averageCheck_lte)}}
+            ]
+        })
+    }
+    if (otherFilter.city_like) {
+        filters.push({
+            $or: [
+                {"place.city": {$regex: otherFilter.city_like, $options: 'i'}}
+            ]
+        })
+    }
+    if (isTag) {
+        filters.push({
+            $or: [
+                {tags: {$elemMatch: {value: {$regex: tagValue, $options: 'i'}}}},
             ]
         })
     }
 
     if (isVerify) {
         Object.assign(searchObject, {verify: isVerify});
+    }
+    if (filters.length > 0) {
+        Object.assign(searchObject, {$and: filters})
     }
 
     return searchObject;

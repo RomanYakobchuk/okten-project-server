@@ -1,7 +1,14 @@
 import {Response, NextFunction} from "express";
 import uuid from "uuid";
 
-import {PasswordService, emailService, UserService, SmsService, TokenService} from '../services';
+import {
+    PasswordService,
+    emailService,
+    UserService,
+    SmsService,
+    TokenService,
+    UserFavoritePlacesService
+} from '../services';
 import {OAuth, Manager, Admin} from '../dataBase';
 import {emailActionTypeEnum, smsActionTypeEnum, tokenTypeEnum} from '../enums';
 import {userPresenter} from "../presenters/user.presenter";
@@ -11,6 +18,7 @@ import {smsTemplateBuilder} from "../common";
 import {CustomError} from "../errors";
 import {CustomRequest} from "../interfaces/func";
 import {IOauth, IUser} from "../interfaces/common";
+import {ObjectId} from "mongoose";
 
 class AuthController {
 
@@ -18,12 +26,14 @@ class AuthController {
     private userService: UserService;
     private smsService: SmsService;
     private tokenService: TokenService;
+    private userFavPlaces: UserFavoritePlacesService;
 
     constructor() {
         this.smsService = new SmsService();
         this.tokenService = new TokenService();
         this.userService = new UserService();
         this.passwordService = new PasswordService();
+        this.userFavPlaces = new UserFavoritePlacesService();
 
         this.login = this.login.bind(this)
         this.register = this.register.bind(this)
@@ -48,16 +58,18 @@ class AuthController {
 
             await this.passwordService.comparePassword(hashPassword, password);
 
-            const tokens = await this.tokenService.generateAuthTokens();
-            await OAuth.create({
-                userId: _id,
-                ...tokens
-            })
             const user = req.user as IUser;
 
             if (user?.blocked?.isBlocked) {
                 return next(new CustomError('Account is blocked', 403));
             }
+            const tokens = await this.tokenService.generateAuthTokens();
+            await OAuth.create({
+                userId: _id,
+                ...tokens
+            });
+
+            const favoritePlaces = await this.userFavPlaces.findOne({_id: user.favoritePlaces});
 
             let resultUser = userPresenter(user);
 
@@ -67,6 +79,7 @@ class AuthController {
 
             res.status(200).json({
                 user: token,
+                favoritePlaces,
                 ...tokens,
                 message: 'Login success'
             });
@@ -80,7 +93,8 @@ class AuthController {
             const {email, password, name, phone, dOB, status} = req.body;
             const hash = await this.passwordService.hashPassword(password);
 
-            const activationLink = uuid.v4()
+            const activationLink = uuid.v4();
+
 
             const newUser = await this.userService.createUser({
                 email,
@@ -91,6 +105,7 @@ class AuthController {
                 password: hash,
                 activationLink,
             });
+            const userFavPlaces = await this.userFavPlaces.create({userId: newUser._id});
 
             if (status === 'manager') {
                 await Manager.create({
@@ -101,8 +116,12 @@ class AuthController {
                 });
             }
 
+            newUser.favoritePlaces = userFavPlaces._id as string & ObjectId;
+
+            await newUser.save();
+
             await Promise.allSettled([
-                emailService(email, emailActionTypeEnum.WELCOME, {name}, `/api/v1/auth/activate/${activationLink}`)
+                emailService(email, emailActionTypeEnum.WELCOME, {name}, `${configs.API_URL}/api/v1/auth/activate/${activationLink}`)
             ]);
 
             res.status(201).json({message: 'Welcome, you need to confirm your data'});

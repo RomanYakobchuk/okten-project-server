@@ -1,6 +1,15 @@
 import {Model} from "mongoose";
 import {IUserFavoritePlacesDoc} from "./doc";
-import {IUser, IInstitutionNews, ICapl, IComment, IAnswerComment, IMessage, IConversation} from "./common";
+import {
+    IUser,
+    IInstitutionNews,
+    ICapl,
+    IComment,
+    IAnswerComment,
+    IMessage,
+    IConversation,
+    IUserFavoritePlaces
+} from "./common";
 
 export interface IUserFavoritePlacesModel extends Model<IUserFavoritePlacesDoc>{}
 

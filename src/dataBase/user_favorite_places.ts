@@ -4,7 +4,7 @@ import {IUserFavoritePlacesModel} from "../interfaces/model";
 
 
 
-const UserFavoritePlaces = new Schema<IUserFavoritePlaces>({
+const UserFavoritePlaces = new Schema({
     userId: {
         type: Schema.Types.ObjectId,
         ref: 'user'

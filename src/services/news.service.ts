@@ -3,16 +3,25 @@ import {IInstitutionNews} from "../interfaces/common";
 
 interface Repository {
     createNews(news: {}): Promise<IInstitutionNews>,
-    getWithPagination(_end: number, _order: any, _start: number, _sort: any, title_like: string, category: string, city_like: string, date_event_lte: any, date_event_gte: any, isPublished: string, institution: string, cutId: string): Promise<{count: number, items: IInstitutionNews[]}>,
+
+    getWithPagination(_end: number, _order: any, _start: number, _sort: any, title_like: string, category: string, city_like: string, date_event_lte: any, date_event_gte: any, isPublished: string, institution: string, cutId: string): Promise<{
+        count: number,
+        items: IInstitutionNews[]
+    }>,
+
     getInstitutionNews(status: string, institutionId: string): Promise<IInstitutionNews[]>,
+
     getOneNews(params: any): Promise<IInstitutionNews | null>,
+
     findByParams(params: any): Promise<IInstitutionNews[] | null>,
 
 }
+
 class NewsService implements Repository {
     createNews(news = {}) {
         return InstitutionNews.create(news);
     }
+
     async getWithPagination(_end: number, _order: any, _start: number, _sort: any, title_like = "", category = "", city_like = "", date_event_lte: any = null, date_event_gte: any = null, isPublished: string, institution = '', cutId = '') {
 
         const filterQuery = _getFilterQuery({
@@ -52,6 +61,7 @@ class NewsService implements Repository {
             items
         }
     }
+
     async getInstitutionNews(status: string, institutionId: string) {
         return InstitutionNews
             .find({institutionId: institutionId, status: status})
@@ -62,6 +72,7 @@ class NewsService implements Repository {
     getOneNews(params = {}) {
         return InstitutionNews.findOne(params)
     }
+
     findByParams(params = {}) {
         return InstitutionNews.find(params);
     }
@@ -72,14 +83,13 @@ function _getFilterQuery(otherFilter: any, isPublished: string) {
     const searchObject = {};
     const filterConditions: any[] = [];
 
-    if (otherFilter.title_like && otherFilter.title_like.length > 0) {
-        filterConditions.push({
-            $or: [
-                {description: {$regex: otherFilter.title_like, $options: "i"}},
-                {title: {$regex: otherFilter.title_like, $options: "i"}},
-            ],
-        });
-    }
+    filterConditions.push({
+        $or: [
+            {description: {$regex: otherFilter.title_like, $options: "i"}},
+            {title: {$regex: otherFilter.title_like, $options: "i"}},
+        ],
+    });
+
 
     if (otherFilter.category) {
         filterConditions.push({

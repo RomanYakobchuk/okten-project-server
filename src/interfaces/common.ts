@@ -281,7 +281,7 @@ export interface IUser extends Document{
     verifyCode: string,
     activationLink: string,
     allInstitutions: IObjectIdArray,
-    favoritePlaces: IObjectIdArray,
+    favoritePlaces: string & ObjectId | string,
     favoriteNews?: Schema.Types.ObjectId[],
     myRatings: IObjectIdArray,
     blocked: {
@@ -296,7 +296,7 @@ export interface IUser extends Document{
 
 export interface IUserFavoritePlaces extends UserId, Document {
     _id: string | string & ObjectId,
-    places: Schema.Types.ObjectId[],
+    places: IObjectIdArray,
     createdAt?: Date,
     updatedAt?: Date,
 }

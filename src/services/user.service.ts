@@ -4,7 +4,7 @@ import {IUser} from "../interfaces/common";
 
 class UserService {
 
-    async getUsersByQuery(_end: number, _order: any, _start: number, _sort: any, search_like: string, status: string, isActivated: boolean, phoneVerify: boolean, isBlocked: boolean) {
+    async getUsersByQuery(_end: number, _order: any, _start: number, _sort: any, search_like: string, status: string, isActivated: any | boolean, phoneVerify: any | boolean, isBlocked: any | boolean) {
 
         const filterQuery = _getFilterQuery({search_like, status, isActivated, phoneVerify, isBlocked});
 

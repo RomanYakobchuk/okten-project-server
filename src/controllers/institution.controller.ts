@@ -50,7 +50,6 @@ class InstitutionController {
             _sort,
             title_like = "",
             propertyType = "",
-            tag_like,
             averageCheck_lte,
             averageCheck_gte,
             city_like = "",
@@ -70,7 +69,7 @@ class InstitutionController {
             const {
                 count,
                 items
-            } = await this.institutionService.getWithPagination(Institution, Number(_end), _order, Number(_start), _sort, title_like as string, propertyType as string, tag_like as string, placeStatus as string, Number(averageCheck_gte), Number(averageCheck_lte), city_like as string, userStatus as string);
+            } = await this.institutionService.getWithPagination(Institution, Number(_end), _order, Number(_start), _sort, title_like as string, propertyType as string, placeStatus as string, averageCheck_gte, averageCheck_lte, city_like as string, userStatus as string);
 
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
