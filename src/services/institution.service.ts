@@ -52,7 +52,7 @@ class InstitutionService {
         if (userStatus === 'admin') {
             items = await model
                 .find(filterQuery)
-                .select('mainPhoto _id rating type place verify description title createdAt createdBy averageCheck')
+                .select('pictures _id rating type place verify description title createdAt createdBy averageCheck')
                 .populate({path: 'views', select: 'viewsNumber'})
                 .limit(_end - _start)
                 .skip(_start)
@@ -61,7 +61,7 @@ class InstitutionService {
         } else {
             items = await model
                 .find(filterQuery)
-                .select('mainPhoto _id rating type place verify description title createdAt createdBy averageCheck')
+                .select('pictures _id rating type place verify description title createdAt createdBy averageCheck')
                 .limit(_end - _start)
                 .skip(_start)
                 .sort({[newSort]: _order})
@@ -151,7 +151,7 @@ class InstitutionService {
         }
         const institutions = await Institution
             .find(searchObject)
-            .select('_id title mainPhoto place')
+            .select('_id title pictures place')
             .limit(20)
             .sort({['title']: 'asc'})
             .exec();
@@ -259,7 +259,7 @@ function _getFilterQuery(otherFilter: any, isVerify: string) {
             ]
         })
     }
-    if (otherFilter.city_like) {
+    if (otherFilter.city_like && otherFilter.city_like.length >= 0) {
         filters.push({
             $or: [
                 {"place.city": {$regex: otherFilter.city_like, $options: 'i'}}

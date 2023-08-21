@@ -52,7 +52,7 @@ router.post(
     '/addDeleteFavoritePlace/:id',
     authMiddleware.checkAccessToken,
     institutionMiddleware.checkInstitution('info'),
-    userFavoritePlacesMiddleware.checkUserFavPlaces,
+    userFavoritePlacesMiddleware.checkUserFavPlaces('check'),
     userController.addDeleteFavoritePlace
 );
 

@@ -81,55 +81,55 @@ export interface IAnswerComment extends Document {
     updatedAt?: Date,
 }
 export interface IPicture {
-    name: string,
-    url: string
+name: string,
+url: string
 }
 interface IWorkDays {
-    days: {
-        from: string,
-        to: string
-    },
-    time: {
-        from: Date,
-        to: Date
-    }
+days: {
+    from: string,
+    to: string
+},
+time: {
+    from: Date,
+    to: Date
+}
 }
 export interface IInstitution extends Document {
-    title: string,
-    _id: string | string & ObjectId,
-    views: IViews | Schema.Types.ObjectId,
-    pictures: IPicture[],
-    workSchedule: {
-        workDays: IWorkDays[],
-        weekend: string
-    },
-    location: {
-        lng: number,
-        lat: number
-    },
-    place: {
-        city: string,
-        address: string
-    },
-    type: string,
-    description: string,
-    contacts: [{
-        value: string
-    }],
-    tags: [{
-        value: string
-    }],
-    verify: "draft" | "published" | "rejected",
-    verifyBy: Schema.Types.ObjectId,
-    rating: number,
-    averageCheck: number,
-    features: [{
-        value: string
-    }],
-    createdBy: Schema.Types.ObjectId | string,
-    news: IObjectIdArray,
-    createdAt?: Date,
-    updatedAt?: Date,
+title: string,
+_id: string | string & ObjectId,
+views: IViews | Schema.Types.ObjectId,
+pictures: IPicture[],
+workSchedule: {
+    workDays: IWorkDays[],
+    weekend: string
+},
+location: {
+    lng: number,
+    lat: number
+},
+place: {
+    city: string,
+    address: string
+},
+type: string,
+description: string,
+contacts: [{
+    value: string
+}],
+tags: [{
+    value: string
+}],
+verify: "draft" | "published" | "rejected",
+verifyBy: Schema.Types.ObjectId,
+rating: number,
+averageCheck: number,
+features: [{
+    value: string
+}],
+createdBy: Schema.Types.ObjectId | string,
+news: IObjectIdArray,
+createdAt?: Date,
+updatedAt?: Date,
 }
 
 export interface IInstitutionNews extends Document {
@@ -281,7 +281,7 @@ export interface IUser extends Document{
     verifyCode: string,
     activationLink: string,
     allInstitutions: IObjectIdArray,
-    favoritePlaces: string & ObjectId | string,
+    favoritePlaces: string | string & ObjectId | Schema.Types.ObjectId,
     favoriteNews?: Schema.Types.ObjectId[],
     myRatings: IObjectIdArray,
     blocked: {
@@ -329,4 +329,13 @@ export interface CreateReserve {
     manager: string | string & ObjectId,
     user: string | string & ObjectId,
     eventType: string
+}
+
+export interface ICityForCount extends Document {
+    _id: string,
+    name_ua: string,
+    name_en: string,
+    url: string,
+    createdAt?: Date,
+    updatedAt?: Date,
 }

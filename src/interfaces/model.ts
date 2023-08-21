@@ -8,7 +8,7 @@ import {
     IAnswerComment,
     IMessage,
     IConversation,
-    IUserFavoritePlaces
+    ICityForCount
 } from "./common";
 
 export interface IUserFavoritePlacesModel extends Model<IUserFavoritePlacesDoc>{}
@@ -25,3 +25,5 @@ export interface IAnswerCommentModel extends Model<IAnswerComment> {}
 
 export interface IMessageModel extends Model<IMessage>{}
 export interface IConversationModel extends Model<IConversation>{}
+
+export interface ICityForCountModel extends Model<ICityForCount>{}

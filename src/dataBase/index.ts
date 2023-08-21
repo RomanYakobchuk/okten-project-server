@@ -15,6 +15,7 @@ import {ReviewItem} from "./reviewItem";
 import {OAuth} from "./oauth";
 import {Menu} from "./menu";
 import {MenuItem} from "./menu_item";
+import {CityForCount} from "./countByCity";
 import {MessageModel, ConversationModel} from "./message";
 
 export {
@@ -38,5 +39,6 @@ export {
     Reviews,
     ReviewItem,
     Institution,
-    InstitutionNews
+    InstitutionNews,
+    CityForCount
 }

@@ -69,6 +69,7 @@ class ConversationController {
                 count
             } = await this.conversationService.getAllByUser(Number(_end), Number(_start), _sort, _order, user?.status, title_like as string, searchUserId as string, institutionId as string);
 
+            console.log(items)
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
 

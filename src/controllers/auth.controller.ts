@@ -17,7 +17,7 @@ import {configs} from "../configs";
 import {smsTemplateBuilder} from "../common";
 import {CustomError} from "../errors";
 import {CustomRequest} from "../interfaces/func";
-import {IOauth, IUser} from "../interfaces/common";
+import {IOauth, IUser, IUserFavoritePlaces} from "../interfaces/common";
 import {ObjectId} from "mongoose";
 
 class AuthController {
@@ -51,6 +51,7 @@ class AuthController {
     }
 
     async login(req: CustomRequest, res: Response, next: NextFunction) {
+        const favoritePlaces = req.favPlaces as IUserFavoritePlaces;
         try {
             const {password: hashPassword, _id} = req.user as IUser;
             const newStatus = req.newStatus;
@@ -69,8 +70,6 @@ class AuthController {
                 ...tokens
             });
 
-            const favoritePlaces = await this.userFavPlaces.findOne({_id: user.favoritePlaces});
-
             let resultUser = userPresenter(user);
 
             resultUser.status = newStatus!;
@@ -79,7 +78,7 @@ class AuthController {
 
             res.status(200).json({
                 user: token,
-                favoritePlaces,
+                favoritePlaces: favoritePlaces.places,
                 ...tokens,
                 message: 'Login success'
             });
@@ -116,7 +115,7 @@ class AuthController {
                 });
             }
 
-            newUser.favoritePlaces = userFavPlaces._id as string & ObjectId;
+            newUser.favoritePlaces = userFavPlaces._id;
 
             await newUser.save();
 

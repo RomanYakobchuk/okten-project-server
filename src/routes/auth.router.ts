@@ -3,6 +3,7 @@
 import {authController} from '../controllers';
 import {authMiddleware, commonMiddleware, userMiddleware} from '../middlewares';
 import {userValidator} from "../validators";
+ import userFavoritePlacesMiddleware from "../middlewares/userFavoritePlaces.middleware";
 
 const router = Router();
 
@@ -10,6 +11,7 @@ router.post('/login',
     authMiddleware.isLoginBodyValid,
     authMiddleware.isUserPresentForAuth,
     authMiddleware.checkStatus('login'),
+    userFavoritePlacesMiddleware.checkUserFavPlaces('login'),
     authController.login
 );
 router.post('/register',

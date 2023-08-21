@@ -2,7 +2,7 @@ import {Document} from "mongoose";
 import {NextFunction, Response} from "express";
 
 import {CustomRequest} from "../interfaces/func";
-import {Institution, Views, Menu} from "../dataBase";
+import {Institution, Views, Menu, CityForCount} from "../dataBase";
 import {
     UserService, InstitutionService, CloudService, TokenService
 } from '../services';
@@ -10,6 +10,7 @@ import {CustomError} from "../errors";
 import {userPresenter} from "../presenters/user.presenter";
 import {institutionMiddleware} from "../middlewares";
 import {IInstitution, IOauth, IUser} from "../interfaces/common";
+import {login} from "../validators/auth.validator";
 
 
 class InstitutionController {
@@ -247,21 +248,38 @@ class InstitutionController {
     }
 
     async countByCity(req: CustomRequest, res: Response, next: NextFunction) {
-        const queryCities: string = req.query?.cities as string;
 
-        const cities = queryCities?.split(',');
         try {
-            const list = await Promise.all(
-                cities?.map((city: string) => {
-                    return Institution.countDocuments({
+            const cities = await CityForCount.find({}, {_id: 0, name_en: 1, name_ua: 1, url: 1});
+
+            // const list = await Promise.all(
+            //     cities?.map((city) => {
+            //         return Institution.countDocuments({
+            //             $and: [
+            //                 {"place.city": {$regex: city.name_ua, $options: 'i'}},
+            //                 {verify: 'published'},
+            //             ]
+            //         })
+            //     })
+            // )
+            const result = await Promise.all(
+                cities.map(async (city) => {
+                    const institutionCount = await Institution.countDocuments({
                         $and: [
-                            {"place.city": {$regex: city, $options: 'i'}},
+                            {"place.city": {$regex: city.name_ua, $options: 'i'}},
                             {verify: 'published'},
                         ]
-                    })
+                    });
+                    return {
+                        _id: city._id,
+                        name_ua: city.name_ua,
+                        name_en: city.name_en,
+                        url: city.url,
+                        institutionCount,
+                    };
                 })
-            )
-            res.status(200).json(list)
+            );
+            res.status(200).json(result)
         } catch (e) {
             next(e)
         }
@@ -286,13 +304,20 @@ class InstitutionController {
     async countMoreViews(req: CustomRequest, res: Response, next: NextFunction) {
         try {
             const components = await Views.getTopComponents(5);
+            let data = [] as any[];
 
-            const promises = components.map((component: Document) => {
-                return component.populate({path: 'viewsWith', select: '_id mainPhoto title type place'});
-            });
+            const items: any[] = [];
+            if (components) {
+                data = await Promise.all(components.map((component: Document) => {
+                    return component.populate({path: 'viewsWith', select: '_id pictures title type place'});
+                }));
 
-            const data = await Promise.all(promises);
-            res.status(200).json(data)
+                for (const item of data) {
+                    items.push({...item?._doc, url: item?.viewsWith?.pictures[0]?.url, name: item.viewsWith?.title})
+                }
+            }
+
+            res.status(200).json(items)
         } catch (e) {
             next(e);
         }
@@ -419,7 +444,10 @@ class InstitutionController {
         try {
             const {location, maxDistance} = req.body;
 
-            const {items, count} = await this.institutionService.getNearby(location as {lat: number, lng: number}, maxDistance as number);
+            const {items, count} = await this.institutionService.getNearby(location as {
+                lat: number,
+                lng: number
+            }, maxDistance as number);
 
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');

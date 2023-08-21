@@ -9,8 +9,11 @@ const InstitutionSchema = new Schema({
     },
     views: {
         type: Schema.Types.ObjectId,
-        ref: 'views'
+        ref: 'views_container'
     },
+    mainPhoto: {
+        type: String
+    }, // прибрати
     pictures: [{
         name: {
             type: String

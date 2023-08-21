@@ -14,7 +14,6 @@ import {UserModel} from "./model";
 export interface CustomRequest extends Request {
     user?: IUser | IOauth | UserModel,
     data_info?: IInstitution | IInstitutionNews,
-    favPlaces?: IUserFavoritePlaces,
     newStatus?: "admin" | "manager" | "user",
     tokenInfo?: IOauth,
     reservation?: ICapl,
@@ -23,4 +22,5 @@ export interface CustomRequest extends Request {
     [key: string]: any,
     userExist?: IUser,
     files?: any,
+    favPlaces?: IUserFavoritePlaces
 }
