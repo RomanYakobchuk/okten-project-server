@@ -20,10 +20,6 @@ const ReviewItemSchema = new Schema<IReviewItem>({
         type: Schema.Types.ObjectId,
         ref: "institution"
     },
-    review: {
-        type: Schema.Types.ObjectId,
-        ref: 'reviews'
-    }
 }, {timestamps: true});
 
 const ReviewItem = model('reviewItem', ReviewItemSchema);

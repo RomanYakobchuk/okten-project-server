@@ -61,16 +61,16 @@ class FileMiddleware {
     checkImagesForUpdated = (propertyName: string) => async (req: CustomRequest, res: Response, next: NextFunction) => {
         try {
             const property = req.data_info;
-            const {otherPhoto: otherPhotoBody} = req.body;
-            if (((otherPhotoBody?.length === 0 || !otherPhotoBody) && !req.files?.otherPhoto) || (!req.body.mainPhoto && !req.files?.mainPhoto)) {
+            const {pictures: picturesBody} = req.body;
+            if (((picturesBody?.length === 0 || !picturesBody) && !req.files?.pictures)) {
                 return next(new CustomError("Photos is required", 400))
             }
             let newPhotos: any[] = [];
-            if (otherPhotoBody) {
-                if (typeof otherPhotoBody === 'string') {
-                    newPhotos?.push(JSON.parse(otherPhotoBody));
+            if (picturesBody) {
+                if (typeof picturesBody === 'string') {
+                    newPhotos?.push(JSON.parse(picturesBody));
                 } else {
-                    for (let otherPhotoBodyElement of otherPhotoBody) {
+                    for (let otherPhotoBodyElement of picturesBody) {
                         otherPhotoBodyElement = JSON.parse(otherPhotoBodyElement);
                         newPhotos.push(otherPhotoBodyElement)
                     }
@@ -82,39 +82,35 @@ class FileMiddleware {
                 if (typeof photosForDeleteElement === "string") {
                     photosForDeleteElement = JSON.parse(photosForDeleteElement);
                 }
-                await this.cloudService.deleteFile(photosForDeleteElement?.url, `${propertyName}/${property?._id}/otherPhoto`)
+                await this.cloudService.deleteFile(photosForDeleteElement?.url, `${propertyName}/${property?._id}/pictures`)
             }
 
-            if (!req.files?.mainPhoto && (!req.files?.otherPhoto || req.files?.otherPhoto?.length === 0)) {
+            if (!req.files?.pictures || req.files?.pictures?.length === 0) {
                 return next()
             }
 
             const newOtherPhoto: any[] = [];
 
-            if (req.files?.otherPhoto) {
-                if (req.files?.otherPhoto?.name) {
-                    const {url} = await this.cloudService.uploadFile(req.files?.otherPhoto?.tempFilePath, `${propertyName}/${property?._id}/otherPhoto`);
-                    newOtherPhoto?.push({name: req.files?.otherPhoto?.name, url})
+            if (req.files?.pictures) {
+                if (req.files?.pictures?.name) {
+                    const {url} = await this.cloudService.uploadFile(req.files?.pictures?.tempFilePath, `${propertyName}/${property?._id}/pictures`);
+                    newOtherPhoto?.push({name: req.files?.pictures?.name, url})
                 } else {
-                    for (let item of req.files?.otherPhoto) {
-                        const {url} = await this.cloudService.uploadFile(item?.tempFilePath, `${propertyName}/${property?._id}/otherPhoto`);
+                    for (let item of req.files?.pictures) {
+                        const {url} = await this.cloudService.uploadFile(item?.tempFilePath, `${propertyName}/${property?._id}/pictures`);
                         newOtherPhoto?.push({name: item?.name, url})
                     }
                 }
-                if (otherPhotoBody) {
-                    if (typeof otherPhotoBody === 'string') {
-                        req.body.otherPhoto = [otherPhotoBody, ...newOtherPhoto]
+                if (picturesBody) {
+                    if (typeof picturesBody === 'string') {
+                        req.body.pictures = [picturesBody, ...newOtherPhoto]
                     } else {
-                        req.body.otherPhoto = [...otherPhotoBody, ...newOtherPhoto];
+                        req.body.pictures = [...picturesBody, ...newOtherPhoto];
                     }
 
                 } else {
-                    req.body.otherPhoto = [...newOtherPhoto]
+                    req.body.pictures = [...newOtherPhoto]
                 }
-            }
-            if (req.files?.mainPhoto) {
-                // const {url: mainUrl} = await cloudService.updateFile(property?.mainPhoto, req.files?.mainPhoto?.tempFilePath, `${propertyName}/${property?._id}/mainPhoto`);
-                // req.body.mainPhoto = mainUrl;
             }
             next()
         } catch (e) {

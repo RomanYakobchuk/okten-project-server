@@ -26,6 +26,7 @@ class UserController {
         this.addDeleteFavoritePlace = this.addDeleteFavoritePlace.bind(this);
         this.findUserByQuery = this.findUserByQuery.bind(this);
         this.updateUserByAdmin = this.updateUserByAdmin.bind(this);
+        this.getUserFavPlaces = this.getUserFavPlaces.bind(this);
     }
 
     async findUsers(req: CustomRequest, res: Response, next: NextFunction) {
@@ -172,6 +173,15 @@ class UserController {
             const {...dataToUpdate} = req.body;
         } catch (e) {
             next(e)
+        }
+    }
+
+    async getUserFavPlaces(req: CustomRequest, res: Response, next: NextFunction) {
+        const favPlaces = req.favPlaces as IUserFavoritePlaces;
+        try {
+            res.status(200).json(favPlaces);
+        } catch (e) {
+            next(e);
         }
     }
 }

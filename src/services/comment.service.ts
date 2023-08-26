@@ -107,7 +107,7 @@ class CommentService implements Repository {
         } else if (type === 'createdBy') {
             items = await CommentItem
                 .find({createdBy: id})
-                .populate([{path: 'institutionId', select: 'title mainPhoto type _id'}, {
+                .populate([{path: 'institutionId', select: 'title pictures type _id'}, {
                     path: 'createdBy',
                     select: 'avatar name _id'
                 }])

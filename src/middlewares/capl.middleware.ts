@@ -20,7 +20,7 @@ class CaplMiddleware {
 
             const reservation = await this.caplService
                 .findOneReserve({_id: id})
-                .populate({path: 'institution', select: '_id createdBy title mainPhoto'});
+                .populate({path: 'institution', select: '_id createdBy title pictures'});
 
             if (!reservation) {
                 return next(new CustomError("Reservation not found", 404));

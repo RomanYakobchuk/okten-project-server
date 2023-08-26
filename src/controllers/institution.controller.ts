@@ -10,7 +10,6 @@ import {CustomError} from "../errors";
 import {userPresenter} from "../presenters/user.presenter";
 import {institutionMiddleware} from "../middlewares";
 import {IInstitution, IOauth, IUser} from "../interfaces/common";
-import {login} from "../validators/auth.validator";
 
 
 class InstitutionController {
@@ -136,7 +135,7 @@ class InstitutionController {
                 } else {
                     currentPictures = pictures;
                 }
-                const uploadedPictures = await this.cloudService.uploadPictures(`institution/${institution?._id}/otherPhoto`, currentPictures);
+                const uploadedPictures = await this.cloudService.uploadPictures(`institution/${institution?._id}/pictures`, currentPictures);
                 for (const uploadedPicture of uploadedPictures) {
                     institution?.pictures?.push({name: uploadedPicture?.name, url: uploadedPicture.url})
                 }
@@ -181,9 +180,6 @@ class InstitutionController {
                 if (dataToUpdate.hasOwnProperty(field)) {
                     let newValue = dataToUpdate[field];
                     const oldValue = institution[field];
-                    if (typeof newValue === 'string' && field !== 'mainPhoto') {
-                        newValue = JSON.parse(newValue);
-                    }
                     if (field !== 'pictures' && newValue !== oldValue) {
                         institution[field] = newValue;
                     }

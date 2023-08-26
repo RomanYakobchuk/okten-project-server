@@ -1,5 +1,6 @@
 import {Response, NextFunction} from "express";
 import uuid from "uuid";
+import config from "config";
 
 import {
     PasswordService,
@@ -18,7 +19,7 @@ import {smsTemplateBuilder} from "../common";
 import {CustomError} from "../errors";
 import {CustomRequest} from "../interfaces/func";
 import {IOauth, IUser, IUserFavoritePlaces} from "../interfaces/common";
-import {ObjectId} from "mongoose";
+
 
 class AuthController {
 
@@ -52,12 +53,16 @@ class AuthController {
 
     async login(req: CustomRequest, res: Response, next: NextFunction) {
         const favoritePlaces = req.favPlaces as IUserFavoritePlaces;
+        const isAuth = req.isAuth as boolean;
+        const pathUrl = (req.query.state as string) ?? '/';
         try {
-            const {password: hashPassword, _id} = req.user as IUser;
             const newStatus = req.newStatus;
-            const {password} = req.body;
+            if (!isAuth) {
+                const {password: hashPassword} = req.user as IUser;
+                const {password} = req.body;
 
-            await this.passwordService.comparePassword(hashPassword, password);
+                await this.passwordService.comparePassword(hashPassword, password);
+            }
 
             const user = req.user as IUser;
 
@@ -66,7 +71,7 @@ class AuthController {
             }
             const tokens = await this.tokenService.generateAuthTokens();
             await OAuth.create({
-                userId: _id,
+                userId: user?._id,
                 ...tokens
             });
 
@@ -82,48 +87,66 @@ class AuthController {
                 ...tokens,
                 message: 'Login success'
             });
+            res.redirect(`${config.get<string>('origin')}${pathUrl}`)
         } catch (e) {
             next(e);
         }
     }
 
     async register(req: CustomRequest, res: Response, next: NextFunction) {
+        const {email, password, name, phone, dOB, status, userData, registerBy} = req.body;
         try {
-            const {email, password, name, phone, dOB, status} = req.body;
-            const hash = await this.passwordService.hashPassword(password);
+            let hash: string = '', activationLink: string = '';
+            let newUser: any;
+            if (!userData?.email && registerBy === 'Email') {
+                hash = await this.passwordService.hashPassword(password);
+                activationLink = uuid.v4();
+                newUser = await this.userService.createUser({
+                    email,
+                    name,
+                    phone: phone ?? "",
+                    dOB,
+                    status,
+                    password: hash,
+                    activationLink,
+                    registerBy
+                });
+            } else if (registerBy === 'Google' || registerBy === 'Facebook') {
+                newUser = await this.userService.createUser({
+                    email: userData?.email,
+                    name: userData?.name,
+                    avatar: userData?.picture,
+                    isActivated: userData?.email_verified,
+                    registerBy
+                })
+            } else {
+                return next(new CustomError('Register failed', 400));
+            }
 
-            const activationLink = uuid.v4();
-
-
-            const newUser = await this.userService.createUser({
-                email,
-                name,
-                phone,
-                dOB,
-                status,
-                password: hash,
-                activationLink,
-            });
             const userFavPlaces = await this.userFavPlaces.create({userId: newUser._id});
 
-            if (status === 'manager') {
-                await Manager.create({
-                    user: newUser?._id,
-                    name: name,
-                    email: email,
-                    phone: phone
-                });
-            }
+            // if (status === 'manager') {
+            //     await Manager.create({
+            //         user: newUser?._id,
+            //         name: name,
+            //         email: email,
+            //         phone: phone
+            //     });
+            // }
 
             newUser.favoritePlaces = userFavPlaces._id;
 
             await newUser.save();
 
-            await Promise.allSettled([
-                emailService(email, emailActionTypeEnum.WELCOME, {name}, `${configs.API_URL}/api/v1/auth/activate/${activationLink}`)
-            ]);
+            if (!userData?.email_verified) {
+                await Promise.allSettled([
+                    emailService(email, emailActionTypeEnum.WELCOME, {name}, `${configs.API_URL}/api/v1/auth/activate/${activationLink}`)
+                ]);
+                res.status(201).json({message: 'Welcome, you need to confirm your data', isVerify: false});
+                return;
+            }
 
-            res.status(201).json({message: 'Welcome, you need to confirm your data'});
+            res.status(201).json({message: 'Welcome, you have successfully registered', isVerify: userData?.email_verified})
 
         } catch (e) {
             console.log(`Помилка у створенні юзера`)
@@ -262,7 +285,7 @@ class AuthController {
             }, "3m");
 
             await Promise.allSettled([
-                emailService(email, emailActionTypeEnum.FORGOT_PASSWORD, {name}, `${configs.CLIENT_URL}/update-password/${token}`)
+                await emailService(email, emailActionTypeEnum.FORGOT_PASSWORD, {name}, `${configs.CLIENT_URL}/update-password/${token}`)
             ])
 
 
@@ -274,9 +297,9 @@ class AuthController {
 
     async updatePassword(req: CustomRequest, res: Response, next: NextFunction) {
         try {
-            const {email, password, access_token} = req.body;
+            const {email, password, token} = req.body;
 
-            await this.tokenService.checkToken(access_token, tokenTypeEnum.ACCESS);
+            await this.tokenService.checkToken(token, tokenTypeEnum.TOKEN_WITH_DATA);
 
             const hash = await this.passwordService.hashPassword(password);
 

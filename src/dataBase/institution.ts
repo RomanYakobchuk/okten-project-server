@@ -11,9 +11,6 @@ const InstitutionSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'views_container'
     },
-    mainPhoto: {
-        type: String
-    }, // прибрати
     pictures: [{
         name: {
             type: String
@@ -110,6 +107,10 @@ const InstitutionSchema = new Schema({
             type: String
         },
     }],
+    reviewsLength: {
+        type: Number,
+        default: 0
+    },
     createdBy: {
         type: Schema.Types.ObjectId,
         ref: 'user',
@@ -121,7 +122,6 @@ const InstitutionSchema = new Schema({
     }],
 }, {timestamps: true})
 
-// const Institution: IInstitutionModel = model<IInstitution, IInstitutionModel>('institution', InstitutionSchema);
 const Institution: IInstitutionModel = model<IInstitution, IInstitutionModel>('institution', InstitutionSchema);
 
 export {

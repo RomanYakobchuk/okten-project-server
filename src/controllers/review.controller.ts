@@ -25,6 +25,7 @@ async function calculateAverageRating(institution: IInstitution) {
 
         if (result?.length > 0) {
             institution.rating = result[0].averageRating;
+            institution.reviewsLength++;
             await institution.save();
         }
     } catch (e) {
@@ -123,7 +124,7 @@ class ReviewController {
             const {
                 items,
                 count
-            } = await this.reviewService.getAllByPlaceWithPagination(userExist?._id, Number(_end), Number(_start), _sort, _order, "createdBy", "institutionId", 'title mainPhoto type _id');
+            } = await this.reviewService.getAllByPlaceWithPagination(userExist?._id, Number(_end), Number(_start), _sort, _order, "createdBy", "institutionId", 'title pictures type _id');
 
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');

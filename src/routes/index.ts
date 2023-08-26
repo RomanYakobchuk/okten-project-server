@@ -2,7 +2,6 @@ import authRouter from './auth.router';
 import userRouter from './user.router';
 import managerRouter from './manager.router';
 import institutionRouter from './institution.router';
-import ratingRouter from './rating.router';
 import newsRouter from './news.router';
 import reviewRouter from './review.router';
 import commentRouter from './comment.router';
@@ -17,7 +16,6 @@ export {
     userRouter,
     managerRouter,
     institutionRouter,
-    ratingRouter,
     newsRouter,
     reviewRouter,
     commentRouter,

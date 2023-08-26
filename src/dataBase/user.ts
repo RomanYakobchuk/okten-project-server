@@ -20,15 +20,12 @@ const UserSchema = new Schema<IUser>({
         },
         dOB: {
             type: Date,
-            required: true,
         },
         password: {
             type: String,
-            required: true
         },
         phone: {
             type: String,
-            required: true
         },
         avatar: {
             type: String,
@@ -70,6 +67,10 @@ const UserSchema = new Schema<IUser>({
                 ref: "rating"
             }
         ],
+        registerBy: {
+            type: String,
+            default: 'Email'
+        },
         blocked: {
             isBlocked: {
                 type: Boolean,

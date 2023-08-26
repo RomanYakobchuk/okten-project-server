@@ -2,7 +2,6 @@ import authMiddleware from  './auth.middleware';
 import commonMiddleware from  './common.middleware';
 import fileMiddleware from  './file.middleware';
 import userMiddleware from  './user.middleware';
-import ratingMiddleware from  './rating.middleware';
 import commentMiddleware from  './comment.middleware';
 import institutionMiddleware from  './institution.middleware';
 import newsMiddleware from  './news.middleware';
@@ -14,7 +13,6 @@ export {
     commonMiddleware,
     fileMiddleware,
     userMiddleware,
-    ratingMiddleware,
     commentMiddleware,
     institutionMiddleware,
     newsMiddleware,

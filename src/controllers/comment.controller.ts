@@ -117,7 +117,7 @@ class CommentController {
             }
 
             const comments = await this.commentService.getItemsByParams({createdBy: searchId})
-                .populate([{path: 'institutionId', select: 'title mainPhoto type _id'}, {
+                .populate([{path: 'institutionId', select: 'title pictures type _id', options: {limit: 1}}, {
                     path: 'createdBy',
                     select: 'avatar name _id'
                 }])

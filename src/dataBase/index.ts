@@ -9,8 +9,6 @@ import {Manager} from "./managers";
 import {Capl} from "./capl";
 import {Institution} from "./institution";
 import {InstitutionNews} from "./institutionNews";
-import {Rating} from "./rating";
-import {Reviews} from "./reviews";
 import {ReviewItem} from "./reviewItem";
 import {OAuth} from "./oauth";
 import {Menu} from "./menu";
@@ -32,11 +30,9 @@ export {
     Admin,
     Manager,
     AnswerComment,
-    Rating,
     CommentItem,
     UserFavPlaces,
     MenuItem,
-    Reviews,
     ReviewItem,
     Institution,
     InstitutionNews,

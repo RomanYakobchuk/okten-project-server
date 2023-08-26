@@ -3,7 +3,7 @@
     "module": "NodeNext",
     "esModuleInterop": true,
     "target": "ESNext",
-    "rootDir": "src",
+    "rootDir": "./src",
     "allowJs": true,
     "outDir": "build",
     "noEmitOnError": false,

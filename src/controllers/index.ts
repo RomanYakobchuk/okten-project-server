@@ -2,7 +2,6 @@ import userController from './user.controller';
 import managerController from './manager.controller';
 import authController from './auth.controller';
 import institutionController from './institution.controller';
-import ratingController from './rating.controller';
 import newsController from './news.controller';
 import reviewController from './review.controller';
 import commentController from './comment.controller';
@@ -18,7 +17,6 @@ export {
     managerController,
     authController,
     institutionController,
-    ratingController,
     newsController,
     reviewController,
     commentController,

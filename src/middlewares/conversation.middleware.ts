@@ -30,7 +30,7 @@ class ConversationMiddleware {
                     .getOne({_id: id})
                     .populate([
                         {path: 'members.user', select: '_id name avatar'},
-                        {path: 'institutionId', select: '_id title mainPhoto'},
+                        {path: 'institutionId', select: '_id title pictures'},
                     ]) as IConversation
             } else if (type === 'someInfo') {
                 conversation = await this.conversationService.getOne({_id: id}) as IConversation;

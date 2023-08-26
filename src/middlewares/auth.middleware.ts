@@ -1,4 +1,7 @@
+import {NextFunction, Response} from "express";
+import {ObjectId} from "mongoose";
 import {CustomRequest} from "../interfaces/func";
+import Joi from "joi";
 
 import {OAuth, User, Manager, Admin} from "../dataBase";
 
@@ -6,10 +9,11 @@ import {CustomError} from '../errors';
 import {UserService, PasswordService, TokenService} from '../services';
 import {authValidator} from '../validators';
 import {tokenTypeEnum} from '../enums';
-import {constants} from '../configs';
-import {NextFunction, Response} from "express";
+import {configs, constants} from '../configs';
 import {IManager, IOauth, IUser} from "../interfaces/common";
-import {ObjectId} from "mongoose";
+import {getFacebookUserInfo, getGitHubUserData, getGoogleUserInfo} from "../clients";
+import config from "config";
+
 
 class AuthMiddleware {
     private userService: UserService;
@@ -77,12 +81,34 @@ class AuthMiddleware {
     }
 
     async isUserPresentForAuth(req: CustomRequest, res: Response, next: NextFunction) {
+        let {email, registerBy, access_token, userId} = req.body;
+        const {code} = req.query;
+        const pathUrl = (req.query.state as string) ?? '/';
+
         try {
-            const {email} = req.body;
-            const user = await this.userService.findOneUser({email});
+            let user: any;
+            if (registerBy === 'Email' && email) {
+                req.isAuth = false;
+            } else if (registerBy === 'Google' && access_token) {
+                const ticket = await getGoogleUserInfo(access_token);
+                email = ticket.email;
+                req.isAuth = true;
+            } else if (registerBy === 'Facebook' && access_token && userId) {
+                const response = await getFacebookUserInfo(userId, access_token);
+                email = response.email
+                req.isAuth = true
+            } else if (code) {
+                const response = await getGitHubUserData(code as string);
+                email = response.email;
+                req.isAuth = true;
+            } else {
+                return next(new CustomError('Wrong data', 403))
+            }
+            user = await this.userService.findOneUser({email, registerBy});
 
             if (!user) {
-                return next(new CustomError('Wrong email or password'));
+                new CustomError('Wrong email or password');
+                return res.redirect(`${configs.CLIENT_URL}/login${pathUrl}`);
             } else if (!user?.isActivated) {
                 return next(new CustomError("User account blocked", 423))
             }
@@ -95,12 +121,28 @@ class AuthMiddleware {
     }
 
     async isLoginBodyValid(req: CustomRequest, res: Response, next: NextFunction) {
+        const {registerBy} = req.body;
+        const {code} = req.query;
         try {
-            const {error, value} = authValidator.login.validate(req.body);
+            let validationSchema: Joi.ObjectSchema<any>;
+
+            switch (registerBy) {
+                case 'Email':
+                    validationSchema = authValidator.login;
+                    break;
+                case 'Google':
+                    validationSchema = authValidator.googleLogin;
+                    break;
+                case 'Facebook':
+                    validationSchema = authValidator.facebookLogin;
+                    break;
+                default:
+                    return next(new CustomError('Invalid registerBy value'));
+            }
+            const {error, value} = validationSchema.validate(req.body);
             if (error) {
                 return next(new CustomError('Wrong email or password'));
             }
-
             req.body = value;
             next();
         } catch (e) {
@@ -187,11 +229,11 @@ class AuthMiddleware {
             }
             if (type === 'login') {
                 const user = req.user as IUser;
-                statusHandler(user.status, user._id);
+                await statusHandler(user.status, user._id);
             } else if (type === 'check') {
                 const {userId} = req.user as IOauth;
                 const user = userId as IUser;
-                statusHandler(user.status, user._id);
+                await statusHandler(user.status, user._id);
             }
         } catch (e) {
             next(e)

@@ -16,7 +16,7 @@ const newUserValidator = Joi.object({
     password: passwordValidator.required(),
     phone: phoneValidator.required(),
     status: stringValidator.required(),
-    dOB: dOBValidator.required()
+    dOB: dOBValidator.required(),
 });
 
 const updateUserValidator = Joi.object({

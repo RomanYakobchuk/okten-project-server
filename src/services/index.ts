@@ -8,7 +8,6 @@ import {TokenService} from  './token.service';
 import {ManagerService} from  './manager.service';
 import {PasswordService} from  './password.service';
 import {InstitutionService} from  './institution.service';
-import {RatingService} from  './rating.service';
 import {NewsService} from  './news.service';
 import {ReviewService} from  './review.service';
 import {CommentService} from  './comment.service';
@@ -28,7 +27,6 @@ export {
     CommentService,
     ReviewService,
     NewsService,
-    RatingService,
     InstitutionService,
     PasswordService,
     ManagerService,

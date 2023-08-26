@@ -84,14 +84,14 @@ class CaplController {
 
             const reservation = await this.caplService
                 .findOneReserve({_id: id})
-                .populate({path: 'institution', select: '_id mainPhoto title place createdBy type'});
+                .populate({path: 'institution', select: '_id pictures title place createdBy type'});
 
             if (!reservation) {
                 return next(new CustomError('Reservation not found', 404))
             }
             const institution = reservation.institution as IInstitution;
 
-            if ((user?.status !== 'admin') && (user?.status !== 'manager' && (institution.createdBy?.toString() !== user?._id?.toString() || reservation?.manager?.toString() !== user?._id?.toString())) && reservation?.user?.toString() !== user?._id?.toString()) {
+            if ((user?.status !== 'admin') && (user?.status !== 'manager' && (institution?.createdBy?.toString() !== user?._id?.toString() || reservation?.manager?.toString() !== user?._id?.toString())) && reservation?.user?.toString() !== user?._id?.toString()) {
                 return next(new CustomError('Access denied', 403))
             }
 

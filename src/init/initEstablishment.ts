@@ -1,9 +1,9 @@
-import {Institution} from "./dataBase";
+import {Institution} from "../dataBase";
 
 require('ts-node/register');
 
 import mongoose from "mongoose";
-import {IInstitution} from "./interfaces/common";
+import {IInstitution} from "../interfaces/common";
 
 async function initDataBase() {
     try {

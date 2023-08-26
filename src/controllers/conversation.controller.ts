@@ -2,7 +2,7 @@ import {NextFunction, Response} from "express";
 
 import {CustomRequest} from "../interfaces/func";
 import {ConversationService} from "../services";
-import {IConvMembers, IInstitution, ILastConvMessage, IOauth, IUser} from "../interfaces/common";
+import {IConversation, IConvMembers, IInstitution, ILastConvMessage, IOauth, IUser} from "../interfaces/common";
 import {Schema} from "mongoose";
 
 class ConversationController {
@@ -86,7 +86,7 @@ class ConversationController {
                 .getOne({members: {$elemMatch: {user: userId}}, institutionId})
                 .populate([
                     {path: 'members.user', select: '_id avatar name'},
-                    {path: 'institutionId', select: '_id title mainPhoto'},
+                    {path: 'institutionId', select: '_id title pictures'},
                 ]);
 
             res.status(200).json(conv);
@@ -95,7 +95,7 @@ class ConversationController {
         }
     }
     async updateTitleName(req: CustomRequest, res: Response, next: NextFunction) {
-        const conversation = req.conversation;
+        const conversation = req.conversation as IConversation;
         const {newName, newTitle} = req.body;
         const status = req.newStatus;
         try {

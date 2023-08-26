@@ -52,7 +52,7 @@ class InstitutionService {
         if (userStatus === 'admin') {
             items = await model
                 .find(filterQuery)
-                .select('pictures _id rating type place verify description title createdAt createdBy averageCheck')
+                .select('pictures _id reviewsLength rating type place title createdBy averageCheck')
                 .populate({path: 'views', select: 'viewsNumber'})
                 .limit(_end - _start)
                 .skip(_start)
@@ -61,7 +61,7 @@ class InstitutionService {
         } else {
             items = await model
                 .find(filterQuery)
-                .select('pictures _id rating type place verify description title createdAt createdBy averageCheck')
+                .select('pictures reviewsLength _id rating type place title createdBy averageCheck')
                 .limit(_end - _start)
                 .skip(_start)
                 .sort({[newSort]: _order})
@@ -100,7 +100,7 @@ class InstitutionService {
 
         const items = await Institution
             .find({createdBy: userId, verify: verify})
-            .select('_id mainPhoto title place averageCheck type rating description createdBy createdAt')
+            .select('_id pictures title place averageCheck type rating description createdBy createdAt')
             .limit(_end - _start)
             .skip(_start)
             .sort({[newSort]: _order});

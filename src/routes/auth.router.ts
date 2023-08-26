@@ -1,9 +1,9 @@
- import {Router} from 'express';
+ import {NextFunction, Router, Response} from 'express';
 
 import {authController} from '../controllers';
 import {authMiddleware, commonMiddleware, userMiddleware} from '../middlewares';
-import {userValidator} from "../validators";
  import userFavoritePlacesMiddleware from "../middlewares/userFavoritePlaces.middleware";
+ import {CustomRequest} from "../interfaces/func";
 
 const router = Router();
 
@@ -14,9 +14,17 @@ router.post('/login',
     userFavoritePlacesMiddleware.checkUserFavPlaces('login'),
     authController.login
 );
+router.get('/login_github',
+    // authMiddleware.isLoginBodyValid,
+    authMiddleware.isUserPresentForAuth,
+    authMiddleware.checkStatus('login'),
+    userFavoritePlacesMiddleware.checkUserFavPlaces('login'),
+    authController.login
+);
 router.post('/register',
-    commonMiddleware.isDateValid(userValidator.newUserValidator),
-    userMiddleware.isUserUniq,
+    userMiddleware.isUserUniqByEmail,
+    userMiddleware.isUserUniqByGoogle,
+    userMiddleware.isUserUniqByFacebook,
     authController.register);
 
 router.post('/refreshToken',

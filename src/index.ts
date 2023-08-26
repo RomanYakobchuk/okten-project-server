@@ -1,4 +1,4 @@
-import express, {Request, Response, NextFunction} from 'express';
+import express, {Response, NextFunction} from 'express';
 import mongoose from  'mongoose';
 import expressFileUpload from  'express-fileupload';
 import bodyParser from  'body-parser';
@@ -13,7 +13,6 @@ import {
     authRouter,
     userRouter,
     institutionRouter,
-    ratingRouter,
     newsRouter,
     reviewRouter,
     commentRouter, cityRouter, menuRouter, managerRouter, conversationRouter, messageRouter, caplRouter
@@ -21,6 +20,7 @@ import {
 
 import {configs} from './configs';
 import {CustomError} from "./errors";
+import {CustomRequest} from "./interfaces/func";
 dotenv.config({path: `./environments/.env`});
 
 const app = express();
@@ -55,7 +55,6 @@ app.use('/api/v1/managers', managerRouter);
 app.use('/api/v1/conversation', conversationRouter);
 app.use('/api/v1/message', messageRouter);
 app.use('/api/v1/institution', institutionRouter);
-app.use('/api/v1/rating', ratingRouter);
 app.use('/api/v1/news', newsRouter);
 app.use('/api/v1/review', reviewRouter);
 app.use('/api/v1/comment', commentRouter);
@@ -67,7 +66,7 @@ app.use('*', (req, res) => {
     res.status(404).json('Route not found');
 });
 
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+app.use((err: any, req: any, res: Response, next: NextFunction) => {
     console.log(err)
     res
         ?.status(err?.status || 500)

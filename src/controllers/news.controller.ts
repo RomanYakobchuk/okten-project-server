@@ -69,9 +69,7 @@ class NewsController {
             const news = await this.newsService.createNews({
                 status: user?.status === 'admin' ? status : "draft",
                 description,
-                otherPhoto: [],
-                mainPhoto: "",
-                variantForDisplay,
+                pictures: [],
                 category,
                 title,
                 createdBy: currentUser?._id === user?._id ? user?._id : currentUser?._id,
@@ -93,7 +91,7 @@ class NewsController {
                 } else {
                     currentPictures = pictures;
                 }
-                const uploadedPictures = await this.cloudService.uploadPictures(`news/${news?._id}/otherPhoto`, currentPictures);
+                const uploadedPictures = await this.cloudService.uploadPictures(`news/${news?._id}/pictures`, currentPictures);
                 for (const uploadedPicture of uploadedPictures) {
                     news?.pictures?.push({name: uploadedPicture.name, url: uploadedPicture.url})
                 }
@@ -185,9 +183,6 @@ class NewsController {
                 if (dataToUpdate.hasOwnProperty(field)) {
                     let newValue = dataToUpdate[field];
                     const oldValue = news[field];
-                    if (typeof newValue === 'string' && field !== 'mainPhoto') {
-                        newValue = JSON.parse(newValue);
-                    }
                     if (field !== 'pictures' && newValue !== oldValue) {
                         news[field] = newValue;
                     }

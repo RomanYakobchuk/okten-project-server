@@ -6,16 +6,18 @@ interface Ids {
     createdAt?: Date,
     updatedAt?: Date,
 }
+
 export interface IObjectIdArray extends Array<Schema.Types.ObjectId> {
     pull(...items: Schema.Types.ObjectId[]): this;
 }
 
-export interface IAction extends Ids{
+export interface IAction extends Ids {
     actionType: string,
     person: Schema.Types.ObjectId,
     actionWith: Schema.Types.ObjectId,
 }
-export interface IAdmin extends Ids{
+
+export interface IAdmin extends Ids {
     user: Schema.Types.ObjectId,
 }
 
@@ -80,56 +82,60 @@ export interface IAnswerComment extends Document {
     createdAt?: Date,
     updatedAt?: Date,
 }
+
 export interface IPicture {
-name: string,
-url: string
+    name: string,
+    url: string
 }
+
 interface IWorkDays {
-days: {
-    from: string,
-    to: string
-},
-time: {
-    from: Date,
-    to: Date
+    days: {
+        from: string,
+        to: string
+    },
+    time: {
+        from: Date,
+        to: Date
+    }
 }
-}
+
 export interface IInstitution extends Document {
-title: string,
-_id: string | string & ObjectId,
-views: IViews | Schema.Types.ObjectId,
-pictures: IPicture[],
-workSchedule: {
-    workDays: IWorkDays[],
-    weekend: string
-},
-location: {
-    lng: number,
-    lat: number
-},
-place: {
-    city: string,
-    address: string
-},
-type: string,
-description: string,
-contacts: [{
-    value: string
-}],
-tags: [{
-    value: string
-}],
-verify: "draft" | "published" | "rejected",
-verifyBy: Schema.Types.ObjectId,
-rating: number,
-averageCheck: number,
-features: [{
-    value: string
-}],
-createdBy: Schema.Types.ObjectId | string,
-news: IObjectIdArray,
-createdAt?: Date,
-updatedAt?: Date,
+    title: string,
+    _id: string | string & ObjectId,
+    views: IViews | Schema.Types.ObjectId,
+    pictures: IPicture[],
+    workSchedule: {
+        workDays: IWorkDays[],
+        weekend: string
+    },
+    reviewsLength: number,
+    location: {
+        lng: number,
+        lat: number
+    },
+    place: {
+        city: string,
+        address: string
+    },
+    type: string,
+    description: string,
+    contacts: [{
+        value: string
+    }],
+    tags: [{
+        value: string
+    }],
+    verify: "draft" | "published" | "rejected",
+    verifyBy: Schema.Types.ObjectId,
+    rating: number,
+    averageCheck: number,
+    features: [{
+        value: string
+    }],
+    createdBy: Schema.Types.ObjectId | string,
+    news: IObjectIdArray,
+    createdAt?: Date,
+    updatedAt?: Date,
 }
 
 export interface IInstitutionNews extends Document {
@@ -199,23 +205,28 @@ export interface IMenuItem extends Ids {
     price: number,
     image: string,
 }
+
 interface InstitutionId {
     institutionId: Schema.Types.ObjectId
 }
+
 interface UserId {
     userId: Schema.Types.ObjectId | IUser | UserModel
 }
+
 export interface ILastConvMessage {
     sender: Schema.Types.ObjectId,
     status?: string,
     text: string,
     updatedAt: Date
 }
+
 export interface IConvMembers {
     user: Schema.Types.ObjectId,
     connectedAt: Date,
     role: "admin" | "manager" | "user"
 }
+
 export interface IConversation extends InstitutionId, Document {
     _id: string | string & ObjectId,
     userName: string,
@@ -249,11 +260,6 @@ export interface IOauth extends UserId, Ids {
     refresh_token: string,
 }
 
-export interface IRating extends InstitutionId, Ids {
-    createdBy: Schema.Types.ObjectId,
-    grade: number,
-}
-
 export interface IReviewItem extends InstitutionId, Ids {
     createdBy: Schema.Types.ObjectId,
     text: {
@@ -268,11 +274,12 @@ export interface IReview extends InstitutionId, Ids {
     reviews: Schema.Types.ObjectId[],
 }
 
-export interface IUser extends Document{
+export interface IUser extends Document {
     name: string,
     email: string,
     status: "user" | "manager" | "admin",
     dOB: Date,
+    registerBy: "Google" | "Email" | "GitHub" | "Facebook",
     password: string,
     phone: string,
     avatar: string,
@@ -291,6 +298,7 @@ export interface IUser extends Document{
     myReviews?: Schema.Types.ObjectId[] | any,
     createdAt?: Date,
     updatedAt?: Date,
+
     [key: string]: any
 }
 

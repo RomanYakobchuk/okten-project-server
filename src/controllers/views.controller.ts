@@ -32,7 +32,8 @@ class ViewsController {
                 if (!isExistView) {
                     await View.create({
                         viewsId: currentViews?._id,
-                        user: user?._id
+                        user: user?._id,
+                        verify: institution.verify
                     })
                     currentViews.viewsNumber++;
 

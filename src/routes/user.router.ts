@@ -71,5 +71,17 @@ router.patch(
     userController.updateUserByAdmin
 )
 
+router.get(
+    `/getUserFavPlaces`,
+    authMiddleware.checkAccessToken,
+    userFavoritePlacesMiddleware.checkUserFavPlaces("check", "byUser", true),
+    userController.getUserFavPlaces
+)
+router.get(
+    `/getByUserIdFavPlaces/:id`,
+    authMiddleware.checkAccessToken,
+    userFavoritePlacesMiddleware.checkUserFavPlaces("check", "byId", true),
+    userController.getUserFavPlaces
+)
 
 export default router;

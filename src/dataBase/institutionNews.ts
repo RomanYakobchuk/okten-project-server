@@ -58,8 +58,6 @@ const InstitutionNewsSchema = new Schema<IInstitutionNews>({
         default: "general"
     },
     pictures: [{
-        type: Object,
-        required: true,
         url: {
             type: String
         },

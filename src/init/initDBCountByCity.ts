@@ -1,4 +1,4 @@
-import {CityForCount} from "./dataBase";
+import {CityForCount} from "../dataBase";
 
 require('ts-node/register');
 

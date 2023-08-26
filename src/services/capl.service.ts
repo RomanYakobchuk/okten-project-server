@@ -48,7 +48,7 @@ class CaplService implements Repository {
 
         const items = await Capl
             .find(filterQuery)
-            .populate([{path: 'institution', select: '_id mainPhoto title type place'}])
+            .populate([{path: 'institution', select: '_id pictures title type place'}])
             .limit(_end - _start)
             .skip(_start)
             .sort({[_sort]: _order})

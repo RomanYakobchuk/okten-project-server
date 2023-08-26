@@ -25,10 +25,10 @@ export const emailService = async (userMail = '', emailAction = '' as keyof type
         viewEngine: {
             extname: '.hbs',
             defaultLayout: 'main',
-            layoutsDir: path.join(process.cwd(), 'email-templates', 'layouts'),
-            partialsDir: path.join(process.cwd(), 'email-templates', 'partials'),
+            layoutsDir: path.join(process.cwd(), 'src', 'email-templates', 'layouts'),
+            partialsDir: path.join(process.cwd(), 'src', 'email-templates', 'partials'),
         },
-        viewPath: path.join(process.cwd(), 'email-templates', 'views'),
+        viewPath: path.join(process.cwd(), 'src', 'email-templates', 'views'),
         extName: '.hbs',
     }
 

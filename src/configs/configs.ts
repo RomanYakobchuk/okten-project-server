@@ -30,7 +30,18 @@ interface ENV {
     AWS_S3_BUCKET_URL: string | undefined,
     FRONTEND_URL: string | undefined,
     CLIENT_URL: string | undefined,
-    API_URL: string | undefined
+    API_URL: string | undefined,
+    GOOGLE_CLIENT_ID: string | undefined,
+    GOOGLE_CLIENT_SECRET: string | undefined,
+    GOOGLE_API_GET_USER_INFO: string | undefined,
+
+    FACEBOOK_API_GET_USER_INFO: string | undefined,
+
+    GITHUB_OAUTH_ROOT_URL: string | undefined,
+    GITHUB_OAUTH_CLIENT_ID: string | undefined,
+    GITHUB_OAUTH_CLIENT_SECRET: string | undefined,
+    GITHUB_OAUTH_REDIRECT_URL: string | undefined,
+    GITHUB_OAUTH_USER_DATA_URL: string | undefined
 }
 
 interface Config {
@@ -67,7 +78,19 @@ interface Config {
 
     FRONTEND_URL: string,
     CLIENT_URL: string,
-    API_URL: string
+    API_URL: string,
+
+    GOOGLE_CLIENT_ID: string,
+    GOOGLE_CLIENT_SECRET: string,
+    GOOGLE_API_GET_USER_INFO: string,
+
+    FACEBOOK_API_GET_USER_INFO: string,
+
+    GITHUB_OAUTH_ROOT_URL: string,
+    GITHUB_OAUTH_CLIENT_ID: string,
+    GITHUB_OAUTH_CLIENT_SECRET: string,
+    GITHUB_OAUTH_REDIRECT_URL: string,
+    GITHUB_OAUTH_USER_DATA_URL: string
 }
 const getConfig = (): ENV => {
     return {
@@ -104,7 +127,19 @@ const getConfig = (): ENV => {
         MONGO_INITDB_DATABASE: process.env.MONGO_INITDB_DATABASE,
         MONGO_INITDB_ROOT_PASSWORD: process.env.MONGO_INITDB_ROOT_PASSWORD,
         MONGO_INITDB_ROOT_USERNAME: process.env.MONGO_INITDB_ROOT_USERNAME,
-        SOCKET_PORT: process.env.SOCKET_PORT
+        SOCKET_PORT: process.env.SOCKET_PORT,
+
+        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+        GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+        GOOGLE_API_GET_USER_INFO: process.env.GOOGLE_API_GET_USER_INFO,
+
+        FACEBOOK_API_GET_USER_INFO: process.env.FACEBOOK_API_GET_USER_INFO,
+
+        GITHUB_OAUTH_ROOT_URL: process.env.GITHUB_OAUTH_ROOT_URL,
+        GITHUB_OAUTH_CLIENT_ID: process.env.GITHUB_OAUTH_CLIENT_ID,
+        GITHUB_OAUTH_CLIENT_SECRET: process.env.GITHUB_OAUTH_CLIENT_SECRET,
+        GITHUB_OAUTH_REDIRECT_URL: process.env.GITHUB_OAUTH_REDIRECT_URL,
+        GITHUB_OAUTH_USER_DATA_URL: process.env.GITHUB_OAUTH_USER_DATA_URL
     }
 }
 

@@ -34,7 +34,7 @@ class ConversationService {
         const items = await ConversationModel
             .find(_filterQuery)
             .populate([
-                {path: 'institutionId', select: '_id title mainPhoto'},
+                {path: 'institutionId', select: '_id title pictures', options: {limit: 1}},
                 {path: 'members.user', select: '_id name avatar'},
             ])
             .limit(_end - _start)
