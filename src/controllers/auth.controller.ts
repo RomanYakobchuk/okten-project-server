@@ -87,7 +87,6 @@ class AuthController {
                 ...tokens,
                 message: 'Login success'
             });
-            res.redirect(`${config.get<string>('origin')}${pathUrl}`)
         } catch (e) {
             next(e);
         }
