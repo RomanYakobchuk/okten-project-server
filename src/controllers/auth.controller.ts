@@ -1,6 +1,5 @@
 import {Response, NextFunction} from "express";
 import uuid from "uuid";
-import config from "config";
 
 import {
     PasswordService,
@@ -10,7 +9,7 @@ import {
     TokenService,
     UserFavoritePlacesService
 } from '../services';
-import {OAuth, Manager, Admin} from '../dataBase';
+import {OauthSchema, AdminSchema} from '../dataBase';
 import {emailActionTypeEnum, smsActionTypeEnum, tokenTypeEnum} from '../enums';
 import {userPresenter} from "../presenters/user.presenter";
 import {authMiddleware} from "../middlewares";
@@ -70,7 +69,7 @@ class AuthController {
                 return next(new CustomError('Account is blocked', 403));
             }
             const tokens = await this.tokenService.generateAuthTokens();
-            await OAuth.create({
+            await OauthSchema.create({
                 userId: user?._id,
                 ...tokens
             });
@@ -158,7 +157,7 @@ class AuthController {
             const {email} = req.body;
             const user = await this.userService.findOneUser({email: email});
             if (!user) {
-                throw new Error("User not found")
+                throw new Error("UserSchema not found")
             }
             const activationLink = uuid.v4();
 
@@ -180,7 +179,7 @@ class AuthController {
 
             const currentUser = await this.userService.findOneUser({_id: userId});
             if (!currentUser) {
-                throw new Error("User not found")
+                throw new Error("UserSchema not found")
             }
             let code = Math.floor(Math.random() * 90000) + 10000;
 
@@ -204,11 +203,11 @@ class AuthController {
         try {
             const {userId, refresh_token} = req.tokenInfo as IOauth;
 
-            await OAuth.deleteOne({refresh_token});
+            await OauthSchema.deleteOne({refresh_token});
 
             const tokens = await this.tokenService.generateAuthTokens();
 
-            await OAuth.create({userId, ...tokens});
+            await OauthSchema.create({userId, ...tokens});
 
             const {token} = await this.tokenService.tokenWithData({...userId}, "3h");
 
@@ -227,7 +226,7 @@ class AuthController {
             const {email, name} = userId as IUser;
 
 
-            await OAuth.deleteOne({access_token});
+            await OauthSchema.deleteOne({access_token});
             // await Promise.allSettled([
             //     await emailService(email, emailActionTypeEnum.LOGOUT, {name, count: 1})
             // ])
@@ -244,7 +243,7 @@ class AuthController {
 
             const {_id, email, name} = userId as IUser;
 
-            const {deletedCount} = await OAuth.deleteMany({userId: _id});
+            const {deletedCount} = await OauthSchema.deleteMany({userId: _id});
             // await Promise.allSettled([
             //     emailService.sendMail(email, emailActionTypeEnum.LOGOUT, {name, count: deletedCount})
             // ])
@@ -360,7 +359,7 @@ class AuthController {
         const user = userId as IUser;
 
         try {
-            const admin = await Admin.findOne({user: user?._id});
+            const admin = await AdminSchema.findOne({user: user?._id});
 
             if (!admin) {
                 return res.status(403).json({message: 'Access denied'})

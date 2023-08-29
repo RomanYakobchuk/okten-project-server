@@ -1,40 +1,43 @@
-import {User} from "./user";
-import {UserFavPlaces} from "./user_favorite_places";
-import {City} from "./city";
-import {AnswerComment, CommentItem} from "./comment";
-import {View, Views} from "./views";
-import {Action} from "./action";
-import {Admin} from "./admin";
-import {Manager} from "./managers";
-import {Capl} from "./capl";
-import {Institution} from "./institution";
-import {InstitutionNews} from "./institutionNews";
-import {ReviewItem} from "./reviewItem";
-import {OAuth} from "./oauth";
-import {Menu} from "./menu";
-import {MenuItem} from "./menu_item";
-import {CityForCount} from "./countByCity";
-import {MessageModel, ConversationModel} from "./message";
+import {UserSchema} from "./user.schema";
+import {UserFavPlaces} from "./user_favorite_places.schema";
+import {CitySchema} from "./city.schema";
+import {AnswerCommentSchema, CommentItemSchema} from "./comment.schema";
+import {View, Views} from "./views.schema";
+import {ActionSchema} from "./action.schema";
+import {AdminSchema} from "./admin.schema";
+import {ManagerSchema} from "./managers.schema";
+import {CaplSchema} from "./capl.schema";
+import {InstitutionSchema} from "./institution.schema";
+import {InstitutionNewsSchema} from "./institutionNews.schema";
+import {ReviewItemSchema} from "./reviewItem.schema";
+import {OauthSchema} from "./oauth.schema";
+import {MenuSchema} from "./menu.schema";
+import {MenuItem} from "./menu_item.schema";
+import {CityForCount} from "./countByCity.schema";
+import {MessageModel, ConversationModel} from "./message.schema";
+import {SubscribeSchema, NotificationSchema} from "./subscribe.schema";
 
 export {
-    User,
+    UserSchema,
     View,
     Views,
     ConversationModel,
     MessageModel,
-    Action,
-    Capl,
-    City,
-    Menu,
-    OAuth,
-    Admin,
-    Manager,
-    AnswerComment,
-    CommentItem,
+    ActionSchema,
+    CaplSchema,
+    CitySchema,
+    MenuSchema,
+    OauthSchema,
+    AdminSchema,
+    ManagerSchema,
+    AnswerCommentSchema,
+    CommentItemSchema,
     UserFavPlaces,
     MenuItem,
-    ReviewItem,
-    Institution,
-    InstitutionNews,
-    CityForCount
+    ReviewItemSchema,
+    InstitutionSchema,
+    InstitutionNewsSchema,
+    CityForCount,
+    SubscribeSchema,
+    NotificationSchema
 }

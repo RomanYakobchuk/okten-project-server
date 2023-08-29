@@ -10,6 +10,7 @@ import menuRouter from './menu.router';
 import messageRouter from './message.router';
 import conversationRouter from './conversation.router';
 import caplRouter from './capl.router';
+import subscribeNotificationRouter from './subscribeNotification.router';
 
 export {
     authRouter,
@@ -24,4 +25,5 @@ export {
     messageRouter,
     conversationRouter,
     caplRouter,
+    subscribeNotificationRouter
 }

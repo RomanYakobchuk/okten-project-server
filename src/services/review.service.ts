@@ -1,4 +1,4 @@
-import {ReviewItem as Review} from "../dataBase";
+import {ReviewItemSchema as Review} from "../dataBase";
 
 class ReviewService {
     createReview(review: {text: string, grade: number, createdBy: string, institutionId: string}) {

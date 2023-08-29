@@ -1,7 +1,7 @@
 import {Schema, model} from "mongoose";
 import {IOauth} from "../interfaces/common";
 
-const OAuthSchema = new Schema<IOauth>({
+const OAuth = new Schema<IOauth>({
     userId: {
         type: Schema.Types.ObjectId,
         ref: 'user',
@@ -19,8 +19,8 @@ const OAuthSchema = new Schema<IOauth>({
     },
 }, { timestamps: true });
 
-const OAuth = model('oauth', OAuthSchema);
+const OauthSchema = model('oauth', OAuth);
 
 export {
-    OAuth
+    OauthSchema
 }

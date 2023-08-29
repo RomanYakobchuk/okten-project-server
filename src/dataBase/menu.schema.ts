@@ -1,7 +1,7 @@
 import {Schema, model} from "mongoose";
 import {IMenu} from "../interfaces/common";
 
-const MenuSchema = new Schema<IMenu>({
+const Menu = new Schema<IMenu>({
     institutionId: {
         type: Schema.Types.ObjectId,
         ref: 'institution'
@@ -20,8 +20,8 @@ const MenuSchema = new Schema<IMenu>({
     }
 }, {timestamps: true});
 
-const Menu = model("menu", MenuSchema);
+const MenuSchema = model("menu", Menu);
 
 export {
-    Menu
+    MenuSchema
 }

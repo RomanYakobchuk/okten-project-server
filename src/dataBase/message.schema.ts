@@ -2,7 +2,7 @@ import {Schema, model} from "mongoose";
 import {IMessage, IConversation} from "../interfaces/common";
 import {IConversationModel, IMessageModel} from "../interfaces/model";
 
-const ConversationSchema = new Schema({
+const Conversation = new Schema({
     userName: {
         type: String
     },
@@ -31,7 +31,7 @@ const ConversationSchema = new Schema({
     },
 }, {timestamps: true});
 
-const MessageSchema = new Schema({
+const Message = new Schema({
     conversationId: {
         type: Schema.Types.ObjectId,
         ref: 'conversation'
@@ -71,8 +71,8 @@ const MessageSchema = new Schema({
     },
 }, {timestamps: true});
 
-const ConversationModel: IConversationModel = model<IConversation, IConversationModel>('conversation', ConversationSchema);
-const MessageModel: IMessageModel = model<IMessage, IMessageModel>('message', MessageSchema);
+const ConversationModel: IConversationModel = model<IConversation, IConversationModel>('conversation', Conversation);
+const MessageModel: IMessageModel = model<IMessage, IMessageModel>('message', Message);
 
 export {
     ConversationModel,

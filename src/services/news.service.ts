@@ -1,4 +1,4 @@
-import {InstitutionNews} from "../dataBase";
+import {InstitutionNewsSchema} from "../dataBase";
 import {IInstitutionNews} from "../interfaces/common";
 
 interface Repository {
@@ -19,7 +19,7 @@ interface Repository {
 
 class NewsService implements Repository {
     createNews(news = {}) {
-        return InstitutionNews.create(news);
+        return InstitutionNewsSchema.create(news);
     }
 
     async getWithPagination(_end: number, _order: any, _start: number, _sort: any, title_like = "", category = "", city_like = "", date_event_lte: any = null, date_event_gte: any = null, isPublished: string, institution = '', cutId = '') {
@@ -37,9 +37,9 @@ class NewsService implements Repository {
         let count: number;
 
         if (isPublished) {
-            count = await InstitutionNews.countDocuments({...filterQuery, status: isPublished});
+            count = await InstitutionNewsSchema.countDocuments({...filterQuery, status: isPublished});
         } else {
-            count = await InstitutionNews.countDocuments({...filterQuery});
+            count = await InstitutionNewsSchema.countDocuments({...filterQuery});
         }
 
         if (!_sort || !_order) {
@@ -48,7 +48,7 @@ class NewsService implements Repository {
         }
         const newSort = _sort?.split('_')[0];
 
-        const items = await InstitutionNews
+        const items = await InstitutionNewsSchema
             .find(filterQuery)
             .limit(_end - _start)
             .skip(_start)
@@ -63,18 +63,18 @@ class NewsService implements Repository {
     }
 
     async getInstitutionNews(status: string, institutionId: string) {
-        return InstitutionNews
+        return InstitutionNewsSchema
             .find({institutionId: institutionId, status: status})
             .limit(20)
             .sort({['publishAt.datePublish']: -1});
     }
 
     getOneNews(params = {}) {
-        return InstitutionNews.findOne(params)
+        return InstitutionNewsSchema.findOne(params)
     }
 
     findByParams(params = {}) {
-        return InstitutionNews.find(params);
+        return InstitutionNewsSchema.find(params);
     }
 }
 

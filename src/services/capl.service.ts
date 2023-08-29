@@ -1,4 +1,4 @@
-import {Capl} from "../dataBase";
+import {CaplSchema} from "../dataBase";
 import {CreateReserve, ICapl} from "../interfaces/common";
 
 
@@ -12,19 +12,19 @@ interface Repository {
 
 class CaplService implements Repository {
     createReserve(params: CreateReserve) {
-        return Capl.create(params)
+        return CaplSchema.create(params)
     }
 
     findAll(params: any) {
-        return Capl.find(params)
+        return CaplSchema.find(params)
     }
 
     findOneReserve(params: { _id: string }) {
-        return Capl.findOne(params)
+        return CaplSchema.findOne(params)
     }
 
     updateOne(params: any, newData: any) {
-        return Capl.findByIdAndUpdate(params, newData, {new: true});
+        return CaplSchema.findByIdAndUpdate(params, newData, {new: true});
     }
 
     async findByPagination(institution_like: string = '', day = null as any, _end: number, _order: any | number, _start: number, _sort: any, search_like = '', userStatus: string = '', institutionStatus: string = '', userId: string = '', type: string = '', active: boolean) {
@@ -38,7 +38,7 @@ class CaplService implements Repository {
             active
         }, userId, type);
 
-        const count = await Capl.countDocuments({...filterQuery, createdBy: userId});
+        const count = await CaplSchema.countDocuments({...filterQuery, createdBy: userId});
 
         if (!_sort || !_order) {
             _sort = "createdAt"
@@ -46,7 +46,7 @@ class CaplService implements Repository {
         }
         _sort = _sort?.split('_')[0];
 
-        const items = await Capl
+        const items = await CaplSchema
             .find(filterQuery)
             .populate([{path: 'institution', select: '_id pictures title type place'}])
             .limit(_end - _start)
@@ -62,16 +62,16 @@ class CaplService implements Repository {
 }
 // export const caplService = {
 //     createReserve: (params: any) => {
-//         return Capl.create(params)
+//         return CaplSchema.create(params)
 //     },
 //     findAll: (params: any) => {
-//         return Capl.find(params)
+//         return CaplSchema.find(params)
 //     },
 //     findOneReserve: (params: any) => {
-//         return Capl.findOne(params)
+//         return CaplSchema.findOne(params)
 //     },
 //     updateOne: (params: any, newData: any) => {
-//         return Capl.findByIdAndUpdate(params, newData, {new: true});
+//         return CaplSchema.findByIdAndUpdate(params, newData, {new: true});
 //     },
 //     findByPagination: async (institution_like: string = '', day = null as any, _end: number, _order: any | number, _start: number, _sort: any, search_like = '', userStatus: string = '', institutionStatus: string = '', userId: string = '', type: string = '', query: {} = {}, active: boolean) => {
 //
@@ -84,7 +84,7 @@ class CaplService implements Repository {
 //             active
 //         }, userId, type);
 //
-//         const count = await Capl.countDocuments({...filterQuery, createdBy: userId});
+//         const count = await CaplSchema.countDocuments({...filterQuery, createdBy: userId});
 //
 //         if (!_sort || !_order) {
 //             _sort = "createdAt"
@@ -92,7 +92,7 @@ class CaplService implements Repository {
 //         }
 //         _sort = _sort?.split('_')[0];
 //
-//         const items = await Capl
+//         const items = await CaplSchema
 //             .find(filterQuery)
 //             .populate([{path: 'institution', select: '_id mainPhoto title type place'}])
 //             .limit(_end - _start)

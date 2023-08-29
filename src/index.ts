@@ -15,7 +15,14 @@ import {
     institutionRouter,
     newsRouter,
     reviewRouter,
-    commentRouter, cityRouter, menuRouter, managerRouter, conversationRouter, messageRouter, caplRouter
+    commentRouter,
+    cityRouter,
+    menuRouter,
+    managerRouter,
+    conversationRouter,
+    messageRouter,
+    caplRouter,
+    subscribeNotificationRouter
 } from './routes';
 
 import {configs} from './configs';
@@ -61,6 +68,7 @@ app.use('/api/v1/comment', commentRouter);
 app.use('/api/v1/city', cityRouter);
 app.use('/api/v1/menu', menuRouter);
 app.use('/api/v1/capl', caplRouter);
+app.use('/api/v1/subscribe', subscribeNotificationRouter);
 
 app.use('*', (req, res) => {
     res.status(404).json('Route not found');

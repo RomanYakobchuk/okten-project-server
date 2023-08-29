@@ -4,7 +4,7 @@ import {NextFunction, Response} from "express";
 import {CustomRequest} from "../interfaces/func";
 import {ReviewService} from "../services";
 import {CustomError} from "../errors";
-import {ReviewItem} from "../dataBase";
+import {ReviewItemSchema} from "../dataBase";
 import {IInstitution, IOauth, IUser} from "../interfaces/common";
 
 async function calculateAverageRating(institution: IInstitution) {
@@ -21,7 +21,7 @@ async function calculateAverageRating(institution: IInstitution) {
             }
         ];
 
-        const result = await ReviewItem.aggregate(pipeline);
+        const result = await ReviewItemSchema.aggregate(pipeline);
 
         if (result?.length > 0) {
             institution.rating = result[0].averageRating;

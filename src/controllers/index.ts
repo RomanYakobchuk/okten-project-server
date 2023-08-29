@@ -11,6 +11,7 @@ import messageController from './message.controller';
 import conversationController from './conversation.controller';
 import caplController from './capl.controller';
 import viewsController from "./views.controller";
+import subscribeNotificationController from "./subscribeNotification.controller";
 
 export {
     userController,
@@ -26,4 +27,5 @@ export {
     conversationController,
     caplController,
     viewsController,
+    subscribeNotificationController
 }

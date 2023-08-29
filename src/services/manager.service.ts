@@ -1,11 +1,11 @@
-import { Manager} from "../dataBase";
+import { ManagerSchema} from "../dataBase";
 
 class ManagerService {
     findManagers(params = {}) {
-        return Manager.find(params);
+        return ManagerSchema.find(params);
     }
     findOneManager(params: any) {
-        return Manager.findOne(params)
+        return ManagerSchema.findOne(params)
     }
 }
 

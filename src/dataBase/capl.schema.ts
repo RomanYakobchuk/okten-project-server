@@ -2,7 +2,7 @@ import {Schema, model} from "mongoose";
 import {ICapl} from "../interfaces/common";
 import {ICaplModel} from "../interfaces/model";
 
-const CaplSchema = new Schema({
+const Capl = new Schema({
     user: {
         type: Schema.Types.ObjectId,
         ref: 'user',
@@ -77,8 +77,8 @@ const CaplSchema = new Schema({
 }, {timestamps: true});
 
 
-const Capl: ICaplModel = model<ICapl, ICaplModel>("capl", CaplSchema);
+const CaplSchema: ICaplModel = model<ICapl, ICaplModel>("capl", Capl);
 
 export {
-    Capl
+    CaplSchema
 }

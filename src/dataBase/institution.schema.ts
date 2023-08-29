@@ -2,7 +2,7 @@ import {Schema, model, Model} from "mongoose";
 import {IInstitution} from "../interfaces/common";
 
 export interface IInstitutionModel extends Model<IInstitution> {}
-const InstitutionSchema = new Schema({
+const Institution = new Schema({
     title: {
         type: String,
         required: true
@@ -19,6 +19,10 @@ const InstitutionSchema = new Schema({
             type: String
         }
     }],
+    sendNotifications: {
+        type: Boolean,
+        default: false,
+    },
     workSchedule: {
         type: Object,
         required: true,
@@ -122,8 +126,8 @@ const InstitutionSchema = new Schema({
     }],
 }, {timestamps: true})
 
-const Institution: IInstitutionModel = model<IInstitution, IInstitutionModel>('institution', InstitutionSchema);
+const InstitutionSchema: IInstitutionModel = model<IInstitution, IInstitutionModel>('institution', Institution);
 
 export {
-    Institution
+    InstitutionSchema
 }

@@ -2,7 +2,7 @@ import {Schema, model} from "mongoose";
 import {IAnswerComment, IComment} from "../interfaces/common";
 import {IAnswerCommentModel, ICommentModel} from "../interfaces/model";
 
-const CommentItemSchema = new Schema({
+const CommentItem = new Schema({
     createdBy: {
         type: Schema.Types.ObjectId,
         ref: "user"
@@ -20,7 +20,7 @@ const CommentItemSchema = new Schema({
     }]
 }, {timestamps: true});
 
-const AnswerCommentSchema = new Schema({
+const AnswerComment = new Schema({
     createdBy: {
         type: Schema.Types.ObjectId,
         ref: "user"
@@ -34,10 +34,10 @@ const AnswerCommentSchema = new Schema({
     },
 }, {timestamps: true})
 
-const AnswerComment: IAnswerCommentModel = model<IAnswerComment, IAnswerCommentModel>('answerComment', AnswerCommentSchema);
-const CommentItem: ICommentModel = model<IComment, ICommentModel>('commentItem', CommentItemSchema);
+const AnswerCommentSchema: IAnswerCommentModel = model<IAnswerComment, IAnswerCommentModel>('answerComment', AnswerComment);
+const CommentItemSchema: ICommentModel = model<IComment, ICommentModel>('commentItem', CommentItem);
 
 export {
-    AnswerComment,
-    CommentItem,
+    AnswerCommentSchema,
+    CommentItemSchema,
 }

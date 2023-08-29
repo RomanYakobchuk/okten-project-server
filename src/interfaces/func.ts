@@ -5,7 +5,7 @@ import {
     IComment, IConversation,
     IInstitution,
     IInstitutionNews,
-    IOauth,
+    IOauth, ISubscribe,
     IUser,
     IUserFavoritePlaces
 } from "./common";
@@ -16,6 +16,7 @@ export interface CustomRequest extends Request {
     data_info?: IInstitution | IInstitutionNews,
     newStatus?: "admin" | "manager" | "user",
     tokenInfo?: IOauth,
+    subscribe?: ISubscribe | null,
     reservation?: ICapl,
     conversation?: IConversation,
     comments?: IComment[]

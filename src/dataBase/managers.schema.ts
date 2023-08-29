@@ -1,7 +1,7 @@
 import {Schema, model} from "mongoose";
 import {IManager} from "../interfaces/common";
 
-const managerSchema = new Schema<IManager>({
+const manager = new Schema<IManager>({
     user: {
         type: Schema.Types.ObjectId,
         ref: 'user'
@@ -36,8 +36,8 @@ const managerSchema = new Schema<IManager>({
     }
 }, {timestamps: true});
 
-const Manager = model('manager', managerSchema);
+const ManagerSchema = model('manager', manager);
 
 export {
-    Manager
+    ManagerSchema
 }

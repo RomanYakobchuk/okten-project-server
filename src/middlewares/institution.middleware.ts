@@ -2,7 +2,7 @@ import {NextFunction, Response} from "express";
 
 import {InstitutionService} from "../services";
 import {CustomError} from "../errors";
-import {City} from "../dataBase";
+import {CitySchema} from "../dataBase";
 import {CustomRequest} from "../interfaces/func";
 import {IInstitution, IOauth, IUser} from "../interfaces/common";
 
@@ -17,7 +17,7 @@ class InstitutionMiddleware {
         this.getAllInfoById = this.getAllInfoById.bind(this);
     }
 
-    checkInstitution = (type: "all_info" | "info") => async (req: CustomRequest, res: Response, next: NextFunction) => {
+    checkInstitution = (type: "all_info" | "info" = 'info') => async (req: CustomRequest, _: Response, next: NextFunction) => {
         try {
             const {institutionId} = req.body;
             const {id} = req.params;
@@ -41,7 +41,7 @@ class InstitutionMiddleware {
             }
 
             if (!institution) {
-                return next(new CustomError("Institution not found", 404))
+                return next(new CustomError("InstitutionSchema not found", 404))
             }
 
             req.data_info = institution;
@@ -51,12 +51,12 @@ class InstitutionMiddleware {
         }
     }
 
-    existCity = async (city: string) => async (req: CustomRequest, res: Response, next: NextFunction) => {
+    existCity = async (city: string) => async (_: CustomRequest, __: Response, next: NextFunction) => {
         try {
-            const cityExist = await City.findOne({name: {$regex: new RegExp(city, "i")}});
+            const cityExist = await CitySchema.findOne({name: {$regex: new RegExp(city, "i")}});
 
             if (!cityExist) {
-                await City.create({
+                await CitySchema.create({
                     name: city
                 })
             }
@@ -66,17 +66,16 @@ class InstitutionMiddleware {
         }
     }
 
-    async getAllInfoById(req: CustomRequest, res: Response, next: NextFunction) {
+    async getAllInfoById(req: CustomRequest, _: Response, next: NextFunction) {
+        const {userId} = req.user as IOauth;
+
+        const user = userId as IUser;
+
+        const institution = req.data_info as IInstitution;
         try {
-            const {id} = req.params;
-            const {userId} = req.user as IOauth;
-
-            const user = userId as IUser;
-
-            const institution = req.data_info as IInstitution;
 
             if (user?._id !== institution?.createdBy && institution?.verify !== "published" && user?.status !== 'admin') {
-                return next(new CustomError("Institution not found", 404))
+                return next(new CustomError("InstitutionSchema not found", 404))
             }
 
             req.data_info = institution;

@@ -1,4 +1,4 @@
-import {Institution} from "../dataBase";
+import {InstitutionSchema} from "../dataBase";
 
 require('ts-node/register');
 
@@ -8,12 +8,12 @@ import {IInstitution} from "../interfaces/common";
 async function initDataBase() {
     try {
         await mongoose.connect("mongodb+srv://romanyakobchuk28:Hjvfydfk-28@main.e6ajbvh.mongodb.net/?retryWrites=true&w=majority");
-        const existingData = await Institution.find();
+        const existingData = await InstitutionSchema.find();
 
         if (existingData.length === 0) {
             const initialData: IInstitution[] | any = [
                 {
-                    title: "Institution 1",
+                    title: "InstitutionSchema 1",
                     pictures: [
                         { name: "Picture 1", url: "https://thumb.tildacdn.com/tild6233-3362-4139-b535-386535393636/-/resize/824x/-/format/webp/koncepciya-kafe.jpg" },
                         { name: "Picture 2", url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSlXScHk1AcIwb2vVvQzqwAiFjX4jQAPqBFSU8XPPZwEbZGzKaJOxXlHv1RzWmMevpQahs&usqp=CAU" },
@@ -29,7 +29,7 @@ async function initDataBase() {
                     location: { lng: 30.547101960608394, lat: 50.41274670612611 },
                     place: { city: "Київ", address: "Address 1" },
                     type: "cafe",
-                    description: "Description for Institution 1",
+                    description: "Description for InstitutionSchema 1",
                     contacts: [{ value: "Contact 1" }],
                     tags: [{ value: "Tag 1" }],
                     verify: "published",
@@ -38,7 +38,7 @@ async function initDataBase() {
                     createdBy: "63ff662330c343feee014e7a",
                 },
                 {
-                    title: "Institution 2",
+                    title: "InstitutionSchema 2",
                     pictures: [
                         { name: "Picture 1", url: "https://profood.com.ua/uploads/file.png?1551951662452" },
                         { name: "Picture 2", url: "https://pyvtrest.com.ua/images/Articles/9.jpg" },
@@ -53,7 +53,7 @@ async function initDataBase() {
                     location: { lng: 24.043249575347865, lat: 49.814787413721824},
                     place: { city: "Львів", address: "Address 2" },
                     type: "bar",
-                    description: "Description for Institution 2",
+                    description: "Description for InstitutionSchema 2",
                     contacts: [{ value: "Contact 2" }],
                     tags: [{ value: "free wi-fi" }],
                     verify: "published",
@@ -62,7 +62,7 @@ async function initDataBase() {
                     createdBy: "63ff662330c343feee014e7a",
                 },
                 {
-                    title: "Institution 3",
+                    title: "InstitutionSchema 3",
                     pictures: [
                         { name: "Picture 1", url: "https://reston.ua/runtime/cache/248x142/6153274.jpg" },
                         { name: "Picture 2", url: "https://static.tildacdn.com/tild3662-3537-4439-b237-303435623130/IMG_3613.jpg" },
@@ -79,7 +79,7 @@ async function initDataBase() {
                     location: { lng: 30.547101960608394, lat: 50.41274670612611 },
                     place: { city: "Київ", address: "Address 3" },
                     type: "restaurant",
-                    description: "Description for Institution 3",
+                    description: "Description for InstitutionSchema 3",
                     contacts: [{ value: "Contact 3" }],
                     tags: [{ value: "Tag 3" }],
                     verify: "published",
@@ -88,7 +88,7 @@ async function initDataBase() {
                     createdBy: "63ff662330c343feee014e7a",
                 },
                 {
-                    title: "Institution 4",
+                    title: "InstitutionSchema 4",
                     pictures: [
                         { name: "Picture 1", url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ44WIgeq9O3RdmFRXe4vO2G-exQMn75L9MkFRexUPesKPvtZjM4oY4D4MCglsrxIshIlU&usqp=CAU" },
                         { name: "Picture 2", url: "https://reston.ua/runtime/cache/248x142/6153274.jpg" },
@@ -106,7 +106,7 @@ async function initDataBase() {
                     location: { lng: 25.600713971605, lat: 49.55055462907285 },
                     place: { city: "Тернопіль", address: "Address 4" },
                     type: "restaurant",
-                    description: "Description for Institution 4",
+                    description: "Description for InstitutionSchema 4",
                     contacts: [{ value: "Contact 4" }],
                     tags: [{ value: "Tag 4" }],
                     verify: "published",
@@ -115,7 +115,7 @@ async function initDataBase() {
                     createdBy: "63ff662330c343feee014e7a",
                 },
             ];
-            await Institution.insertMany(initialData)
+            await InstitutionSchema.insertMany(initialData)
             console.log('Initial Data added to CityForCount table')
 
             await mongoose.connection.close();

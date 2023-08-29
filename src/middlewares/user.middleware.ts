@@ -35,7 +35,7 @@ class UserMiddleware {
             }
             const user = await this.userService.findOneUser({_id: currentId});
             if (!user) {
-                return next(new CustomError('User not found'));
+                return next(new CustomError('UserSchema not found'));
             }
 
             req.userExist = user;

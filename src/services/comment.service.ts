@@ -1,4 +1,4 @@
-import {CommentItem, AnswerComment} from "../dataBase";
+import {CommentItemSchema, AnswerCommentSchema} from "../dataBase";
 import {IAnswerComment, IComment, ICreateCommentItem} from "../interfaces/common";
 
 interface Repository {
@@ -11,30 +11,30 @@ interface Repository {
 }
 class CommentService implements Repository {
     createCommentItem(comment: ICreateCommentItem) {
-        return CommentItem.create(comment)
+        return CommentItemSchema.create(comment)
     }
     createAnswerComment(comment: any) {
-        return AnswerComment.create(comment)
+        return AnswerCommentSchema.create(comment)
     }
     getItemsByParams(params: any) {
-        return CommentItem.find(params)
+        return CommentItemSchema.find(params)
     }
     deleteComment(id: string) {
-        return CommentItem.deleteOne({_id: id});
+        return CommentItemSchema.deleteOne({_id: id});
     }
     deleteAnswerComment(id: string) {
-        return AnswerComment.deleteOne({_id: id});
+        return AnswerCommentSchema.deleteOne({_id: id});
     }
     getItemByParams(params: any) {
-        return CommentItem.findOne(params)
+        return CommentItemSchema.findOne(params)
     }
     getItemAnswerByParams(params: any) {
-        return AnswerComment.findOne(params)
+        return AnswerCommentSchema.findOne(params)
     }
     async getAllAnswerComments(id: string, _end: number, _start: number) {
-        const count = await AnswerComment.countDocuments({parentCommentId: id});
+        const count = await AnswerCommentSchema.countDocuments({parentCommentId: id});
 
-        const items = await AnswerComment
+        const items = await AnswerCommentSchema
             .find({parentCommentId: id})
             .populate({
                 path: 'createdBy',
@@ -53,7 +53,7 @@ class CommentService implements Repository {
     async getWithPagination( _end: number, _order: any, _start: number, _sort: any, text_like: string = "", user = '', institution = '', day_gte: any = null) {
         const filterQuery = _getFilterQuery({text_like, day_gte, user, institution});
 
-        const count = await CommentItem.countDocuments({...filterQuery});
+        const count = await CommentItemSchema.countDocuments({...filterQuery});
 
         if (!_sort || !_order) {
             _sort = 'createdAt'
@@ -62,7 +62,7 @@ class CommentService implements Repository {
 
         _sort = _sort?.split('_')[0];
 
-        const items = await CommentItem
+        const items = await CommentItemSchema
             .find(filterQuery)
             .populate([{path: 'institutionId', select: '_id title type place'}, {
                 path: 'createdBy',
@@ -91,11 +91,11 @@ class CommentService implements Repository {
         }
         const newSort = _sort?.split('_')[0];
 
-        const count = await CommentItem.countDocuments({[type]: id});
+        const count = await CommentItemSchema.countDocuments({[type]: id});
 
         let items;
         if (type === 'institutionId') {
-            items = await CommentItem
+            items = await CommentItemSchema
                 .find({institutionId: id})
                 .populate([
                     {path: 'createdBy', select: '_id avatar name'},
@@ -105,7 +105,7 @@ class CommentService implements Repository {
                 .skip(_start)
                 .sort({[newSort]: _order});
         } else if (type === 'createdBy') {
-            items = await CommentItem
+            items = await CommentItemSchema
                 .find({createdBy: id})
                 .populate([{path: 'institutionId', select: 'title pictures type _id'}, {
                     path: 'createdBy',

@@ -1,5 +1,11 @@
 import {Router} from "express";
-import {authMiddleware, institutionMiddleware, fileMiddleware, userMiddleware} from "../middlewares";
+import {
+    authMiddleware,
+    institutionMiddleware,
+    fileMiddleware,
+    userMiddleware,
+    subscribeNotificationMiddleware
+} from "../middlewares";
 import {institutionController, viewsController} from "../controllers";
 
 
@@ -21,20 +27,21 @@ router.post(
 
 // all institution info with field
 router.get(
-    `/allInfoById/:id`,
+    `/infoById/:id`,
     authMiddleware.checkAccessToken,
     institutionMiddleware.checkInstitution('all_info'),
     institutionMiddleware.getAllInfoById,
+    subscribeNotificationMiddleware.checkSubscribe,
     viewsController.addViewForInstitution
 )
 
 // institution info
-router.get(
-    `/infoById/:id`,
-    authMiddleware.checkAccessToken,
-    institutionMiddleware.checkInstitution('info'),
-    institutionController.getById
-)
+// router.get(
+//     `/infoById/:id`,
+//     authMiddleware.checkAccessToken,
+//     institutionMiddleware.checkInstitution('info'),
+//     institutionController.getById
+// )
 
 // update institution info
 router.patch(

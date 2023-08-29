@@ -4,6 +4,7 @@ import {CloudService} from "../services";
 import {CustomRequest} from "../interfaces/func";
 import {NextFunction, Response} from "express";
 import {IOauth, IPicture, IUser} from "../interfaces/common";
+import {isJsonString} from "../common";
 
 
 class FileMiddleware {
@@ -58,20 +59,26 @@ class FileMiddleware {
             next(e);
         }
     }
+
     checkImagesForUpdated = (propertyName: string) => async (req: CustomRequest, res: Response, next: NextFunction) => {
         try {
             const property = req.data_info;
-            const {pictures: picturesBody} = req.body;
+            let {pictures: picturesBody} = req.body;
+            if (isJsonString(picturesBody)) {
+                picturesBody = JSON.parse(picturesBody);
+            }
             if (((picturesBody?.length === 0 || !picturesBody) && !req.files?.pictures)) {
                 return next(new CustomError("Photos is required", 400))
             }
             let newPhotos: any[] = [];
             if (picturesBody) {
-                if (typeof picturesBody === 'string') {
+                if (isJsonString(picturesBody)) {
                     newPhotos?.push(JSON.parse(picturesBody));
                 } else {
                     for (let otherPhotoBodyElement of picturesBody) {
-                        otherPhotoBodyElement = JSON.parse(otherPhotoBodyElement);
+                        if (isJsonString(otherPhotoBodyElement)) {
+                            otherPhotoBodyElement = JSON.parse(otherPhotoBodyElement);
+                        }
                         newPhotos.push(otherPhotoBodyElement)
                     }
                 }
@@ -79,9 +86,6 @@ class FileMiddleware {
             const photosForDelete = property?.pictures?.filter(obj1 => !newPhotos.some(obj2 => obj1?.url === obj2?.url)) as IPicture[];
 
             for (let photosForDeleteElement of photosForDelete) {
-                if (typeof photosForDeleteElement === "string") {
-                    photosForDeleteElement = JSON.parse(photosForDeleteElement);
-                }
                 await this.cloudService.deleteFile(photosForDeleteElement?.url, `${propertyName}/${property?._id}/pictures`)
             }
 
@@ -91,27 +95,26 @@ class FileMiddleware {
 
             const newOtherPhoto: any[] = [];
 
-            if (req.files?.pictures) {
-                if (req.files?.pictures?.name) {
-                    const {url} = await this.cloudService.uploadFile(req.files?.pictures?.tempFilePath, `${propertyName}/${property?._id}/pictures`);
-                    newOtherPhoto?.push({name: req.files?.pictures?.name, url})
-                } else {
-                    for (let item of req.files?.pictures) {
-                        const {url} = await this.cloudService.uploadFile(item?.tempFilePath, `${propertyName}/${property?._id}/pictures`);
-                        newOtherPhoto?.push({name: item?.name, url})
-                    }
-                }
-                if (picturesBody) {
-                    if (typeof picturesBody === 'string') {
-                        req.body.pictures = [picturesBody, ...newOtherPhoto]
-                    } else {
-                        req.body.pictures = [...picturesBody, ...newOtherPhoto];
-                    }
-
-                } else {
-                    req.body.pictures = [...newOtherPhoto]
+            if (req.files?.pictures?.name) {
+                const {url} = await this.cloudService.uploadFile(req.files?.pictures, `${propertyName}/${property?._id}/pictures`);
+                newOtherPhoto?.push({name: req.files?.pictures?.name, url})
+            } else {
+                for (let item of req.files?.pictures) {
+                    const {url} = await this.cloudService.uploadFile(item, `${propertyName}/${property?._id}/pictures`);
+                    newOtherPhoto?.push({name: item?.name, url})
                 }
             }
+            if (picturesBody) {
+                if (typeof picturesBody === 'string') {
+                    req.body.pictures = [picturesBody, ...newOtherPhoto]
+                } else {
+                    req.body.pictures = [...picturesBody, ...newOtherPhoto];
+                }
+
+            } else {
+                req.body.pictures = [...newOtherPhoto]
+            }
+
             next()
         } catch (e) {
             next(e)

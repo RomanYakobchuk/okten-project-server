@@ -3,7 +3,7 @@ import {NextFunction, Response} from "express";
 import {CustomRequest} from "../interfaces/func";
 import {CustomError} from "../errors";
 import {UserService, ManagerService} from "../services";
-import {Manager} from "../dataBase";
+import {ManagerSchema} from "../dataBase";
 import {IManager, IOauth, IUser} from "../interfaces/common";
 
 class ManagerController {
@@ -65,7 +65,7 @@ class ManagerController {
             }).populate('user');
 
             if (!manager) {
-                return next(new CustomError('User not found', 404))
+                return next(new CustomError('UserSchema not found', 404))
             }
             res.status(200).json(manager)
         } catch (e) {
@@ -74,7 +74,7 @@ class ManagerController {
     }
     async updateManagersFromUserChanges(userId: string, userData: any) {
         try {
-            const manager = await Manager.findOne({user: userId}) as IManager;
+            const manager = await ManagerSchema.findOne({user: userId}) as IManager;
             if (userData.name) {
                 manager.name = userData.name;
             }

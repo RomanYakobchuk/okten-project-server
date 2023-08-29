@@ -30,7 +30,7 @@ class CommonMiddleware {
 
             if (error) {
                 console.log(`помилка у файлі common.middleware isDateValid error`)
-                return next(new CustomError(error.details[0].message));
+                return next(new CustomError(`${error.details[0].message}`));
             }
 
             req[dataType] = value;

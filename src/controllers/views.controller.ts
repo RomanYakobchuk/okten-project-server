@@ -2,7 +2,7 @@ import {NextFunction, Response} from "express";
 
 import {CustomRequest} from "../interfaces/func";
 import {Views, View} from "../dataBase";
-import {IInstitution, IOauth, IUser, IViews} from "../interfaces/common";
+import {IInstitution, IOauth, ISubscribe, IUser, IViews} from "../interfaces/common";
 
 class ViewsController {
 
@@ -11,6 +11,7 @@ class ViewsController {
     }
     async addViewForInstitution(req: CustomRequest, res: Response, next: NextFunction) {
         const institution = req.data_info as IInstitution;
+        const subscribe = req.subscribe as ISubscribe;
         const {userId} = req.user as IOauth;
         const user = userId as IUser;
         try {
@@ -40,7 +41,10 @@ class ViewsController {
                     await currentViews.save();
                 }
             }
-            res.status(200).json(institution);
+            res.status(200).json({
+                institution,
+                subscribe
+            });
         } catch (e) {
             next(e)
         }

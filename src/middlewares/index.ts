@@ -7,6 +7,7 @@ import institutionMiddleware from  './institution.middleware';
 import newsMiddleware from  './news.middleware';
 import caplMiddleware from  './capl.middleware';
 import conversationMiddleware from  './conversation.middleware';
+import subscribeNotificationMiddleware from  './subscribeNotification.middleware';
 
 export {
     authMiddleware,
@@ -17,5 +18,6 @@ export {
     institutionMiddleware,
     newsMiddleware,
     caplMiddleware,
-    conversationMiddleware
+    conversationMiddleware,
+    subscribeNotificationMiddleware
 }

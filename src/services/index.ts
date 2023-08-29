@@ -15,8 +15,10 @@ import {MessageService} from  './message.service';
 import {ConversationService} from  './conversation.service';
 import {CaplService} from './capl.service';
 import {UserFavoritePlacesService} from './userFavoritePlaces.service';
-import * as scheduler from './scheduler';
-import * as reserve from './isActiveReserve';
+import * as scheduler from './other/scheduler';
+import * as reserve from './other/isActiveReserve';
+
+import {SubscribeNotificationService} from "./subscribeNotification.service"
 
 export {
     emailService,
@@ -35,6 +37,7 @@ export {
     CaplService,
     TokenService,
     UserFavoritePlacesService,
+    SubscribeNotificationService,
     scheduler,
     reserve
 }

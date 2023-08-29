@@ -1,5 +1,5 @@
 // import schedule from 'node-schedule';
-// import {Capl} from '../dataBase';
+// import {CaplSchema} from '../dataBase';
 //
 // // Встановлюємо правило розкладу для перевірки стану isActive кожні 10 хвилин.
 // const rule = new schedule.RecurrenceRule();
@@ -10,14 +10,14 @@
 //     const now: Date = new Date();
 //     const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000);
 //
-//     const count = await Capl.countDocuments({
+//     const count = await CaplSchema.countDocuments({
 //         'data.day': { $lte: twelveHoursAgo },
 //         'userStatus.value': 'accepted',
 //         'institutionStatus.value': 'accepted'
 //     });
 //
 //     if (count >= 2) {
-//         await Capl.updateMany({ isActive: true }, { isActive: false });
+//         await CaplSchema.updateMany({ isActive: true }, { isActive: false });
 //     }
 //
 // };

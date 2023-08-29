@@ -49,7 +49,7 @@ class UserController {
                 .populate("favoritePlaces") as IUser;
 
             if (!user) {
-                return next(new CustomError('User not found', 404));
+                return next(new CustomError('UserSchema not found', 404));
             }
             if (currentUser?._id?.toString() !== user?._id.toString() && userStatus !== 'admin') {
                 return next(new CustomError("Access denied", 403));
@@ -81,7 +81,7 @@ class UserController {
 
             const {token} = await this.tokenService.tokenWithData(userForResponse, "12h");
 
-            res.status(201).json({user: token, message: 'User data updated successfully'});
+            res.status(201).json({user: token, message: 'UserSchema data updated successfully'});
         } catch (e) {
             next(e);
         }

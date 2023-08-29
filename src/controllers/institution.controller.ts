@@ -2,7 +2,7 @@ import {Document} from "mongoose";
 import {NextFunction, Response} from "express";
 
 import {CustomRequest} from "../interfaces/func";
-import {Institution, Views, Menu, CityForCount} from "../dataBase";
+import {InstitutionSchema, Views, MenuSchema, CityForCount} from "../dataBase";
 import {
     UserService, InstitutionService, CloudService, TokenService
 } from '../services';
@@ -10,7 +10,7 @@ import {CustomError} from "../errors";
 import {userPresenter} from "../presenters/user.presenter";
 import {institutionMiddleware} from "../middlewares";
 import {IInstitution, IOauth, IUser} from "../interfaces/common";
-
+import {isJsonString} from "../common";
 
 class InstitutionController {
 
@@ -69,7 +69,7 @@ class InstitutionController {
             const {
                 count,
                 items
-            } = await this.institutionService.getWithPagination(Institution, Number(_end), _order, Number(_start), _sort, title_like as string, propertyType as string, placeStatus as string, averageCheck_gte, averageCheck_lte, city_like as string, userStatus as string);
+            } = await this.institutionService.getWithPagination(InstitutionSchema, Number(_end), _order, Number(_start), _sort, title_like as string, propertyType as string, placeStatus as string, averageCheck_gte, averageCheck_lte, city_like as string, userStatus as string);
 
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
@@ -106,7 +106,7 @@ class InstitutionController {
             if (createdBy?.length > 0) {
                 currentUser = await this.userService.findOneUser({_id: createdBy})
                 if (!currentUser) {
-                    return next(new CustomError('User not found'));
+                    return next(new CustomError('UserSchema not found'));
                 }
             }
 
@@ -152,7 +152,7 @@ class InstitutionController {
 
             await institutionMiddleware.existCity(JSON.parse(place)?.city);
 
-            await Menu.create({
+            await MenuSchema.create({
                 institutionId: institution?._id,
                 createdBy: currentUser?._id === user?._id ? user?._id : currentUser?._id,
             })
@@ -164,7 +164,7 @@ class InstitutionController {
 
                 res.status(201).json({user: token, createdById: user?._id});
             } else {
-                res.status(201).json({message: "Institution created successful"})
+                res.status(201).json({message: "InstitutionSchema created successful"})
             }
         } catch (e) {
             console.log('Error created institution')
@@ -181,6 +181,9 @@ class InstitutionController {
                     let newValue = dataToUpdate[field];
                     const oldValue = institution[field];
                     if (field !== 'pictures' && newValue !== oldValue) {
+                        if (isJsonString(newValue)) {
+                            newValue = JSON.parse(newValue)
+                        }
                         institution[field] = newValue;
                     }
                 }
@@ -199,7 +202,7 @@ class InstitutionController {
             }
 
             await institution?.save();
-            res.status(200).json({message: 'Institution updated successfully'});
+            res.status(200).json({message: 'InstitutionSchema updated successfully'});
         } catch (e) {
             next(e)
         }
@@ -250,7 +253,7 @@ class InstitutionController {
 
             // const list = await Promise.all(
             //     cities?.map((city) => {
-            //         return Institution.countDocuments({
+            //         return InstitutionSchema.countDocuments({
             //             $and: [
             //                 {"place.city": {$regex: city.name_ua, $options: 'i'}},
             //                 {verify: 'published'},
@@ -260,7 +263,7 @@ class InstitutionController {
             // )
             const result = await Promise.all(
                 cities.map(async (city) => {
-                    const institutionCount = await Institution.countDocuments({
+                    const institutionCount = await InstitutionSchema.countDocuments({
                         $and: [
                             {"place.city": {$regex: city.name_ua, $options: 'i'}},
                             {verify: 'published'},
@@ -283,9 +286,9 @@ class InstitutionController {
 
     async countByType(req: CustomRequest, res: Response, next: NextFunction) {
         try {
-            const cafeCount = await Institution.countDocuments({type: 'cafe', verify: 'published'})
-            const barCount = await Institution.countDocuments({type: 'bar', verify: 'published'})
-            const restaurantCount = await Institution.countDocuments({type: 'restaurant', verify: 'published'})
+            const cafeCount = await InstitutionSchema.countDocuments({type: 'cafe', verify: 'published'})
+            const barCount = await InstitutionSchema.countDocuments({type: 'bar', verify: 'published'})
+            const restaurantCount = await InstitutionSchema.countDocuments({type: 'restaurant', verify: 'published'})
 
             res.status(200).json([
                 {type: 'cafe', count: cafeCount},
@@ -325,7 +328,7 @@ class InstitutionController {
         const regex = new RegExp(keyword as string, 'i');
 
         try {
-            const cities = await Institution?.aggregate([
+            const cities = await InstitutionSchema?.aggregate([
                 {$match: {"place.city": regex}},
                 {$group: {_id: "$place.city"}},
                 {$limit: 20}

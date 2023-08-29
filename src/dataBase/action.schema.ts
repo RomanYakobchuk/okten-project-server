@@ -1,7 +1,7 @@
 import {Schema, model} from "mongoose";
 import {IAction} from "../interfaces/common";
 
-const ActionSchema = new Schema<IAction>({
+const Action = new Schema<IAction>({
         actionType: {
             type: String,
             required: true
@@ -20,8 +20,8 @@ const ActionSchema = new Schema<IAction>({
     }
 )
 
-const Action = model("action", ActionSchema);
+const ActionSchema = model("action", Action);
 
 export {
-    Action
+    ActionSchema
 }

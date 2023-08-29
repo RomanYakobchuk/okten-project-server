@@ -1,4 +1,4 @@
-import {User} from '../dataBase';
+import {UserSchema} from '../dataBase';
 import {CustomError} from "../errors";
 import {IUser} from "../interfaces/common";
 
@@ -8,7 +8,7 @@ class UserService {
 
         const filterQuery = _getFilterQuery({search_like, status, isActivated, phoneVerify, isBlocked});
 
-        const count = await User.countDocuments({...filterQuery});
+        const count = await UserSchema.countDocuments({...filterQuery});
 
         if (!_sort || !_order) {
             _sort = "createdAt"
@@ -23,7 +23,7 @@ class UserService {
 
         const newSort = _sort?.split('_')[0];
 
-        const items = await User
+        const items = await UserSchema
             .find(filterQuery)
             .select('_id name email phone dOB isActivated phoneVerify blocked status')
             .limit(_end - _start)
@@ -38,18 +38,18 @@ class UserService {
     }
     findOneUser(params = {}) {
 
-        return User.findOne(params);
+        return UserSchema.findOne(params);
     }
     createUser(user: any){
-        return User.create(user);
+        return UserSchema.create(user);
     }
 
     updateOneUser(params: any, userData: any, options = {new: true}) {
-        return User.findOneAndUpdate(params, userData, options);
+        return UserSchema.findOneAndUpdate(params, userData, options);
 
     }
     deleteOneUser(params: any) {
-        return User.deleteOne(params);
+        return UserSchema.deleteOne(params);
     }
 };
 

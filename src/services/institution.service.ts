@@ -1,6 +1,5 @@
-import {Institution} from "../dataBase";
+import {InstitutionSchema} from "../dataBase";
 import {IInstitution} from "../interfaces/common";
-import {IInstitutionModel} from "../dataBase/institution";
 
 
 class InstitutionService {
@@ -52,7 +51,7 @@ class InstitutionService {
         if (userStatus === 'admin') {
             items = await model
                 .find(filterQuery)
-                .select('pictures _id reviewsLength rating type place title createdBy averageCheck')
+                .select('pictures _id reviewsLength rating type place title createdBy description averageCheck')
                 .populate({path: 'views', select: 'viewsNumber'})
                 .limit(_end - _start)
                 .skip(_start)
@@ -61,7 +60,7 @@ class InstitutionService {
         } else {
             items = await model
                 .find(filterQuery)
-                .select('pictures reviewsLength _id rating type place title createdBy averageCheck')
+                .select('pictures reviewsLength _id rating type place title createdBy description averageCheck')
                 .limit(_end - _start)
                 .skip(_start)
                 .sort({[newSort]: _order})
@@ -75,11 +74,11 @@ class InstitutionService {
     }
 
     createInstitution(institution: any) {
-        return Institution.create(institution);
+        return InstitutionSchema.create(institution);
     }
 
     getOneInstitution(params: { _id: string }) {
-        return Institution.findOne(params)
+        return InstitutionSchema.findOne(params)
     }
 
     async getAllByUserParams(_end: number, _start: number, _sort: any, _order: any, userId: string, verify: string) {
@@ -96,9 +95,9 @@ class InstitutionService {
         }
         const newSort = _sort?.split('_')[0];
 
-        const count = await Institution.countDocuments({createdBy: userId, verify: verify});
+        const count = await InstitutionSchema.countDocuments({createdBy: userId, verify: verify});
 
-        const items = await Institution
+        const items = await InstitutionSchema
             .find({createdBy: userId, verify: verify})
             .select('_id pictures title place averageCheck type rating description createdBy createdAt')
             .limit(_end - _start)
@@ -112,7 +111,7 @@ class InstitutionService {
     }
 
     deleteOne(params: any) {
-        return Institution.deleteOne(params)
+        return InstitutionSchema.deleteOne(params)
     }
 
     async getUserInstitutionsByQuery(search_like = '', createdBy: string) {
@@ -149,7 +148,7 @@ class InstitutionService {
                 ]
             })
         }
-        const institutions = await Institution
+        const institutions = await InstitutionSchema
             .find(searchObject)
             .select('_id title pictures place')
             .limit(20)
@@ -165,7 +164,7 @@ class InstitutionService {
         const minCheck = establishment.averageCheck * 0.8;
         const maxCheck = establishment.averageCheck * 1.2;
 
-        const items = await Institution
+        const items = await InstitutionSchema
             .find({
                 "place.city": establishment.place.city,
                 type: establishment.type,
@@ -183,7 +182,7 @@ class InstitutionService {
 
     async getNearby(location: { lat: number, lng: number }, maxDistance: number) {
 
-        const count = await Institution.countDocuments({
+        const count = await InstitutionSchema.countDocuments({
             location: {
                 $near: {
                     $geometry: {
@@ -196,7 +195,7 @@ class InstitutionService {
             verify: "published"
         });
 
-        const items = await Institution
+        const items = await InstitutionSchema
             .find({
                 location: {
                     $near: {

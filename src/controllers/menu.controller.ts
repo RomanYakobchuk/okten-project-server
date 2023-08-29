@@ -1,7 +1,7 @@
 import {NextFunction, Response} from "express";
 
 import {CustomRequest} from "../interfaces/func";
-import {Menu, MenuItem} from "../dataBase";
+import {MenuSchema, MenuItem} from "../dataBase";
 import {CloudService} from "../services";
 import {IInstitution, IMenuItem} from "../interfaces/common";
 
@@ -18,7 +18,7 @@ class MenuController {
         try {
             const institution = req.data_info as IInstitution;
 
-            const menu = await Menu.findOne({institutionId: institution?._id}).populate("items");
+            const menu = await MenuSchema.findOne({institutionId: institution?._id}).populate("items");
 
             let category: any[] = [];
             if (menu) {
@@ -42,7 +42,7 @@ class MenuController {
             // const {userId: user} = req.user;
             // const institution = req.data_info;
             //
-            // const menu = await Menu.create({
+            // const menu = await MenuSchema.create({
             //     institutionId: institution?._id,
             //     createdBy: user?._id,
             //     items: [],
@@ -71,7 +71,7 @@ class MenuController {
             //
             // await menu?.save();
 
-            res.status(200).json({message: "Menu create successfully"})
+            res.status(200).json({message: "MenuSchema create successfully"})
         } catch (e) {
             next(e)
         }

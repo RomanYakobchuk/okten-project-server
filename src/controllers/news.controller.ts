@@ -3,7 +3,6 @@ import {NextFunction, Response} from "express";
 import {CustomRequest} from "../interfaces/func";
 import {NewsService, UserService, CloudService} from "../services";
 import {CustomError} from "../errors";
-import {InstitutionNews} from "../dataBase";
 import {IInstitution, IInstitutionNews, IOauth, IUser} from "../interfaces/common";
 import {Schema} from "mongoose";
 
@@ -39,7 +38,6 @@ class NewsController {
                 place,
                 createdBy,
                 category,
-                variantForDisplay
             } = req.body;
             const {pictures} = req.files;
             const institution = req.data_info as IInstitution;
@@ -50,9 +48,9 @@ class NewsController {
             const currentUser = await this.userService.findOneUser({_id: createdBy});
 
             if (!currentUser) {
-                return next(new CustomError('User not found'));
+                return next(new CustomError('UserSchema not found'));
             }
-            const isUserInstitution = currentUser?.allInstitutions?.includes(institution?._id as Schema.Types.ObjectId);
+            const isUserInstitution = currentUser?._id?.toString() === institution?.createdBy?.toString();
 
             if (!isUserInstitution && currentUser?.status !== 'admin') {
                 return next(new CustomError("It is not your institution", 403))
@@ -67,7 +65,7 @@ class NewsController {
                 newDataEvent?.push(item)
             }
             const news = await this.newsService.createNews({
-                status: user?.status === 'admin' ? status : "draft",
+                status: status,
                 description,
                 pictures: [],
                 category,
@@ -242,7 +240,7 @@ class NewsController {
 
 // async function checkScheduledNews() {
 //     const currentDateTime = new Date();
-//     const scheduledNews = await InstitutionNews.find({ status: 'draft', publishAt: { $lte: currentDateTime } });
+//     const scheduledNews = await Institution_newsSchema.find({ status: 'draft', publishAt: { $lte: currentDateTime } });
 //
 //     for (const scheduledNew of scheduledNews) {
 //         scheduledNew.status = 'published';

@@ -104,6 +104,7 @@ export interface IInstitution extends Document {
     _id: string | string & ObjectId,
     views: IViews | Schema.Types.ObjectId,
     pictures: IPicture[],
+    sendNotifications: boolean,
     workSchedule: {
         workDays: IWorkDays[],
         weekend: string
@@ -326,6 +327,7 @@ export interface IViews extends Document {
 }
 
 export interface CreateReserve {
+    _id?: string & ObjectId,
     institution: string | string & ObjectId,
     date: Date,
     writeMe: boolean,
@@ -344,6 +346,21 @@ export interface ICityForCount extends Document {
     name_ua: string,
     name_en: string,
     url: string,
+    createdAt?: Date,
+    updatedAt?: Date,
+}
+
+export interface ISubscribe extends Document, InstitutionId {
+    _id: string & ObjectId | string,
+    subscriberId: Schema.Types.ObjectId,
+    createdAt?: Date,
+    updatedAt?: Date,
+}
+
+export interface INotification extends Document {
+    _id: string & ObjectId | string,
+    subscribeId: Schema.Types.ObjectId,
+    newsId: Schema.Types.ObjectId,
     createdAt?: Date,
     updatedAt?: Date,
 }

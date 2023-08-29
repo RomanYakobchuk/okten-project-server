@@ -3,7 +3,7 @@ import {ObjectId} from "mongoose";
 import {CustomRequest} from "../interfaces/func";
 import Joi from "joi";
 
-import {OAuth, User, Manager, Admin} from "../dataBase";
+import {OauthSchema, UserSchema, ManagerSchema, AdminSchema} from "../dataBase";
 
 import {CustomError} from '../errors';
 import {UserService, PasswordService, TokenService} from '../services';
@@ -12,7 +12,6 @@ import {tokenTypeEnum} from '../enums';
 import {configs, constants} from '../configs';
 import {IManager, IOauth, IUser} from "../interfaces/common";
 import {getFacebookUserInfo, getGitHubUserData, getGoogleUserInfo} from "../clients";
-import config from "config";
 
 
 class AuthMiddleware {
@@ -45,7 +44,7 @@ class AuthMiddleware {
 
             await this.tokenService.checkToken(access_token, tokenTypeEnum.ACCESS);
 
-            const tokenInfo = await OAuth.findOne({access_token}).populate('userId');
+            const tokenInfo = await OauthSchema.findOne({access_token}).populate('userId');
 
             if (!tokenInfo) {
                 return next(new CustomError('Token not valid', 401));
@@ -68,7 +67,7 @@ class AuthMiddleware {
 
             await this.tokenService.checkToken(refresh_token, tokenTypeEnum.REFRESH);
 
-            const tokenInfo = await OAuth.findOne({refresh_token}).populate("userId");
+            const tokenInfo = await OauthSchema.findOne({refresh_token}).populate("userId");
             if (!tokenInfo) {
                 return next(new CustomError('Token not valid', 401));
             }
@@ -110,7 +109,7 @@ class AuthMiddleware {
                 new CustomError('Wrong email or password');
                 return res.redirect(`${configs.CLIENT_URL}/login${pathUrl}`);
             } else if (!user?.isActivated) {
-                return next(new CustomError("User account blocked", 423))
+                return next(new CustomError("UserSchema account blocked", 423))
             }
 
             req.user = user;
@@ -122,7 +121,6 @@ class AuthMiddleware {
 
     async isLoginBodyValid(req: CustomRequest, res: Response, next: NextFunction) {
         const {registerBy} = req.body;
-        const {code} = req.query;
         try {
             let validationSchema: Joi.ObjectSchema<any>;
 
@@ -183,7 +181,7 @@ class AuthMiddleware {
     }
 
     async activate(activationLink: string) {
-        const user = await User.findOne({activationLink})
+        const user = await UserSchema.findOne({activationLink})
         if (!user) {
             throw new Error("Uncorrected link")
         }
@@ -197,7 +195,7 @@ class AuthMiddleware {
 
     async verifyNumber(id: string, code: number) {
 
-        const user = await User.findOne({_id: id}) as IUser;
+        const user = await UserSchema.findOne({_id: id}) as IUser;
 
         await this.passwordService.compareVerifyCode(user.verifyCode, code.toString());
 
@@ -214,10 +212,10 @@ class AuthMiddleware {
         try {
             let statusHandler = async (status: IUser['status'], _id: string | string & ObjectId) => {
                 if (status === 'manager') {
-                    const isManager = await Manager.findOne({user: _id}) as IManager;
+                    const isManager = await ManagerSchema.findOne({user: _id}) as IManager;
                     req.newStatus = isManager.verify?.isVerify ? status : 'user';
                 } else if (status === 'admin') {
-                    const isAdmin = await Admin.findOne({user: _id});
+                    const isAdmin = await AdminSchema.findOne({user: _id});
                     req.newStatus = isAdmin ? status : 'user';
                 } else if (status === 'user') {
                     req.newStatus = status;

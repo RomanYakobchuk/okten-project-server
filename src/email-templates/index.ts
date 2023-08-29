@@ -18,7 +18,7 @@ export const emailTemplates: Record<EmailActionType, {subject: string, template:
     },
 
     [emailActionTypeEnum.LOGOUT]: {
-        subject: 'User was logout',
+        subject: 'UserSchema was logout',
         template: 'logout'
     },
     [emailActionTypeEnum.ORDER_PROCESS]: {

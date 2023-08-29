@@ -1,7 +1,7 @@
 import {NextFunction, Response} from "express";
 
 import {CustomRequest} from "../interfaces/func";
-import {City} from "../dataBase";
+import {CitySchema} from "../dataBase";
 
 class CityController {
 
@@ -26,7 +26,7 @@ class CityController {
                 ]
             })
 
-            const cities = await City
+            const cities = await CitySchema
                 .find(searchObject)
                 .limit(50)
                 .sort({['name']: 'asc'})

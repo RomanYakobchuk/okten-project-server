@@ -2,7 +2,7 @@ import {Schema, model} from "mongoose";
 import {IInstitutionNews} from "../interfaces/common";
 import {IInstitutionNewsModel} from "../interfaces/model";
 
-const InstitutionNewsSchema = new Schema<IInstitutionNews>({
+const InstitutionNews = new Schema<IInstitutionNews>({
     institutionId: {
         type: Schema.Types.ObjectId,
         ref: 'institution',
@@ -25,11 +25,9 @@ const InstitutionNewsSchema = new Schema<IInstitutionNews>({
         },
         city: {
             type: String,
-            required: true
         },
         address: {
             type: String,
-            required: true
         }
     },
     publishAt: {
@@ -80,8 +78,8 @@ const InstitutionNewsSchema = new Schema<IInstitutionNews>({
     },
 }, {timestamps: true});
 
-const InstitutionNews: IInstitutionNewsModel =model<IInstitutionNews, IInstitutionNewsModel>('institutionNews', InstitutionNewsSchema);
+const InstitutionNewsSchema: IInstitutionNewsModel =model<IInstitutionNews, IInstitutionNewsModel>('institutionNews', InstitutionNews);
 
 export {
-    InstitutionNews
+    InstitutionNewsSchema
 }
