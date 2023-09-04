@@ -15,7 +15,6 @@ const InstitutionNews = new Schema<IInstitutionNews>({
     place: {
         isPlace: Boolean,
         location: {
-            type: Object,
             lng: {
                 type: Number,
             },
@@ -23,11 +22,13 @@ const InstitutionNews = new Schema<IInstitutionNews>({
                 type: Number,
             }
         },
-        city: {
-            type: String,
-        },
-        address: {
-            type: String,
+        place: {
+            city: {
+                type: String,
+            },
+            address: {
+                type: String,
+            }
         }
     },
     publishAt: {

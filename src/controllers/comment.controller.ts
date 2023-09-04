@@ -134,7 +134,7 @@ class CommentController {
         try {
             const {text, isAnswer, parentId} = req.body;
             const {userId} = req.user as IOauth;
-            const institution = req.data_info;
+            const institution = req.data_info as IInstitution;
             const user = userId as IUser;
 
             if (isAnswer && parentId) {

@@ -4,7 +4,7 @@ import {InstitutionService} from "../services";
 import {CustomError} from "../errors";
 import {CitySchema} from "../dataBase";
 import {CustomRequest} from "../interfaces/func";
-import {IInstitution, IOauth, IUser} from "../interfaces/common";
+import {IInstitution, IInstitutionNews, IOauth, IUser} from "../interfaces/common";
 
 class InstitutionMiddleware {
     private institutionService: InstitutionService;
@@ -17,34 +17,31 @@ class InstitutionMiddleware {
         this.getAllInfoById = this.getAllInfoById.bind(this);
     }
 
-    checkInstitution = (type: "all_info" | "info" = 'info') => async (req: CustomRequest, _: Response, next: NextFunction) => {
+        checkInstitution = (type: "all_info" | "info" = 'info') => async (req: CustomRequest, _: Response, next: NextFunction) => {
+        const news = req.news as IInstitutionNews;
         try {
             const {institutionId} = req.body;
             const {id} = req.params;
 
-            let institution = {} as IInstitution, currentId: string = '';
+            const currentId = institutionId || id || "";
 
-            if (id) {
-                currentId = id
-            } else if (!id && institutionId) {
-                currentId = institutionId
+            if (news?.institutionId && news?.institutionId === institutionId) {
+                next();
             }
-            if (type === 'info') {
-                institution = await this.institutionService.getOneInstitution({_id: currentId}) as IInstitution
-            } else if (type === 'all_info') {
-                institution = await this.institutionService.getOneInstitution({_id: currentId})
-                    .populate("news")
-                    .populate({
-                        path: 'views',
-                        select: 'viewsNumber _id'
-                    }) as IInstitution;
-            }
+            let institution: IInstitution;
 
+            const query = await this.institutionService.getOneInstitution({_id: currentId}) as IInstitution;
+            if (type === 'all_info' && query) {
+                await query.populate([{path: "news"}, {path: 'views',
+                    select: 'viewsNumber _id'
+                }]);
+            }
+            institution = query as IInstitution;
             if (!institution) {
                 return next(new CustomError("InstitutionSchema not found", 404))
             }
-
             req.data_info = institution;
+
             next();
         } catch (e) {
             next(e)

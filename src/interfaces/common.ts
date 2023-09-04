@@ -90,8 +90,8 @@ export interface IPicture {
 
 interface IWorkDays {
     days: {
-        from: string,
-        to: string
+        from: number,
+        to: number
     },
     time: {
         from: Date,
@@ -149,8 +149,10 @@ export interface IInstitutionNews extends Document {
             lng: number,
             lat: number,
         },
-        city: string,
-        address: string
+        place: {
+            city: string,
+            address: string
+        }
     },
     publishAt: {
         isPublish: boolean,

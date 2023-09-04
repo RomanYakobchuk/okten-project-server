@@ -10,7 +10,6 @@ import {CustomError} from "../errors";
 import {userPresenter} from "../presenters/user.presenter";
 import {institutionMiddleware} from "../middlewares";
 import {IInstitution, IOauth, IUser} from "../interfaces/common";
-import {isJsonString} from "../common";
 
 class InstitutionController {
 
@@ -69,8 +68,11 @@ class InstitutionController {
             const {
                 count,
                 items
-            } = await this.institutionService.getWithPagination(InstitutionSchema, Number(_end), _order, Number(_start), _sort, title_like as string, propertyType as string, placeStatus as string, averageCheck_gte, averageCheck_lte, city_like as string, userStatus as string);
+            } = await this.institutionService.getWithPagination(Number(_end), _order, Number(_start), _sort, title_like as string, propertyType as string, placeStatus as string, averageCheck_gte, averageCheck_lte, city_like as string, userStatus as string);
 
+            for (const item of items) {
+                item.pictures = [item.pictures[0]]
+            }
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
 
@@ -94,7 +96,8 @@ class InstitutionController {
                 averageCheck,
                 features,
                 verify,
-                createdBy
+                createdBy,
+                sendNotifications
             } = req.body;
 
             const {pictures} = req.files;
@@ -106,7 +109,7 @@ class InstitutionController {
             if (createdBy?.length > 0) {
                 currentUser = await this.userService.findOneUser({_id: createdBy})
                 if (!currentUser) {
-                    return next(new CustomError('UserSchema not found'));
+                    return next(new CustomError('User not found'));
                 }
             }
 
@@ -114,18 +117,19 @@ class InstitutionController {
 
             const institution = await this.institutionService.createInstitution({
                 title,
-                workSchedule: JSON.parse(workSchedule),
-                location: JSON.parse(location),
-                place: JSON.parse(place),
+                sendNotifications,
+                workSchedule: workSchedule,
+                location: location,
+                place: place,
                 type,
                 createdBy: currentUser?._id === user?._id ? user?._id : currentUser?._id,
                 description,
-                contacts: JSON.parse(contacts),
-                tags: JSON.parse(tags),
+                contacts: contacts,
+                tags: tags,
                 verify: newVerify,
                 pictures: [],
                 averageCheck,
-                features: JSON.parse(features),
+                features: features,
             });
 
             if (pictures) {
@@ -150,7 +154,7 @@ class InstitutionController {
 
             await institution.save();
 
-            await institutionMiddleware.existCity(JSON.parse(place)?.city);
+            await institutionMiddleware.existCity(place?.city);
 
             await MenuSchema.create({
                 institutionId: institution?._id,
@@ -181,24 +185,14 @@ class InstitutionController {
                     let newValue = dataToUpdate[field];
                     const oldValue = institution[field];
                     if (field !== 'pictures' && newValue !== oldValue) {
-                        if (isJsonString(newValue)) {
-                            newValue = JSON.parse(newValue)
-                        }
                         institution[field] = newValue;
                     }
                 }
             }
             institution?.pictures?.splice(0, institution?.pictures?.length);
-            if (typeof req.body.pictures === 'string') {
-                const newPhoto = JSON.parse(req.body.pictures);
-                institution?.pictures?.push(newPhoto);
-            } else {
-                for (let element of req.body.pictures) {
-                    if (typeof element === 'string') {
-                        element = JSON.parse(element)
-                    }
-                    institution?.pictures?.push(element)
-                }
+
+            for (let element of req.body.pictures) {
+                institution?.pictures?.push(element)
             }
 
             await institution?.save();
@@ -218,7 +212,7 @@ class InstitutionController {
         }
     }
 
-    async deleteInstitutions(req: CustomRequest, res: Response, next: NextFunction) {
+    async deleteInstitutions(_: CustomRequest, res: Response, next: NextFunction) {
         try {
             // const {userId: user} = req.user;
             // const institution = req.data_info;
@@ -246,21 +240,11 @@ class InstitutionController {
         }
     }
 
-    async countByCity(req: CustomRequest, res: Response, next: NextFunction) {
+    async countByCity(_: CustomRequest, res: Response, next: NextFunction) {
 
         try {
             const cities = await CityForCount.find({}, {_id: 0, name_en: 1, name_ua: 1, url: 1});
 
-            // const list = await Promise.all(
-            //     cities?.map((city) => {
-            //         return InstitutionSchema.countDocuments({
-            //             $and: [
-            //                 {"place.city": {$regex: city.name_ua, $options: 'i'}},
-            //                 {verify: 'published'},
-            //             ]
-            //         })
-            //     })
-            // )
             const result = await Promise.all(
                 cities.map(async (city) => {
                     const institutionCount = await InstitutionSchema.countDocuments({
@@ -284,7 +268,7 @@ class InstitutionController {
         }
     }
 
-    async countByType(req: CustomRequest, res: Response, next: NextFunction) {
+    async countByType(_: CustomRequest, res: Response, next: NextFunction) {
         try {
             const cafeCount = await InstitutionSchema.countDocuments({type: 'cafe', verify: 'published'})
             const barCount = await InstitutionSchema.countDocuments({type: 'bar', verify: 'published'})
@@ -300,7 +284,7 @@ class InstitutionController {
         }
     }
 
-    async countMoreViews(req: CustomRequest, res: Response, next: NextFunction) {
+    async countMoreViews(_: CustomRequest, res: Response, next: NextFunction) {
         try {
             const components = await Views.getTopComponents(5);
             let data = [] as any[];

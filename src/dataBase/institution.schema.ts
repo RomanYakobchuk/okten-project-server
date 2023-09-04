@@ -31,10 +31,10 @@ const Institution = new Schema({
             days: {
                 type: Object,
                 from: {
-                    type: String
+                    type: Number
                 },
                 to: {
-                    type: String
+                    type: Number
                 },
             },
             time: {

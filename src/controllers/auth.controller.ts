@@ -30,6 +30,7 @@ class AuthController {
 
     constructor() {
         this.smsService = new SmsService();
+        this.smsService = new SmsService();
         this.tokenService = new TokenService();
         this.userService = new UserService();
         this.passwordService = new PasswordService();

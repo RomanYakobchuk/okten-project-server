@@ -59,7 +59,7 @@ class NewsController {
             let newDataEvent: any[] = [];
 
             const currentDate = new Date();
-            for (let item of JSON.parse(dateEvent)) {
+            for (let item of dateEvent) {
                 item.schedule.from = item?.schedule?.from ? new Date(item?.schedule?.from).toISOString() : item?.schedule?.from;
                 item.schedule.to = item?.schedule?.to ? new Date(item?.schedule?.to).toISOString() : item?.schedule?.to
                 newDataEvent?.push(item)
@@ -75,8 +75,8 @@ class NewsController {
                 dateEvent: newDataEvent,
                 // place: JSON.parse(place),
                 publishAt: {
-                    isPublish: JSON.parse(isDatePublished),
-                    datePublish: datePublished && isDatePublished ? JSON.parse(datePublished) : currentDate
+                    isPublish: isDatePublished,
+                    datePublish: datePublished && isDatePublished ? datePublished : currentDate
                 }
             })
 
@@ -158,7 +158,7 @@ class NewsController {
 
     async newsInfo(req: CustomRequest, res: Response, next: NextFunction) {
         try {
-            const news = req.data_info as IInstitutionNews;
+            const news = req.news as IInstitutionNews;
             const {userId} = req.user as IOauth;
             const user = userId as IUser;
 
@@ -176,7 +176,7 @@ class NewsController {
     async updateNewsInfo(req: CustomRequest, res: Response, next: NextFunction) {
         try {
             const {...dataToUpdate} = req.body;
-            const news = req.data_info as IInstitutionNews;
+            const news = req.news as IInstitutionNews;
             for (const field in dataToUpdate) {
                 if (dataToUpdate.hasOwnProperty(field)) {
                     let newValue = dataToUpdate[field];
@@ -187,16 +187,9 @@ class NewsController {
                 }
             }
             news?.pictures?.splice(0, news?.pictures?.length);
-            if (typeof req.body.pictures === 'string') {
-                const newPhoto = JSON.parse(req.body.pictures);
-                news?.pictures?.push(newPhoto);
-            } else {
-                for (let element of req.body.pictures) {
-                    if (typeof element === 'string') {
-                        element = JSON.parse(element)
-                    }
-                    news?.pictures?.push(element)
-                }
+
+            for (let element of req.body.pictures) {
+                news?.pictures?.push(element)
             }
 
             await news?.save();

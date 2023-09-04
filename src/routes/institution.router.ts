@@ -4,9 +4,10 @@ import {
     institutionMiddleware,
     fileMiddleware,
     userMiddleware,
-    subscribeNotificationMiddleware
+    subscribeNotificationMiddleware, commonMiddleware
 } from "../middlewares";
 import {institutionController, viewsController} from "../controllers";
+import {establishmentValidator} from "../validators";
 
 
 const router = Router();
@@ -22,6 +23,8 @@ router.get(
 router.post(
     `/create`,
     authMiddleware.checkAccessToken,
+    commonMiddleware.parseJsonStrings,
+    commonMiddleware.isDateValid(establishmentValidator.createEstablishment, 'body'),
     institutionController.createInstitution
 )
 
@@ -48,6 +51,8 @@ router.patch(
     `/infoById/:id`,
     authMiddleware.checkAccessToken,
     institutionMiddleware.checkInstitution('info'),
+    commonMiddleware.parseJsonStrings,
+    commonMiddleware.isDateValid(establishmentValidator.updateEstablishment, 'body'),
     fileMiddleware.checkImagesForUpdated('institution'),
     institutionController.updateInstitutionById
 )

@@ -4,7 +4,6 @@ import {IInstitution} from "../interfaces/common";
 
 class InstitutionService {
     async getWithPagination(
-        model: any,
         _end: number,
         _order: any,
         _start: number,
@@ -27,11 +26,11 @@ class InstitutionService {
 
         let count: number;
         if (isVerify) {
-            count = await model.countDocuments(
+            count = await InstitutionSchema.countDocuments(
                 {...filterQuery, verify: isVerify}
             );
         } else {
-            count = await model.countDocuments({...filterQuery});
+            count = await InstitutionSchema.countDocuments({...filterQuery});
         }
 
         if (!_sort || !_order) {
@@ -47,18 +46,18 @@ class InstitutionService {
 
         const newSort = _sort?.split('_')[0];
 
-        let items: any[];
+        let items: IInstitution[];
         if (userStatus === 'admin') {
-            items = await model
+            items = await InstitutionSchema
                 .find(filterQuery)
-                .select('pictures _id reviewsLength rating type place title createdBy description averageCheck')
+                .select('pictures reviewsLength _id rating type place title createdBy description averageCheck')
                 .populate({path: 'views', select: 'viewsNumber'})
                 .limit(_end - _start)
                 .skip(_start)
                 .sort({[newSort]: _order})
                 .exec();
         } else {
-            items = await model
+            items = await InstitutionSchema
                 .find(filterQuery)
                 .select('pictures reviewsLength _id rating type place title createdBy description averageCheck')
                 .limit(_end - _start)

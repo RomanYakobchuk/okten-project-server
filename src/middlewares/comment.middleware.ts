@@ -2,7 +2,7 @@ import {CommentService} from "../services";
 import {CustomError} from "../errors";
 import {CustomRequest} from "../interfaces/func";
 import {NextFunction, Response} from "express";
-import {IAnswerComment, IComment} from "../interfaces/common";
+import {IAnswerComment, IComment, IInstitution} from "../interfaces/common";
 
 class CommentMiddleware {
     private commentService: CommentService;
@@ -15,7 +15,7 @@ class CommentMiddleware {
     }
     async checkCommentsByInstitution(req: CustomRequest, res: Response, next: NextFunction) {
         try {
-            const institution = req.data_info;
+            const institution = req.data_info as IInstitution;
 
             const comments = await this.commentService.getItemsByParams({institutionId: institution?._id}).populate('items');
 

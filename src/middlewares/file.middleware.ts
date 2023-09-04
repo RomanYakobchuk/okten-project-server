@@ -4,8 +4,6 @@ import {CloudService} from "../services";
 import {CustomRequest} from "../interfaces/func";
 import {NextFunction, Response} from "express";
 import {IOauth, IPicture, IUser} from "../interfaces/common";
-import {isJsonString} from "../common";
-
 
 class FileMiddleware {
     private cloudService: CloudService;
@@ -63,24 +61,15 @@ class FileMiddleware {
     checkImagesForUpdated = (propertyName: string) => async (req: CustomRequest, res: Response, next: NextFunction) => {
         try {
             const property = req.data_info;
-            let {pictures: picturesBody} = req.body;
-            if (isJsonString(picturesBody)) {
-                picturesBody = JSON.parse(picturesBody);
-            }
+            const {pictures: picturesBody} = req.body;
+
             if (((picturesBody?.length === 0 || !picturesBody) && !req.files?.pictures)) {
                 return next(new CustomError("Photos is required", 400))
             }
             let newPhotos: any[] = [];
             if (picturesBody) {
-                if (isJsonString(picturesBody)) {
-                    newPhotos?.push(JSON.parse(picturesBody));
-                } else {
-                    for (let otherPhotoBodyElement of picturesBody) {
-                        if (isJsonString(otherPhotoBodyElement)) {
-                            otherPhotoBodyElement = JSON.parse(otherPhotoBodyElement);
-                        }
-                        newPhotos.push(otherPhotoBodyElement)
-                    }
+                for (let otherPhotoBodyElement of picturesBody) {
+                    newPhotos.push(otherPhotoBodyElement)
                 }
             }
             const photosForDelete = property?.pictures?.filter(obj1 => !newPhotos.some(obj2 => obj1?.url === obj2?.url)) as IPicture[];
