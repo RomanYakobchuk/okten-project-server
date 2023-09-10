@@ -35,6 +35,7 @@ router.patch(
     '/userInfo/:id',
     commonMiddleware.isIdValid,
     authMiddleware.checkAccessToken,
+    commonMiddleware.parseJsonStrings,
     fileMiddleware.checkUserAvatar,
     userController.updateUserById
 );

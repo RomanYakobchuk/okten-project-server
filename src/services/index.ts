@@ -1,6 +1,6 @@
 
 import {emailService} from  './email.service';
-// import s3Service from  './s3.service';
+import {S3Service} from  './s3.service';
 import {CloudService} from  './cloud.service';
 import {SmsService} from  './sms.service';
 import {UserService} from  './user.service';
@@ -22,7 +22,7 @@ import {SubscribeNotificationService} from "./subscribeNotification.service"
 
 export {
     emailService,
-    // s3Service,
+    S3Service,
     CloudService,
     SmsService,
     MessageService,

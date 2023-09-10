@@ -28,11 +28,10 @@ class CommonMiddleware {
 
     isDateValid = (validationSchema: any, dataType = 'body') => async (req: CustomRequest, _: Response, next: NextFunction) => {
         try {
-            console.log(req[dataType])
             const { error, value } = validationSchema.validate(req[dataType]);
 
             if (error) {
-                console.log(`помилка у файлі common.middleware isDateValid error`)
+                console.log(`Data validate error: `, error.details[0].message)
                 return next(new CustomError(`${error.details[0].message}`));
             }
 

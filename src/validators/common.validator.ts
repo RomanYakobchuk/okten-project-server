@@ -53,8 +53,8 @@ const dateEventValidator = Joi.array().items(Joi.object({
         to: dateValidator
     },
     time: {
-        from: dateValidator,
-        to: dateValidator
+        from: stringValidator,
+        to: stringValidator
     }
 }));
 
