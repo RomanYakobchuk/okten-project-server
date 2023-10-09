@@ -8,13 +8,19 @@ import {
     IAnswerComment,
     IMessage,
     IConversation,
-    ICityForCount, ISubscribe, INotification
+    ICityForCount, ISubscribe, INotification, IInstitution, IFreeSeats, IOauth
 } from "./common";
 
 export interface IUserFavoritePlacesModel extends Model<IUserFavoritePlacesDoc> {
 }
 
 export interface UserModel extends Model<IUser> {
+}
+
+export interface IInstitutionModel extends Model<IInstitution> {
+}
+
+export interface IFreeSeatsModel extends Model<IFreeSeats> {
 }
 
 export interface IInstitutionNewsModel extends Model<IInstitutionNews> {
@@ -42,4 +48,7 @@ export interface ISubscribeModel extends Model<ISubscribe> {
 }
 
 export interface INotificationModel extends Model<INotification> {
+}
+
+export interface IOAuthModel extends Model<IOauth> {
 }

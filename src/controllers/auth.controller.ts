@@ -18,6 +18,7 @@ import {smsTemplateBuilder} from "../common";
 import {CustomError} from "../errors";
 import {CustomRequest} from "../interfaces/func";
 import {IOauth, IUser, IUserFavoritePlaces} from "../interfaces/common";
+import {Schema} from "mongoose";
 
 
 class AuthController {
@@ -54,7 +55,6 @@ class AuthController {
     async login(req: CustomRequest, res: Response, next: NextFunction) {
         const favoritePlaces = req.favPlaces as IUserFavoritePlaces;
         const isAuth = req.isAuth as boolean;
-        const pathUrl = (req.query.state as string) ?? '/';
         try {
             const newStatus = req.newStatus;
             if (!isAuth) {
@@ -70,8 +70,9 @@ class AuthController {
                 return next(new CustomError('Account is blocked', 403));
             }
             const tokens = await this.tokenService.generateAuthTokens();
+
             await OauthSchema.create({
-                userId: user?._id,
+                userId: user?._id as Schema.Types.ObjectId,
                 ...tokens
             });
 
@@ -284,7 +285,7 @@ class AuthController {
             }, "3m");
 
             await Promise.allSettled([
-                await emailService(email, emailActionTypeEnum.FORGOT_PASSWORD, {name}, `${configs.CLIENT_URL}/update-password/${token}`)
+                await emailService(email, emailActionTypeEnum.FORGOT_PASSWORD, {name}, `${configs.CLIENT_URL}/update-password?token=${token}`)
             ])
 
 

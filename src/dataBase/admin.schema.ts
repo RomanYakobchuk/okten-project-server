@@ -4,7 +4,8 @@ import {IAdmin} from "../interfaces/common";
 const Admin = new Schema<IAdmin>({
     user: {
         type: Schema.Types.ObjectId,
-        ref: 'user'
+        ref: 'user',
+        unique: true
     },
 }, {timestamps: true});
 

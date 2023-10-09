@@ -34,7 +34,8 @@ const Conversation = new Schema({
 const Message = new Schema({
     conversationId: {
         type: Schema.Types.ObjectId,
-        ref: 'conversation'
+        ref: 'conversation',
+        unique: true
     },
     sender: {
         type: Schema.Types.ObjectId,

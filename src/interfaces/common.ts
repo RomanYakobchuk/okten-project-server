@@ -135,6 +135,22 @@ export interface IInstitution extends Document {
     }],
     createdBy: Schema.Types.ObjectId | string,
     news: IObjectIdArray,
+    freeSeats: Schema.Types.ObjectId | IFreeSeats,
+    createdAt?: Date,
+    updatedAt?: Date,
+}
+export interface IFreeSeatsList {
+    table: number,
+    numberOfSeats: number,
+    status: "free" | "reserved" | "",
+    description?: string
+}
+export interface IFreeSeats extends Document {
+    _id: string | string & ObjectId,
+    establishmentId: Schema.Types.ObjectId | IInstitution,
+    list: IFreeSeatsList[],
+    allFreeSeats: number,
+    isCombineTheSeats: boolean,
     createdAt?: Date,
     updatedAt?: Date,
 }
@@ -258,9 +274,11 @@ export interface IMessage extends Document {
 }
 
 
-export interface IOauth extends UserId, Ids {
+export interface IOauth extends UserId, Document {
     access_token: string,
     refresh_token: string,
+    createdAt?: Date,
+    updatedAt?: Date
 }
 
 export interface IReviewItem extends InstitutionId, Ids {
@@ -332,6 +350,11 @@ export interface CreateReserve {
     _id?: string & ObjectId,
     institution: string | string & ObjectId,
     date: Date,
+    seats: {
+        table: number,
+        numberOfSeats: number,
+        status: "free" | "reserved"
+    },
     writeMe: boolean,
     comment: string,
     fullName: string,

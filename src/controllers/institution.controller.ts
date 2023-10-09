@@ -1,8 +1,8 @@
-import {Document} from "mongoose";
+import {Document, ObjectId} from "mongoose";
 import {NextFunction, Response} from "express";
 
 import {CustomRequest} from "../interfaces/func";
-import {InstitutionSchema, Views, MenuSchema, CityForCount} from "../dataBase";
+import {InstitutionSchema, Views, MenuSchema, CityForCount, FreeSeatsSchema} from "../dataBase";
 import {
     UserService, InstitutionService, CloudService, TokenService
 } from '../services';
@@ -52,7 +52,10 @@ class InstitutionController {
             averageCheck_lte,
             averageCheck_gte,
             city_like = "",
-            verify = ''
+            verify = '',
+            numberOfFreeSeats,
+            numberOfTable,
+            typeOfFreeSeats
         } = req.query;
 
         const userStatus = req.newStatus;
@@ -68,7 +71,22 @@ class InstitutionController {
             const {
                 count,
                 items
-            } = await this.institutionService.getWithPagination(Number(_end), _order, Number(_start), _sort, title_like as string, propertyType as string, placeStatus as string, averageCheck_gte, averageCheck_lte, city_like as string, userStatus as string);
+            } = await this.institutionService.getWithPagination(
+                Number(_end),
+                _order,
+                Number(_start),
+                _sort,
+                title_like as string,
+                propertyType as string,
+                placeStatus as string,
+                averageCheck_gte,
+                averageCheck_lte,
+                city_like as string,
+                userStatus as string,
+                numberOfFreeSeats as string,
+                numberOfTable as string,
+                typeOfFreeSeats as string
+            );
 
             for (const item of items) {
                 item.pictures = [item.pictures[0]]
@@ -160,6 +178,14 @@ class InstitutionController {
                 institutionId: institution?._id,
                 createdBy: currentUser?._id === user?._id ? user?._id : currentUser?._id,
             })
+
+            const freeSeats = await FreeSeatsSchema.create({
+                establishmentId: institution?._id,
+                list: []
+            })
+            institution.freeSeats = freeSeats._id as ObjectId;
+
+            await institution.save();
 
             if (currentUser?._id === user?._id) {
                 const userForResponse = userPresenter(user);
@@ -395,6 +421,7 @@ class InstitutionController {
 
     async allByUserId(req: CustomRequest, res: Response, next: NextFunction) {
         const user = req.userExist;
+
         const {_end, _start, _sort, _order, verify} = req.query;
 
         try {
@@ -425,17 +452,14 @@ class InstitutionController {
 
     establishmentNearby = async (req: CustomRequest, res: Response, next: NextFunction) => {
         try {
-            const {location, maxDistance} = req.body;
+            const {locationLng, locationLat, maxDistance, _end, _start, establishmentId} = req.query;
 
-            const {items, count} = await this.institutionService.getNearby(location as {
-                lat: number,
-                lng: number
-            }, maxDistance as number);
+            const {items, count} = await this.institutionService.getNearby({lng: parseFloat(locationLng as string), lat: parseFloat(locationLat as string)}, parseFloat(maxDistance as string), Number(_end), Number(_start), establishmentId as string);
 
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
 
-            res.status(200).json({nearby: items})
+            res.status(200).json(items)
 
         } catch (e) {
             next(e)

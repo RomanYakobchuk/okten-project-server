@@ -50,6 +50,7 @@ class NewsService implements Repository {
 
         const items = await InstitutionNewsSchema
             .find(filterQuery)
+            .populate([{path: 'institutionId', select: '_is pictures title type'}])
             .limit(_end - _start)
             .skip(_start)
             .sort({[newSort]: _order})

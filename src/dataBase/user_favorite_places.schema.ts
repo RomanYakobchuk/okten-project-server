@@ -7,7 +7,8 @@ import {IUserFavoritePlacesModel} from "../interfaces/model";
 const UserFavoritePlaces = new Schema({
     userId: {
         type: Schema.Types.ObjectId,
-        ref: 'user'
+        ref: 'user',
+        unique: true
     },
     places: [{
         type: Schema.Types.ObjectId,

@@ -4,7 +4,8 @@ import {IManager} from "../interfaces/common";
 const manager = new Schema<IManager>({
     user: {
         type: Schema.Types.ObjectId,
-        ref: 'user'
+        ref: 'user',
+        unique: true
     },
     name: {
         type: String,
@@ -14,12 +15,14 @@ const manager = new Schema<IManager>({
     email: {
         type: String,
         required: true,
-        default: ''
+        default: '',
+        unique: true
     },
     phone: {
         type: String,
         required: true,
-        default: ''
+        default: '',
+        unique: true
     },
     verify: {
         verifyBy: {

@@ -28,6 +28,11 @@ class CaplController {
             await this.caplService.createReserve({
                 institution: institution?._id as string,
                 date: date as Date,
+                seats: {
+                    numberOfSeats: 0,
+                    status: "reserved",
+                    table: 1
+                },
                 writeMe: Boolean(writeMe),
                 comment: comment as string,
                 fullName: fullName as string,

@@ -29,7 +29,7 @@ class UserController {
         this.getUserFavPlaces = this.getUserFavPlaces.bind(this);
     }
 
-    async findUsers(req: CustomRequest, res: Response, next: NextFunction) {
+    async findUsers(_: CustomRequest, res: Response, next: NextFunction) {
         try {
             res.status(200).json('users')
         } catch (e) {
@@ -161,16 +161,17 @@ class UserController {
         }
     }
 
-    async updateUserByAdmin(req: CustomRequest, res: Response, next: NextFunction) {
+    async updateUserByAdmin(req: CustomRequest, _: Response, next: NextFunction) {
         const userStatus = req.newStatus;
-        const userForUpdate = req.userExist;
+        // const userForUpdate = req.userExist;
 
         if (userStatus !== 'admin') {
             return next(new CustomError('Access denied', 403));
         }
         try {
             // const {name, email, status, phone, dOB, isActivated, phoneVerify, blocked} = req.body;
-            const {...dataToUpdate} = req.body;
+            // const {...dataToUpdate} = req.body;
+        //     other code...
         } catch (e) {
             next(e)
         }
@@ -179,7 +180,7 @@ class UserController {
     async getUserFavPlaces(req: CustomRequest, res: Response, next: NextFunction) {
         const favPlaces = req.favPlaces as IUserFavoritePlaces;
         try {
-            res.status(200).json(favPlaces);
+            res.status(200).json(favPlaces?.places);
         } catch (e) {
             next(e);
         }

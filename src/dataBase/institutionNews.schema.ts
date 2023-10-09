@@ -6,7 +6,8 @@ const InstitutionNews = new Schema<IInstitutionNews>({
     institutionId: {
         type: Schema.Types.ObjectId,
         ref: 'institution',
-        required: true
+        required: true,
+        unique: true
     },
     title: {
         type: String,
@@ -79,7 +80,7 @@ const InstitutionNews = new Schema<IInstitutionNews>({
     },
 }, {timestamps: true});
 
-const InstitutionNewsSchema: IInstitutionNewsModel =model<IInstitutionNews, IInstitutionNewsModel>('institutionNews', InstitutionNews);
+const InstitutionNewsSchema: IInstitutionNewsModel = model<IInstitutionNews, IInstitutionNewsModel>('institutionNews', InstitutionNews);
 
 export {
     InstitutionNewsSchema

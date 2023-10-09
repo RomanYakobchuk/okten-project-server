@@ -18,7 +18,7 @@ class NewsMiddleware {
             const {id} = req.params;
 
             const news = await this.newsService
-                .getOneNews({_id: id}).populate({path: 'institutionId', select: '_id title'})
+                .getOneNews({_id: id}).populate({path: 'institutionId', select: '_id title pictures type place'})
 
             if (!news) {
                 return next(new CustomError('News not found', 404));

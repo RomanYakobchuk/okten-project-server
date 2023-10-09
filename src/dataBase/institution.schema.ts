@@ -1,7 +1,7 @@
-import {Schema, model, Model} from "mongoose";
+import {Schema, model} from "mongoose";
 import {IInstitution} from "../interfaces/common";
+import {IInstitutionModel} from "../interfaces/model";
 
-export interface IInstitutionModel extends Model<IInstitution> {}
 const Institution = new Schema({
     title: {
         type: String,
@@ -124,7 +124,13 @@ const Institution = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'institutionNews',
     }],
-}, {timestamps: true})
+    freeSeats: {
+        type: Schema.Types.ObjectId,
+        ref: 'freeSeats',
+        unique: true
+    }
+}, {timestamps: true});
+
 
 const InstitutionSchema: IInstitutionModel = model<IInstitution, IInstitutionModel>('institution', Institution);
 

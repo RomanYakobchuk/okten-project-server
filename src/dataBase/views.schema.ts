@@ -6,7 +6,8 @@ const ViewSchema = new Schema<IView & Document>(
     {
         viewsId: {
             type: Schema.Types.ObjectId,
-            ref: 'views_container'
+            ref: 'views_container',
+            unique: true
         },
         user: {
             type: Schema.Types.ObjectId,

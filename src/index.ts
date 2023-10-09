@@ -74,7 +74,7 @@ app.use('*', (req, res) => {
     res.status(404).json('Route not found');
 });
 
-app.use((err: any, req: any, res: Response, next: NextFunction) => {
+app.use((err: any, _: any, res: Response, __: NextFunction) => {
     console.log(err)
     res
         ?.status(err?.status || 500)

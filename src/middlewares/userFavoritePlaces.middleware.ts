@@ -1,6 +1,6 @@
 import {NextFunction, Response} from "express";
 
-import {IOauth, IUser, IUserFavoritePlaces} from "../interfaces/common";
+import {IOauth, IUser} from "../interfaces/common";
 import {UserFavoritePlacesService, UserService} from "../services";
 import {CustomRequest} from "../interfaces/func";
 import {CustomError} from "../errors";
@@ -17,7 +17,7 @@ class UserFavoritePlacesMiddleware {
         this.checkUserFavPlaces = this.checkUserFavPlaces.bind(this);
     }
 
-    checkUserFavPlaces = (type: "login" | "check" = 'check', by: "byUser" | "byId" = "byUser", allPlacesInfo: true | false = false) => async (req: CustomRequest, res: Response, next: NextFunction) => {
+    checkUserFavPlaces = (type: "login" | "check" = 'check', by: "byUser" | "byId" = "byUser", allPlacesInfo: true | false = false) => async (req: CustomRequest, _: Response, next: NextFunction) => {
         try {
             let user = {} as IUser;
 

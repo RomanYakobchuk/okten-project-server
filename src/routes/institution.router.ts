@@ -134,7 +134,7 @@ router.get(
     institutionController.similarEstablishment
 )
 
-router.post(
+router.get(
     `/nearby`,
     authMiddleware.checkAccessToken,
     institutionController.establishmentNearby

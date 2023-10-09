@@ -5,7 +5,7 @@ import {INotificationModel, ISubscribeModel} from "../interfaces/model";
 const Subscribe = new Schema({
     institutionId: {
         type: Schema.Types.ObjectId,
-        ref: 'institution'
+        ref: 'institution',
     },
     subscriberId: {
         type: Schema.Types.ObjectId,

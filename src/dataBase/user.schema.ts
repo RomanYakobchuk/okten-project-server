@@ -16,7 +16,8 @@ const User = new Schema<IUser>({
         },
         status: {
             type: String,
-            default: 'user' //manager, admin
+            enum: ['user', 'admin', 'manger'],
+            default: 'user'
         },
         dOB: {
             type: Date,
@@ -26,6 +27,7 @@ const User = new Schema<IUser>({
         },
         phone: {
             type: String,
+            unique: true
         },
         avatar: {
             type: String,
@@ -53,7 +55,8 @@ const User = new Schema<IUser>({
         ],
         favoritePlaces: {
             type: Schema.Types.ObjectId,
-            ref: "userFavoritePlaces"
+            ref: "userFavoritePlaces",
+            unique: true
         },
         favoriteNews: [
             {
@@ -69,6 +72,7 @@ const User = new Schema<IUser>({
         ],
         registerBy: {
             type: String,
+            enum: ['Email', 'Google', 'Facebook'],
             default: 'Email'
         },
         blocked: {
