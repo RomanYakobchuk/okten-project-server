@@ -4,7 +4,7 @@ import {UserFavPlaces} from "./user_favorite_places.schema";
 
 import {CitySchema} from "./city.schema";
 
-import {AnswerCommentSchema, CommentItemSchema} from "./comment.schema";
+import {CommentItemSchema} from "./comment.schema";
 
 import {View, Views} from "./views.schema";
 
@@ -50,7 +50,6 @@ export {
     OauthSchema,
     AdminSchema,
     ManagerSchema,
-    AnswerCommentSchema,
     CommentItemSchema,
     UserFavPlaces,
     MenuItem,

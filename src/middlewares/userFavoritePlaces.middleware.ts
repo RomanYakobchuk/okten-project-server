@@ -17,16 +17,16 @@ class UserFavoritePlacesMiddleware {
         this.checkUserFavPlaces = this.checkUserFavPlaces.bind(this);
     }
 
-    checkUserFavPlaces = (type: "login" | "check" = 'check', by: "byUser" | "byId" = "byUser", allPlacesInfo: true | false = false) => async (req: CustomRequest, _: Response, next: NextFunction) => {
+    checkUserFavPlaces = (type: "user" | "tokenInfo" = 'user', by: "byUser" | "byId" = "byUser", isObj: boolean = false) => async (req: CustomRequest, _: Response, next: NextFunction) => {
         try {
             let user = {} as IUser;
 
             if (by === 'byUser') {
-                if (type === 'login') {
-                    user = req.user as IUser;
-                } else if (type === 'check') {
-                    const {userId} = req.user as IOauth;
+                if (isObj) {
+                    const {userId} = req[type] as IOauth;
                     user = userId as IUser;
+                } else {
+                    user = req.user as IUser;
                 }
             } else if (by === 'byId') {
                 const {id} = req.params;
@@ -35,20 +35,13 @@ class UserFavoritePlacesMiddleware {
                     return next(new CustomError('user not found', 404));
                 }
             }
-            let favPlaces: any;
-
-            if (allPlacesInfo) {
-                favPlaces = await this.userFavoritePlacesService
-                    .findOne({_id: user.favoritePlaces})
-                    .populate({path: 'places', select: "_id pictures averageCheck rating createdBy createdAt reviewsLength type place title"}).exec();
-            } else {
-                favPlaces = await this.userFavoritePlacesService.findOne({_id: user.favoritePlaces})
-            }
+            let favPlaces = await this.userFavoritePlacesService.findOne({_id: user?.favoritePlaces})
 
             if (!favPlaces) {
+                await this.userFavoritePlacesService.deleteOne({userId: user?._id});
                 favPlaces = await this.userFavoritePlacesService.create({userId: user._id});
                 user.favoritePlaces = favPlaces._id;
-                await user.save();
+                await this.userService.updateOneUser({_id: user?._id}, {favoritePlaces: favPlaces?._id});
             }
 
             req.favPlaces = favPlaces;

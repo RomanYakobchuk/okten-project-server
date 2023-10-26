@@ -139,4 +139,12 @@ router.get(
     authMiddleware.checkAccessToken,
     institutionController.establishmentNearby
 )
+
+router.get(
+    `/getNumberOfEstablishmentProperties/:id`,
+    authMiddleware.checkAccessToken,
+    institutionMiddleware.checkInstitution('info'),
+    institutionController.getNumberOfEstablishmentProperties
+)
+
 export default router;

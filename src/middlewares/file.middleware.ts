@@ -61,13 +61,16 @@ class FileMiddleware {
     checkImagesForUpdated = (propertyName: string) => async (req: CustomRequest, res: Response, next: NextFunction) => {
         try {
             const property = req.data_info;
-            const {pictures: picturesBody} = req.body;
+            let {pictures: picturesBody} = req.body;
 
             if (((picturesBody?.length === 0 || !picturesBody) && !req.files?.pictures)) {
                 return next(new CustomError("Photos is required", 400))
             }
-            let newPhotos: any[] = [];
+            let newPhotos: IPicture[] = [];
             if (picturesBody) {
+                if (picturesBody?.url) {
+                    picturesBody = [picturesBody]
+                }
                 for (let otherPhotoBodyElement of picturesBody) {
                     newPhotos.push(otherPhotoBodyElement)
                 }

@@ -11,14 +11,14 @@ router.post('/login',
     authMiddleware.isLoginBodyValid,
     authMiddleware.isUserPresentForAuth,
     authMiddleware.checkStatus('login'),
-    userFavoritePlacesMiddleware.checkUserFavPlaces('login'),
+    userFavoritePlacesMiddleware.checkUserFavPlaces('user', 'byUser', false),
     authController.login
 );
 router.get('/login_github',
     // authMiddleware.isLoginBodyValid,
     authMiddleware.isUserPresentForAuth,
     authMiddleware.checkStatus('login'),
-    userFavoritePlacesMiddleware.checkUserFavPlaces('login'),
+    userFavoritePlacesMiddleware.checkUserFavPlaces('user', 'byUser', false),
     authController.login
 );
 router.post('/register',
@@ -29,6 +29,7 @@ router.post('/register',
 
 router.post('/refreshToken',
     authMiddleware.checkRefreshToken,
+    userFavoritePlacesMiddleware.checkUserFavPlaces("tokenInfo", "byUser", true),
     authController.refreshToken);
 
 router.get('/logout',

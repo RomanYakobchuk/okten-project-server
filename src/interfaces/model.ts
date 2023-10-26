@@ -5,7 +5,6 @@ import {
     IInstitutionNews,
     ICapl,
     IComment,
-    IAnswerComment,
     IMessage,
     IConversation,
     ICityForCount, ISubscribe, INotification, IInstitution, IFreeSeats, IOauth
@@ -30,9 +29,6 @@ export interface ICaplModel extends Model<ICapl> {
 }
 
 export interface ICommentModel extends Model<IComment> {
-}
-
-export interface IAnswerCommentModel extends Model<IAnswerComment> {
 }
 
 export interface IMessageModel extends Model<IMessage> {

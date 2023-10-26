@@ -70,10 +70,10 @@ class NewsController {
                 pictures: [],
                 category,
                 title,
+                place: place,
                 createdBy: currentUser?._id === user?._id ? user?._id : currentUser?._id,
                 institutionId: institution?._id,
                 dateEvent: newDataEvent,
-                // place: JSON.parse(place),
                 publishAt: {
                     isPublish: isDatePublished,
                     datePublish: datePublished && isDatePublished ? datePublished : currentDate
@@ -148,9 +148,12 @@ class NewsController {
         try {
             const institution = req.data_info as IInstitution;
 
-            const news = await this.newsService.getInstitutionNews('published', institution?._id as string);
+            const {items, total} = await this.newsService.getInstitutionNews('published', institution?._id as string);
 
-            res.status(200).json({news: news ?? []});
+            res.header('x-total-count', `${total}`);
+            res.header('Access-Control-Expose-Headers', 'x-total-count');
+
+            res.status(200).json(items ?? []);
         } catch (e) {
             next(e)
         }

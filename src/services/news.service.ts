@@ -9,7 +9,7 @@ interface Repository {
         items: IInstitutionNews[]
     }>,
 
-    getInstitutionNews(status: string, institutionId: string): Promise<IInstitutionNews[]>,
+    getInstitutionNews(status: string, institutionId: string): Promise<{total: number, items: IInstitutionNews[]}>,
 
     getOneNews(params: any): Promise<IInstitutionNews | null>,
 
@@ -64,10 +64,17 @@ class NewsService implements Repository {
     }
 
     async getInstitutionNews(status: string, institutionId: string) {
-        return InstitutionNewsSchema
-            .find({institutionId: institutionId, status: status})
+        const filters = {institutionId: institutionId, status: status};
+        const total = await InstitutionNewsSchema.countDocuments(filters);
+        const items = await InstitutionNewsSchema
+            .find(filters)
             .limit(20)
             .sort({['publishAt.datePublish']: -1});
+
+        return {
+            total,
+            items
+        }
     }
 
     getOneNews(params = {}) {

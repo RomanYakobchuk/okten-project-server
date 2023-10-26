@@ -1,6 +1,5 @@
 import {Request} from "express";
 import {
-    IAnswerComment,
     ICapl,
     IComment, IConversation,
     IInstitution,
@@ -18,10 +17,11 @@ export interface CustomRequest extends Request {
     newStatus?: "admin" | "manager" | "user",
     tokenInfo?: IOauth,
     subscribe?: ISubscribe | null,
+    subscribes?: {count: number, items: ISubscribe[]} | null,
     reservation?: ICapl,
     conversation?: IConversation,
     comments?: IComment[]
-    comment?: IAnswerComment | IComment,
+    comment?: IComment,
     isAuth?: boolean,
     userExist?: IUser,
     isAllowedNewReview?: boolean,

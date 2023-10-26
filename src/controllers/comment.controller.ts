@@ -1,10 +1,9 @@
 import {NextFunction, Response} from "express";
 
 import {CustomRequest} from "../interfaces/func";
-import {CommentService} from "../services";
+import {CommentService, isProfaneText} from "../services";
 import {CustomError} from "../errors";
-import {IAnswerComment, IComment, IInstitution, IOauth, IUser} from "../interfaces/common";
-import {Schema} from "mongoose";
+import {IComment, IInstitution, IOauth, IUser} from "../interfaces/common";
 
 class CommentController {
     private commentService: CommentService;
@@ -14,7 +13,7 @@ class CommentController {
 
         this.allComments = this.allComments.bind(this);
         this.createComment = this.createComment.bind(this);
-        this.allCommentsByInstitutionUserId = this.allCommentsByInstitutionUserId.bind(this);
+        this.allCommentsByEstablishment = this.allCommentsByEstablishment.bind(this);
         this.allAnsweredCommentById = this.allAnsweredCommentById.bind(this);
         this.allCommentsByUserId = this.allCommentsByUserId.bind(this);
         this.deleteComment = this.deleteComment.bind(this);
@@ -53,43 +52,40 @@ class CommentController {
             next(e)
         }
     }
-    allCommentsByInstitutionUserId = (type: string) => async (req: CustomRequest, res: Response, next: NextFunction) => {
-        const {_order, _sort, _end, _start} = req.query;
-        const {userId} = req.user as IOauth;
-        const user = userId as IUser;
+
+    allCommentsByEstablishment = async (req: CustomRequest, res: Response, next: NextFunction) => {
+        const {_order, _sort, _end, _start, parentId} = req.query;
+        const institution = req.data_info as IInstitution;
 
         try {
-            let id: any = '';
-            if (type === 'institutionId') {
-                const institution = req.data_info as IInstitution;
-                id = institution?._id
-            } else if (type === 'createdBy') {
-                const currentUser = req.userExist;
-                id = currentUser?._id;
-                if (id?.toString() !== user?._id?.toString() && user?.status !== 'admin') {
-                    return next(new CustomError("Access denied", 403))
-                }
-            }
+
             const {
                 items,
-                count
-            } = await this.commentService.getAllByPlaceWithPagination(id, Number(_end), Number(_start), _sort, _order, type)
+                count,
+                currentSize
+            } = await this.commentService.getEstablishmentTopLevelComments(institution?._id, Number(_end), Number(_start), _sort, _order, parentId as string | null)
 
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
 
-            res.status(200).json(items);
+            res.status(200).json({
+                items,
+                count,
+                currentSize
+            });
 
         } catch (e) {
             next(e)
         }
     }
+
     async allAnsweredCommentById(req: CustomRequest, res: Response, next: NextFunction) {
-        const comment = req.comment as IAnswerComment;
+        const comment = req.comment as IComment;
+        const establishment = req.data_info as IInstitution;
         const {_end, _start} = req.query;
 
         try {
-            const {count, items} = await this.commentService.getAllAnswerComments(comment?._id as string, Number(_end), Number(_start));
+            const {count, items} = await this.commentService.getAllReviewComments(comment?._id as string, Number(_end), Number(_start), establishment?._id);
 
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
@@ -99,6 +95,7 @@ class CommentController {
             next(e)
         }
     }
+
     async allCommentsByUserId(req: CustomRequest, res: Response, next: NextFunction) {
         try {
             const {userId} = req.user as IOauth;
@@ -130,60 +127,62 @@ class CommentController {
             next(e)
         }
     }
-    async createComment(req: CustomRequest, res: Response, next: NextFunction) {
-        try {
-            const {text, isAnswer, parentId} = req.body;
-            const {userId} = req.user as IOauth;
-            const institution = req.data_info as IInstitution;
-            const user = userId as IUser;
 
-            if (isAnswer && parentId) {
-                const comment = await this.commentService.getItemByParams({_id: parentId});
-                if (!comment) {
+    async createComment(req: CustomRequest, res: Response, next: NextFunction) {
+        const {text, parentId, refFieldCreate, createdBy} = req.body;
+        const institution = req.data_info as IInstitution;
+
+        try {
+
+            const isProfane = isProfaneText(text);
+            if (isProfane) {
+                return next(new CustomError('Your comment includes bad words!!!', 400))
+            }
+            let parentCommentId: string | null = null;
+            if (parentId) {
+                const parent = await this.commentService.getItemByParams({_id: parentId, establishmentId: institution?._id});
+                if (!parent) {
                     return next(new CustomError("Comment not found", 404));
                 }
-                const answer = await this.commentService.createAnswerComment({
-                    text: text,
-                    parentCommentId: comment?._id,
-                    createdBy: user?._id
-                });
-
-                comment.replies.push(answer?._id as Schema.Types.ObjectId);
-                await comment.save();
+                parentCommentId = parent?._id as string;
             } else {
-                await this.commentService.createCommentItem({
-                    text: text,
-                    createdBy: user?._id,
-                    institutionId: institution?._id as string,
-                })
+                parentCommentId = null;
             }
+            const {comment, parentReviewsLength} = await this.commentService.createCommentItem({
+                text: text,
+                parentId: parentCommentId,
+                createdBy: createdBy,
+                establishmentId: institution?._id,
+                refFieldCreate: refFieldCreate === 'establishment' ? 'institution' : refFieldCreate,
+            });
 
-            res.status(200).json({message: "Comment added successfully"})
+
+
+            res.status(200).json({message: "Comment added successfully", comment: comment, parentReviewsLength});
         } catch (e) {
             next(e)
         }
     }
+
     async deleteComment(req: CustomRequest, res: Response, next: NextFunction) {
+        const {createdBy} = req.body;
+        const {userId} = req.user as IOauth;
+        const user = userId as IUser;
         try {
-            const {userId} = req.user as IOauth;
-            const {isAnswer} = req.body;
-            const comment = req.comment as any;
+            const comment = req.comment as IComment;
 
-            const user = userId as IUser;
-
-            if (user?._id?.toString() !== comment?.createdBy?.toString() && user?.status !== "admin") {
+            if (createdBy?.toString() !== comment?.createdBy?.toString() && user?.status !== "admin") {
                 return res.status(403).json({message: 'It is not your comment'})
             }
-            if (isAnswer) {
-                const parent = await this.commentService.getItemByParams({_id: comment?.parentCommentId as IAnswerComment["parentCommentId"]}) as IComment;
-                parent.replies.pull(comment?._id);
-                await parent.save();
-                await this.commentService.deleteAnswerComment(comment?._id);
-            } else {
-                await this.commentService.deleteComment(comment?._id);
+
+            if (comment?.parentId) {
+                await this.commentService.changeParentRepliesLength(comment?.parentId as string);
             }
 
-            res.status(204).json({message: 'Comment deleted success'});
+            res.status(200).send({message: 'Comment deleted success'});
+            await this.commentService.deleteByParent(comment?._id as string);
+            await this.commentService.deleteComment(comment?._id as string);
+
 
         } catch (e) {
             next(e)

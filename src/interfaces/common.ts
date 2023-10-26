@@ -58,29 +58,25 @@ export interface ICity extends Ids {
 }
 
 export interface IComment extends Document {
-    createdBy: Schema.Types.ObjectId,
-    _id: string | string & ObjectId | any,
+    createdBy: Schema.Types.ObjectId | IUser | IInstitution | {_id: string, name: string, avatar: string},
+    _id: string | string & ObjectId | ObjectId,
     text: string,
-    institutionId: Schema.Types.ObjectId,
-    replies: IObjectIdArray,
+    repliesLength: number,
+    establishmentId: Schema.Types.ObjectId,
+    parentId: Schema.Types.ObjectId | string,
     createdAt?: Date,
     updatedAt?: Date,
+    refFieldCreate?: "user" | "institution",
+    _doc?: IComment
     // [key: string]: any
 }
 
 export interface ICreateCommentItem {
     text: string,
+    refFieldCreate: 'institution' | 'user',
     createdBy: string | string & ObjectId,
-    institutionId: string | string & ObjectId,
-}
-
-export interface IAnswerComment extends Document {
-    _id: string | string & ObjectId,
-    parentCommentId: Schema.Types.ObjectId,
-    createdBy: Schema.Types.ObjectId,
-    text: string,
-    createdAt?: Date,
-    updatedAt?: Date,
+    parentId: string | string & ObjectId | null,
+    establishmentId: string | string & ObjectId,
 }
 
 export interface IPicture {
@@ -156,7 +152,7 @@ export interface IFreeSeats extends Document {
 }
 
 export interface IInstitutionNews extends Document {
-    institutionId: Schema.Types.ObjectId,
+    institutionId: Schema.Types.ObjectId | IInstitution,
     _id: string | string & ObjectId,
     title: string,
     place: {
@@ -322,10 +318,16 @@ export interface IUser extends Document {
 
     [key: string]: any
 }
-
+export interface IGenericArray<T> extends Array<T> {
+    pull(...items: T[]): this;
+}
+export interface IFavPlaces {
+    type: string,
+    item: Schema.Types.ObjectId
+}
 export interface IUserFavoritePlaces extends UserId, Document {
     _id: string | string & ObjectId,
-    places: IObjectIdArray,
+    places: IGenericArray<IFavPlaces>,
     createdAt?: Date,
     updatedAt?: Date,
 }

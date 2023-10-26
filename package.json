@@ -20,6 +20,7 @@
     "aws-sdk": "^2.1327.0",
     "bcrypt": "^5.1.0",
     "body-parser": "^1.20.2",
+    "censor-sensor": "^1.0.6",
     "cloudinary": "^1.36.2",
     "compression": "^1.7.4",
     "config": "^3.3.9",

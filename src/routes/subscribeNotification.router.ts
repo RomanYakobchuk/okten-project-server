@@ -20,4 +20,12 @@ router.post(
     subscribeNotificationController.updateSubscribe
 )
 
+router.get(
+    `/byUser/:id`,
+    authMiddleware.checkAccessToken,
+    authMiddleware.checkStatus("check"),
+    subscribeNotificationMiddleware.checkAllSubscribed('subscriberId'),
+    subscribeNotificationController.getAllSubscribes
+)
+
 export default router;

@@ -1,6 +1,6 @@
 import {Router} from 'express';
 
-import {authMiddleware, institutionMiddleware, commentMiddleware, userMiddleware} from "../middlewares";
+import {authMiddleware, institutionMiddleware, commentMiddleware} from "../middlewares";
 import {commentController} from "../controllers";
 
 const router = Router();
@@ -10,6 +10,7 @@ router.post(
     `/create`,
     authMiddleware.checkAccessToken,
     institutionMiddleware.checkInstitution('info'),
+    commentMiddleware.checkCreatorIsExist,
     commentController.createComment
 )
 
@@ -18,16 +19,16 @@ router.get(
     `/allByInstitutionId/:id`,
     authMiddleware.checkAccessToken,
     institutionMiddleware.checkInstitution('info'),
-    commentController.allCommentsByInstitutionUserId('institutionId')
+    commentController.allCommentsByEstablishment
 )
 
 // all user`s comments
-router.get(
-    `/allByUserId/:id`,
-    authMiddleware.checkAccessToken,
-    userMiddleware.isUserPresent,
-    commentController.allCommentsByInstitutionUserId('createdBy')
-)
+// router.get(
+//     `/allByUserId/:id`,
+//     authMiddleware.checkAccessToken,
+//     userMiddleware.isUserPresent,
+//     commentController.allCommentsByInstitutionUserId('createdBy')
+// )
 
 // all comments
 router.get(
@@ -39,9 +40,10 @@ router.get(
 
 // delete comment
 router.delete(
-    `/deleteComment/:id`,
+    `/delete/:id`,
     authMiddleware.checkAccessToken,
     commentMiddleware.checkCommentById,
+    commentMiddleware.checkCreatorIsExist,
     commentController.deleteComment
 )
 
@@ -49,6 +51,7 @@ router.get(
     `/allAnsweredCommentById/:id`,
     authMiddleware.checkAccessToken,
     commentMiddleware.checkCommentById,
+    institutionMiddleware.checkInstitution('info'),
     commentController.allAnsweredCommentById
 )
 

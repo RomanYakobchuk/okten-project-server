@@ -14,7 +14,6 @@ const InstitutionNews = new Schema<IInstitutionNews>({
         required: true
     },
     place: {
-        isPlace: Boolean,
         location: {
             lng: {
                 type: Number,

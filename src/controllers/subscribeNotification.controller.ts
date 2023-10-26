@@ -2,7 +2,7 @@ import {NextFunction, Response} from "express";
 
 import {SubscribeNotificationService} from "../services";
 import {CustomRequest} from "../interfaces/func";
-import {ISubscribe} from "../interfaces/common";
+import {ISubscribe,} from "../interfaces/common";
 
 class SubscribeNotificationController {
     private subscribeNotificationService: SubscribeNotificationService;
@@ -12,6 +12,7 @@ class SubscribeNotificationController {
 
         this.updateSubscribe = this.updateSubscribe.bind(this);
         this.getOneSubscribe = this.getOneSubscribe.bind(this);
+        this.getAllSubscribes = this.getAllSubscribes.bind(this);
     }
 
     async updateSubscribe(req: CustomRequest, res: Response, next: NextFunction) {
@@ -22,12 +23,12 @@ class SubscribeNotificationController {
             let isSubscribe: boolean;
             if (subscribe?._id) {
                 await this.subscribeNotificationService.deleteSubscribe(institutionId, subscriberId);
-                isSubscribe = true;
+                isSubscribe = false;
             } else {
                 await this.subscribeNotificationService.createSubscribe(institutionId, subscriberId);
-                isSubscribe = false;
+                isSubscribe = true;
             }
-            res.status(200).json({message: `${isSubscribe ? 'Unfollowed' : 'Followed'}`})
+            res.status(200).json({message: `${!isSubscribe ? 'Unfollowed' : 'Followed'}`, isSubscribe})
 
         } catch (e) {
             next(e);
@@ -43,6 +44,18 @@ class SubscribeNotificationController {
         }
     }
 
+    getAllSubscribes = async (req: CustomRequest, res: Response, next: NextFunction) => {
+        const {items, count} = req.subscribes as {count: number, items: ISubscribe[]};
+        try {
+
+            res.header('x-total-count', `${count}`);
+            res.header('Access-Control-Expose-Headers', 'x-total-count');
+
+            res.status(200).json(items)
+        } catch (e) {
+            next(e)
+        }
+    }
 }
 
 export default new SubscribeNotificationController();

@@ -6,7 +6,7 @@ import {UserService, CloudService, TokenService} from '../services';
 import {userPresenter} from '../presenters/user.presenter';
 import {CustomError} from "../errors";
 import managerController from "./manager.controller";
-import {IInstitution, IOauth, IUser, IUserFavoritePlaces} from "../interfaces/common";
+import {IInstitution, IInstitutionNews, IOauth, IUser, IUserFavoritePlaces} from "../interfaces/common";
 
 class UserController {
 
@@ -115,15 +115,27 @@ class UserController {
         const user = userId as IUser;
 
         const institution = req.data_info as IInstitution;
+        const news = req.news as IInstitutionNews;
+        const {refPath} = req.body;
         const favPlaces = req.favPlaces as IUserFavoritePlaces;
         try {
 
-            const isInclude = favPlaces?.places?.includes(institution._id as Schema.Types.ObjectId) as boolean;
+            let isInclude: boolean = false;
+            let followId: Schema.Types.ObjectId;
+            if (refPath === 'institution') {
+                isInclude = favPlaces?.places?.some((item) => item.type === refPath && item.item.toString() === institution?._id?.toString());
+                followId = institution?._id as Schema.Types.ObjectId;
+            } else if (refPath === 'institutionNews') {
+                isInclude = favPlaces?.places?.some((item) => item.type === refPath && item.item.toString() === news?._id?.toString())
+                followId = news?._id as Schema.Types.ObjectId;
+            } else {
+                return next(new CustomError('Something went wrong'))
+            }
 
-            if (isInclude) {
-                favPlaces.places?.pull(institution._id as Schema.Types.ObjectId)
+            if (isInclude && followId) {
+                favPlaces.places?.pull({item: followId as Schema.Types.ObjectId, type: refPath})
             } else if (!isInclude) {
-                favPlaces.places?.push(institution._id as Schema.Types.ObjectId);
+                favPlaces.places?.push({item: followId as Schema.Types.ObjectId, type: refPath});
             }
             await favPlaces.save();
 
@@ -171,7 +183,7 @@ class UserController {
         try {
             // const {name, email, status, phone, dOB, isActivated, phoneVerify, blocked} = req.body;
             // const {...dataToUpdate} = req.body;
-        //     other code...
+            //     other code...
         } catch (e) {
             next(e)
         }

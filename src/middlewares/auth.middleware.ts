@@ -9,8 +9,8 @@ import {CustomError} from '../errors';
 import {UserService, PasswordService, TokenService} from '../services';
 import {authValidator} from '../validators';
 import {tokenTypeEnum} from '../enums';
-import {configs, constants} from '../configs';
-import {IManager, IOauth, IUser} from "../interfaces/common";
+import {constants} from '../configs';
+import {IInstitution, IManager, IOauth, IUser} from "../interfaces/common";
 import {getFacebookUserInfo, getGitHubUserData, getGoogleUserInfo} from "../clients";
 
 
@@ -33,7 +33,7 @@ class AuthMiddleware {
         this.checkStatus = this.checkStatus.bind(this);
     }
 
-    async checkAccessToken(req: CustomRequest, res: Response, next: NextFunction) {
+    async checkAccessToken(req: CustomRequest, _: Response, next: NextFunction) {
         try {
 
             const access_token = req.get(constants.AUTHORIZATION);
@@ -57,7 +57,7 @@ class AuthMiddleware {
         }
     }
 
-    async checkRefreshToken(req: CustomRequest, res: Response, next: NextFunction) {
+    async checkRefreshToken(req: CustomRequest, _: Response, next: NextFunction) {
         try {
             const {refresh_token} = req.body;
 
@@ -79,10 +79,9 @@ class AuthMiddleware {
         }
     }
 
-    async isUserPresentForAuth(req: CustomRequest, res: Response, next: NextFunction) {
+    async isUserPresentForAuth(req: CustomRequest, _: Response, next: NextFunction) {
         let {email, registerBy, access_token, userId} = req.body;
         const {code} = req.query;
-        const pathUrl = (req.query.state as string) ?? '/';
 
         try {
             let user: any;
@@ -106,9 +105,9 @@ class AuthMiddleware {
             user = await this.userService.findOneUser({email, registerBy});
 
             if (!user) {
-                new CustomError('Wrong email or password');
-                return res.redirect(`${configs.CLIENT_URL}/login${pathUrl}`);
-            } else if (!user?.isActivated) {
+                return next(new CustomError('Wrong email or password'));
+            }
+            if (!user?.isActivated) {
                 return next(new CustomError("UserSchema account blocked", 423))
             }
 
@@ -119,10 +118,10 @@ class AuthMiddleware {
         }
     }
 
-    async isLoginBodyValid(req: CustomRequest, res: Response, next: NextFunction) {
+    async isLoginBodyValid(req: CustomRequest, _: Response, next: NextFunction) {
         const {registerBy} = req.body;
         try {
-            let validationSchema: Joi.ObjectSchema<any>;
+            let validationSchema: Joi.ObjectSchema;
 
             switch (registerBy) {
                 case 'Email':
@@ -148,7 +147,7 @@ class AuthMiddleware {
         }
     }
 
-    async isEmailValid(req: CustomRequest, res: Response, next: NextFunction) {
+    async isEmailValid(req: CustomRequest, _: Response, next: NextFunction) {
         try {
             const {error, value} = authValidator.forgotPassword.validate(req.body);
 
@@ -163,7 +162,7 @@ class AuthMiddleware {
         }
     }
 
-    async isUserPresentByEmail(req: CustomRequest, res: Response, next: NextFunction) {
+    async isUserPresentByEmail(req: CustomRequest, _: Response, next: NextFunction) {
         try {
             const {email} = req.body;
 
@@ -208,7 +207,7 @@ class AuthMiddleware {
         await this.userService.updateOneUser({_id: user?._id}, user);
     }
 
-    checkStatus = (type: string) => async (req: CustomRequest, res: Response, next: NextFunction) => {
+    checkStatus = (type: "login" | "check") => async (req: CustomRequest, _: Response, next: NextFunction) => {
         try {
             let statusHandler = async (status: IUser['status'], _id: string | string & ObjectId) => {
                 if (status === 'manager') {

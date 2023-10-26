@@ -2,10 +2,9 @@ import {Document, ObjectId} from "mongoose";
 import {NextFunction, Response} from "express";
 
 import {CustomRequest} from "../interfaces/func";
-import {InstitutionSchema, Views, MenuSchema, CityForCount, FreeSeatsSchema} from "../dataBase";
+import {InstitutionSchema, Views, MenuSchema, CityForCount, FreeSeatsSchema, InstitutionNewsSchema, ReviewItemSchema, CommentItemSchema} from "../dataBase";
 import {
-    UserService, InstitutionService, CloudService, TokenService
-} from '../services';
+    UserService, InstitutionService, CloudService, TokenService} from '../services';
 import {CustomError} from "../errors";
 import {userPresenter} from "../presenters/user.presenter";
 import {institutionMiddleware} from "../middlewares";
@@ -39,6 +38,7 @@ class InstitutionController {
         this.getStatus = this.getStatus.bind(this);
         this.allByUserId = this.allByUserId.bind(this);
         this.establishmentNearby = this.establishmentNearby.bind(this);
+        this.getNumberOfEstablishmentProperties = this.getNumberOfEstablishmentProperties.bind(this);
     }
 
     async allInstitutionByVerify(req: CustomRequest, res: Response, next: NextFunction) {
@@ -351,7 +351,7 @@ class InstitutionController {
 
     async userInstitutionsByQuery(req: CustomRequest, res: Response, next: NextFunction) {
         try {
-            const {title_like = ""} = req.query;
+            const {title_like = "", _end, _start} = req.query;
             const {userId} = req.user as IOauth;
             const user = userId as IUser;
             const userStatus = req.newStatus;
@@ -366,7 +366,7 @@ class InstitutionController {
                 return next(new CustomError("Access denied", 403));
             }
 
-            const {items} = await this.institutionService.getUserInstitutionsByQuery(title_like as string, createdBy);
+            const {items} = await this.institutionService.getUserInstitutionsByQuery(title_like as string, createdBy, Number(_end), Number(_start));
 
             res.status(200).json(items);
 
@@ -463,6 +463,22 @@ class InstitutionController {
 
         } catch (e) {
             next(e)
+        }
+    }
+    async getNumberOfEstablishmentProperties(req: CustomRequest, res: Response, next: NextFunction) {
+        const establishment = req.data_info as IInstitution;
+        try {
+            const reviewCount = await ReviewItemSchema.countDocuments({institutionId: establishment?._id});
+            const newsCount = await InstitutionNewsSchema.countDocuments({institutionId: establishment?._id});
+            const commentCount = await CommentItemSchema.countDocuments({establishmentId: establishment?._id});
+
+            res.status(200).json({
+                reviewCount,
+                commentCount,
+                newsCount
+            })
+        } catch (e) {
+            next(e);
         }
     }
 }

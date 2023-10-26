@@ -5,7 +5,10 @@ class UserFavoritePlacesService {
         return UserFavPlaces.findOne(params)
     }
     create(params: {userId: string}) {
-        return UserFavPlaces.create({userId: params.userId});
+        return UserFavPlaces.create({userId: params.userId, places: []});
+    }
+    deleteOne(params: {userId: string}) {
+        return UserFavPlaces.deleteOne(params);
     }
 }
 

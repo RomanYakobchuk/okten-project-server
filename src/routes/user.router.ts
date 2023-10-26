@@ -1,7 +1,14 @@
 import {Router} from "express";
 
 import { userController} from '../controllers';
-import {commonMiddleware, userMiddleware, authMiddleware, fileMiddleware, institutionMiddleware} from '../middlewares';
+import {
+    commonMiddleware,
+    userMiddleware,
+    authMiddleware,
+    fileMiddleware,
+    institutionMiddleware,
+    newsMiddleware
+} from '../middlewares';
 import { userQueryValidator } from '../validators';
 import userFavoritePlacesMiddleware from "../middlewares/userFavoritePlaces.middleware";
 
@@ -52,8 +59,9 @@ router.delete('/:id',
 router.post(
     '/addDeleteFavoritePlace/:id',
     authMiddleware.checkAccessToken,
+    newsMiddleware.checkNews,
     institutionMiddleware.checkInstitution('info'),
-    userFavoritePlacesMiddleware.checkUserFavPlaces('check'),
+    userFavoritePlacesMiddleware.checkUserFavPlaces('user', 'byUser', true),
     userController.addDeleteFavoritePlace
 );
 
@@ -75,13 +83,13 @@ router.patch(
 router.get(
     `/getUserFavPlaces`,
     authMiddleware.checkAccessToken,
-    userFavoritePlacesMiddleware.checkUserFavPlaces("check", "byUser", true),
+    userFavoritePlacesMiddleware.checkUserFavPlaces("user", "byUser", true),
     userController.getUserFavPlaces
 )
 router.get(
     `/getByUserIdFavPlaces/:id`,
     authMiddleware.checkAccessToken,
-    userFavoritePlacesMiddleware.checkUserFavPlaces("check", "byId", true),
+    userFavoritePlacesMiddleware.checkUserFavPlaces("user", "byId", true),
     userController.getUserFavPlaces
 )
 

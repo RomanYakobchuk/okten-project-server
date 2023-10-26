@@ -44,7 +44,7 @@ class UserService {
         return UserSchema.create(user);
     }
 
-    updateOneUser(params: any, userData: any, options = {new: true}) {
+    updateOneUser(params: {}, userData: {}, options = {new: true}) {
         return UserSchema.findOneAndUpdate(params, userData, options);
 
     }

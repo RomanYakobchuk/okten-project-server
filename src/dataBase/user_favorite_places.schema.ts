@@ -11,8 +11,14 @@ const UserFavoritePlaces = new Schema({
         unique: true
     },
     places: [{
-        type: Schema.Types.ObjectId,
-        ref: 'institution'
+        type: {
+            type: String,
+            enum: ['institution', 'institutionNews']
+        },
+        item: {
+            type: Schema.Types.ObjectId,
+            refPath: 'places.type'
+        }
     }]
 }, {
     timestamps: true,

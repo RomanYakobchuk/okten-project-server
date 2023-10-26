@@ -1,4 +1,5 @@
 import {NotificationSchema, SubscribeSchema} from "../dataBase";
+import {SortOrder} from "mongoose";
 
 class SubscribeNotificationService {
     getOneSubscribe(institutionId: string, subscriberId: string) {
@@ -20,18 +21,8 @@ class SubscribeNotificationService {
         return NotificationSchema.findOne({subscribeId})
     }
 
-    async getAllSubscribes(id: string, type: 'institutionId' | "subscriberId", _end: number, _start: number, _order: any, _sort: any,) {
+    async getAllSubscribes(id: string, type: 'institutionId' | "subscriberId", _end: number = 40, _start: number = 0, _order: SortOrder = -1, _sort: string = 'createdAt',) {
 
-        if (!_sort || !_order) {
-            _sort = "createdAt"
-            _order = -1
-        }
-        if (!_start) {
-            _start = 0
-        }
-        if (!_end) {
-            _end = 40
-        }
         const filter = _getFilterQuery({id, type});
 
         const count = await SubscribeSchema.countDocuments({...filter});

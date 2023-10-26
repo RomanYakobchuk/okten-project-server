@@ -17,6 +17,7 @@ import {CaplService} from './capl.service';
 import {UserFavoritePlacesService} from './userFavoritePlaces.service';
 import * as scheduler from './other/scheduler';
 import * as reserve from './other/isActiveReserve';
+import {isProfaneText} from "./other/checkBadWords";
 
 import {SubscribeNotificationService} from "./subscribeNotification.service"
 
@@ -39,5 +40,6 @@ export {
     UserFavoritePlacesService,
     SubscribeNotificationService,
     scheduler,
-    reserve
+    reserve,
+    isProfaneText
 }

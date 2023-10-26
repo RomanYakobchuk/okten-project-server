@@ -17,32 +17,37 @@ class InstitutionMiddleware {
         this.getAllInfoById = this.getAllInfoById.bind(this);
     }
 
-        checkInstitution = (type: "all_info" | "info" = 'info') => async (req: CustomRequest, _: Response, next: NextFunction) => {
+    checkInstitution = (type: "all_info" | "info" = 'info') => async (req: CustomRequest, _: Response, next: NextFunction) => {
         const news = req.news as IInstitutionNews;
         try {
-            const {institutionId} = req.body;
+            const {institutionId, refPath} = req.body;
             const {id} = req.params;
 
-            const currentId = institutionId || id || "";
+            if (refPath === 'institutionNews') {
+                next();
+            } else {
+                const currentId = institutionId || id || "";
 
-            if (news?.institutionId && news?.institutionId === institutionId) {
+                if (news?.institutionId && news?.institutionId === institutionId) {
+                    next();
+                }
+                let institution: IInstitution;
+
+                const query = await this.institutionService.getOneInstitution({_id: currentId}) as IInstitution;
+                if (type === 'all_info' && query) {
+                    await query.populate([{
+                        path: 'views',
+                        select: 'viewsNumber _id'
+                    }]);
+                }
+                institution = query as IInstitution;
+                if (!institution) {
+                    return next(new CustomError("InstitutionSchema not found", 404))
+                }
+                req.data_info = institution;
+
                 next();
             }
-            let institution: IInstitution;
-
-            const query = await this.institutionService.getOneInstitution({_id: currentId}) as IInstitution;
-            if (type === 'all_info' && query) {
-                await query.populate([{path: "news"}, {path: 'views',
-                    select: 'viewsNumber _id'
-                }]);
-            }
-            institution = query as IInstitution;
-            if (!institution) {
-                return next(new CustomError("InstitutionSchema not found", 404))
-            }
-            req.data_info = institution;
-
-            next();
         } catch (e) {
             next(e)
         }

@@ -50,6 +50,13 @@ router.get(
     authMiddleware.checkAccessToken,
     institutionMiddleware.checkInstitution('info'),
     newsController.otherPlaceNews
+);
+
+router.get(
+    `/getAllByEstablishment/:id`,
+    authMiddleware.checkAccessToken,
+    institutionMiddleware.checkInstitution('info'),
+    newsController.allInstitutionsNewsByPublished
 )
 
 

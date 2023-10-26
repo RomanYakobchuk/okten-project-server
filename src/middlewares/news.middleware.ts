@@ -13,18 +13,25 @@ class NewsMiddleware {
         this.checkNews = this.checkNews.bind(this);
     }
 
-    async checkNews(req: CustomRequest, res: Response, next: NextFunction) {
+    async checkNews(req: CustomRequest, _: Response, next: NextFunction) {
         try {
+            const {newsId, refPath} = req.body;
             const {id} = req.params;
 
-            const news = await this.newsService
-                .getOneNews({_id: id}).populate({path: 'institutionId', select: '_id title pictures type place'})
+            if (refPath === 'institution') {
+                next();
+            } else {
+                const currentId = newsId || id || "";
 
-            if (!news) {
-                return next(new CustomError('News not found', 404));
+                const news = await this.newsService
+                    .getOneNews({_id: currentId}).populate({path: 'institutionId', select: '_id title pictures type place location'})
+
+                if (!news) {
+                    return next(new CustomError('News not found', 404));
+                }
+                req.news = news;
+                next();
             }
-            req.news = news;
-            next();
         } catch (e) {
             next(e)
         }

@@ -81,10 +81,9 @@ class AuthController {
             resultUser.status = newStatus!;
 
             const {token} = await this.tokenService.tokenWithData(resultUser, "3h");
-
             res.status(200).json({
                 user: token,
-                favoritePlaces: favoritePlaces.places,
+                favoritePlaces: favoritePlaces?.places,
                 ...tokens,
                 message: 'Login success'
             });
@@ -202,6 +201,7 @@ class AuthController {
     }
 
     async refreshToken(req: CustomRequest, res: Response, next: NextFunction) {
+        const favoritePlaces = req.favPlaces as IUserFavoritePlaces;
         try {
             const {userId, refresh_token} = req.tokenInfo as IOauth;
 
@@ -215,7 +215,8 @@ class AuthController {
 
             res.json({
                 user: token,
-                ...tokens
+                ...tokens,
+                favoritePlaces: favoritePlaces?.places
             });
         } catch (e) {
             next(e);
@@ -281,7 +282,8 @@ class AuthController {
                 phone,
                 isActivated,
                 updatedAt,
-                phoneVerify
+                phoneVerify,
+                email
             }, "3m");
 
             await Promise.allSettled([
@@ -303,6 +305,7 @@ class AuthController {
 
             const hash = await this.passwordService.hashPassword(password);
 
+            console.log(req.body)
             await this.userService.updateOneUser({email: email}, {password: hash});
 
             res.status(200).json({message: "Password updated successful"})

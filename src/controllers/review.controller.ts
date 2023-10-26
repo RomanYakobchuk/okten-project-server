@@ -2,7 +2,7 @@ import moment from "moment";
 import {NextFunction, Response} from "express";
 
 import {CustomRequest} from "../interfaces/func";
-import {ReviewService} from "../services";
+import {isProfaneText, ReviewService} from "../services";
 import {CustomError} from "../errors";
 import {ReviewItemSchema} from "../dataBase";
 import {IInstitution, IOauth, IUser} from "../interfaces/common";
@@ -54,6 +54,7 @@ class ReviewController {
             next(e)
         }
     }
+
     async allReviewByInstitutionId(req: CustomRequest, res: Response, next: NextFunction) {
         const institution = req.data_info;
 
@@ -74,6 +75,7 @@ class ReviewController {
             next(e)
         }
     }
+
     latestUserReview = (type: string) => async (req: CustomRequest, res: Response, next: NextFunction) => {
         const institution = req.data_info as IInstitution;
         const {userId} = req.user as IOauth;
@@ -85,13 +87,12 @@ class ReviewController {
 
             let isAllowedNewReview: boolean;
             if (userLatestReview) {
+                const oneWeekAgo = moment().subtract(3, 'days');
                 if (type === 'check') {
-                    const oneWeekAgo = moment().subtract(1, 'week');
                     isAllowedNewReview = moment(userLatestReview.createdAt).isBefore(oneWeekAgo);
                     req.isAllowedNewReview = isAllowedNewReview;
                     return next();
                 } else if (type === 'info') {
-                    const oneWeekAgo = moment().subtract(1, 'week');
                     isAllowedNewReview = moment(userLatestReview.createdAt).isBefore(oneWeekAgo);
                     res.status(200).json({
                         isAllowedNewReview: isAllowedNewReview
@@ -109,6 +110,7 @@ class ReviewController {
             next(e)
         }
     }
+
     async allReviewByUserId(req: CustomRequest, res: Response, next: NextFunction) {
         const {_order, _sort, _end, _start} = req.query;
         const {userId} = req.user as IOauth;
@@ -134,6 +136,7 @@ class ReviewController {
             next(e)
         }
     }
+
     async createReview(req: CustomRequest, res: Response, next: NextFunction) {
         const {grade, text} = req.body;
         const {userId} = req.user as IOauth;
@@ -145,9 +148,13 @@ class ReviewController {
             if (!isAllowedNewReview) {
                 return next(new CustomError("Allowed block", 403))
             }
-
             if (institution.createdBy?.toString() === user?._id?.toString()) {
                 return next(new CustomError("You cannot evaluate your own institution", 403))
+            }
+            const isProfane1 = isProfaneText(text.like);
+            const isProfane2 = isProfaneText(text.notLike);
+            if (isProfane1 || isProfane2) {
+                return next(new CustomError('Your comment includes bad words!!!', 400))
             }
 
             await this.reviewService.createReview({

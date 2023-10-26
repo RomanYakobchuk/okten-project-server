@@ -40,11 +40,19 @@ const workScheduleValidator = Joi.object({
     })),
     weekend: stringValidator
 });
-const picturesValidator = Joi.array().items(Joi.object({
-    name: stringValidator,
-    url: stringValidator,
-    _id: stringValidator
-}));
+const picturesValidator = Joi.alternatives().try(
+    Joi.array().items(Joi.object({
+        name: stringValidator,
+        url: stringValidator,
+        _id: stringValidator
+    })),
+    Joi.object({
+        name: stringValidator,
+        url: stringValidator,
+        _id: stringValidator
+    })
+);
+
 
 const categoryValidator = Joi.string<"general" | "promotions" | "events">();
 const dateEventValidator = Joi.array().items(Joi.object({

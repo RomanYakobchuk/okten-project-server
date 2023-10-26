@@ -57,9 +57,7 @@ class InstitutionService {
 
         _sort = _sort?.split('_')[0];
 
-        if (_sort === 'createdAt') {
-            _order = _order === 'desc' ? -1 : 1
-        }
+        _order = _order === 'desc' ? -1 : 1;
 
         const otherFieldsToInclude = {
             pictures: 1,
@@ -72,7 +70,7 @@ class InstitutionService {
             createdBy: 1,
             description: 1,
             averageCheck: 1,
-            freeSeats: 1
+            freeSeats: 1,
         };
         const adminFieldsToInclude = {
             'viewsContainer.viewsNumber': 1,
@@ -150,10 +148,15 @@ class InstitutionService {
             aggregationPipeline.push(
                 {
                     $lookup: {
-                        from: 'views_container',
-                        localField: 'views',
-                        foreignField: '_id',
-                        as: 'viewsContainer'
+                        from: 'views_containers',
+                        localField: '_id',
+                        foreignField: 'viewsWith',
+                        as: 'viewsContainer',
+                        pipeline: [
+                            {
+                                $match: {refField: 'institution'}
+                            }
+                        ]
                     }
                 },
                 {
@@ -221,9 +224,14 @@ class InstitutionService {
         return InstitutionSchema.deleteOne(params)
     }
 
-    async getUserInstitutionsByQuery(search_like = '', createdBy: string) {
+    async getUserInstitutionsByQuery(search_like = '', createdBy: string, _end: number, _start: number) {
         const searchObject = {};
-
+        if (!_start) {
+            _start = 0
+        }
+        if (!_end) {
+            _end = 5
+        }
         if (createdBy === 'all') {
             Object
                 .assign(searchObject, {
@@ -257,8 +265,9 @@ class InstitutionService {
         }
         const institutions = await InstitutionSchema
             .find(searchObject)
-            .select('_id title pictures place type')
-            .limit(20)
+            .select('_id title pictures place type location createdBy')
+            .limit(_end - _start)
+            .skip(_start)
             .sort({['title']: 'asc'})
             .exec();
 
