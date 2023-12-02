@@ -1,9 +1,9 @@
 import {NextFunction, Response} from "express";
 
 import {CustomError} from '../errors';
-import {UserService} from '../services';
+import {ManagerService, UserService} from '../services';
 import {CustomRequest} from "../interfaces/func";
-import {IUser} from "../interfaces/common";
+import {IOauth, IUser} from "../interfaces/common";
 import {commonMiddleware} from "./index";
 import {authValidator, userValidator} from "../validators";
 import {getFacebookUserInfo, getGoogleUserInfo} from "../clients";
@@ -11,9 +11,11 @@ import {getFacebookUserInfo, getGoogleUserInfo} from "../clients";
 class UserMiddleware {
 
     private userService: UserService;
+    private managerService: ManagerService;
 
     constructor() {
         this.userService = new UserService();
+        this.managerService = new ManagerService();
 
         this.isUserPresent = this.isUserPresent.bind(this);
         this.isUserUniqByEmail = this.isUserUniqByEmail.bind(this);
@@ -21,27 +23,37 @@ class UserMiddleware {
         this.isUserUniqByFacebook = this.isUserUniqByFacebook.bind(this);
     }
 
-    async isUserPresent(req: CustomRequest, res: Response, next: NextFunction) {
+    isUserPresent = (bodyData: string = 'userId') => async (req: CustomRequest, _: Response, next: NextFunction) => {
+        const {id} = req.params;
+        if (!bodyData) {
+            bodyData = 'userId'
+        }
+        const userId = req.body[bodyData];
+        const {userId: currentUserId} = req.user as IOauth;
+        const currentUser = currentUserId as IUser;
+        const status = req.newStatus;
         try {
-            const {id} = req.params;
-            const {userId} = req.body;
+            if (status === 'admin') {
 
-            let currentId;
+                let currentId = id || userId;
 
-            if (id) {
-                currentId = id
-            } else if (!id && userId) {
-                currentId = userId
+                const user = await this.userService.findOneUser({_id: currentId});
+                if (!user) {
+                    return next(new CustomError('User not found', 403));
+                }
+                if (bodyData === 'managerId') {
+                    const manager = await this.managerService.findOneManager({_id: userId})?.populate('user');
+                    if (!manager) {
+                        return next(new CustomError('Manager not found', 403));
+                    }
+                    next();
+                }
+                req.userExist = user;
+            } else {
+                req.userExist = currentUser;
             }
-            const user = await this.userService.findOneUser({_id: currentId});
-            if (!user) {
-                return next(new CustomError('UserSchema not found'));
-            }
-
-            req.userExist = user;
             next();
         } catch (e) {
-            console.log(`isUserPresent user.middleware`)
             next(e);
         }
     }

@@ -1,10 +1,20 @@
-import {Document, ObjectId} from "mongoose";
+import {Document, ObjectId, Schema} from "mongoose";
 import {NextFunction, Response} from "express";
 
 import {CustomRequest} from "../interfaces/func";
-import {InstitutionSchema, Views, MenuSchema, CityForCount, FreeSeatsSchema, InstitutionNewsSchema, ReviewItemSchema, CommentItemSchema} from "../dataBase";
 import {
-    UserService, InstitutionService, CloudService, TokenService} from '../services';
+    InstitutionSchema,
+    Views,
+    MenuSchema,
+    CityForCount,
+    FreeSeatsSchema,
+    InstitutionNewsSchema,
+    ReviewItemSchema,
+    CommentItemSchema
+} from "../dataBase";
+import {
+    UserService, InstitutionService, CloudService, TokenService, NotificationService
+} from '../services';
 import {CustomError} from "../errors";
 import {userPresenter} from "../presenters/user.presenter";
 import {institutionMiddleware} from "../middlewares";
@@ -16,12 +26,14 @@ class InstitutionController {
     private cloudService: CloudService;
     private institutionService: InstitutionService;
     private tokenService: TokenService;
+    private notificationService: NotificationService;
 
     constructor() {
         this.cloudService = new CloudService();
         this.userService = new UserService();
         this.institutionService = new InstitutionService();
         this.tokenService = new TokenService();
+        this.notificationService = new NotificationService();
 
         this.similarEstablishment = this.similarEstablishment.bind(this);
         this.allInstitutionByVerify = this.allInstitutionByVerify.bind(this);
@@ -101,6 +113,7 @@ class InstitutionController {
     }
 
     async createInstitution(req: CustomRequest, res: Response, next: NextFunction) {
+        const status = req.newStatus;
         try {
             const {
                 title,
@@ -123,8 +136,8 @@ class InstitutionController {
             const {userId} = req.user as IOauth;
             const user = userId as IUser;
 
-            let currentUser: any;
-            if (createdBy?.length > 0) {
+            let currentUser: any = user;
+            if (createdBy?.length > 0 && status === 'admin') {
                 currentUser = await this.userService.findOneUser({_id: createdBy})
                 if (!currentUser) {
                     return next(new CustomError('User not found'));
@@ -140,7 +153,7 @@ class InstitutionController {
                 location: location,
                 place: place,
                 type,
-                createdBy: currentUser?._id === user?._id ? user?._id : currentUser?._id,
+                createdBy: currentUser?._id,
                 description,
                 contacts: contacts,
                 tags: tags,
@@ -187,12 +200,27 @@ class InstitutionController {
 
             await institution.save();
 
+            const notification = await this.notificationService.create({
+                type: "newEstablishment",
+                userId: currentUser?._id as Schema.Types.ObjectId,
+                isRead: false,
+                message: 'User reserved seats',
+                description: institution?._id,
+                forUser: {
+                    role: 'admin'
+                }
+            });
+
             if (currentUser?._id === user?._id) {
                 const userForResponse = userPresenter(user);
 
                 const {token} = await this.tokenService.tokenWithData(userForResponse, "12h");
 
-                res.status(201).json({user: token, createdById: user?._id});
+                res.status(201).json({
+                    user: token,
+                    createdById: user?._id,
+                    notification
+                });
             } else {
                 res.status(201).json({message: "InstitutionSchema created successful"})
             }
@@ -269,7 +297,7 @@ class InstitutionController {
     async countByCity(_: CustomRequest, res: Response, next: NextFunction) {
 
         try {
-            const cities = await CityForCount.find({}, {_id: 0, name_en: 1, name_ua: 1, url: 1});
+            const cities = await CityForCount.find({}, {_id: 1, name_en: 1, name_ua: 1, url: 1});
 
             const result = await Promise.all(
                 cities.map(async (city) => {
@@ -422,13 +450,13 @@ class InstitutionController {
     async allByUserId(req: CustomRequest, res: Response, next: NextFunction) {
         const user = req.userExist;
 
-        const {_end, _start, _sort, _order, verify} = req.query;
+        const {_end, _start, _sort, _order, verify, title_like} = req.query;
 
         try {
             const {
                 items,
                 count
-            } = await this.institutionService.getAllByUserParams(Number(_end), Number(_start), _sort, _order, user?._id, verify as string);
+            } = await this.institutionService.getAllByUserParams(Number(_end), Number(_start), _sort, _order, user?._id, verify as string, title_like as string);
 
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
@@ -444,7 +472,7 @@ class InstitutionController {
         try {
             const {items} = await this.institutionService.getSimilar(establishment);
 
-            res.status(200).json({similar: items})
+            res.status(200).json(items)
         } catch (e) {
             next(e)
         }
@@ -454,7 +482,10 @@ class InstitutionController {
         try {
             const {locationLng, locationLat, maxDistance, _end, _start, establishmentId} = req.query;
 
-            const {items, count} = await this.institutionService.getNearby({lng: parseFloat(locationLng as string), lat: parseFloat(locationLat as string)}, parseFloat(maxDistance as string), Number(_end), Number(_start), establishmentId as string);
+            const {items, count} = await this.institutionService.getNearby({
+                lng: parseFloat(locationLng as string),
+                lat: parseFloat(locationLat as string)
+            }, parseFloat(maxDistance as string), Number(_end), Number(_start), establishmentId as string);
 
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
@@ -465,12 +496,16 @@ class InstitutionController {
             next(e)
         }
     }
+
     async getNumberOfEstablishmentProperties(req: CustomRequest, res: Response, next: NextFunction) {
         const establishment = req.data_info as IInstitution;
         try {
             const reviewCount = await ReviewItemSchema.countDocuments({institutionId: establishment?._id});
             const newsCount = await InstitutionNewsSchema.countDocuments({institutionId: establishment?._id});
-            const commentCount = await CommentItemSchema.countDocuments({establishmentId: establishment?._id});
+            const commentCount = await CommentItemSchema.countDocuments({
+                establishmentId: establishment?._id,
+                parentId: null
+            });
 
             res.status(200).json({
                 reviewCount,

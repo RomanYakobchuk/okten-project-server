@@ -18,7 +18,6 @@ class FileMiddleware {
     async checkUserAvatar(req: CustomRequest, res: Response, next: NextFunction) {
         try {
             const {id} = req.params;
-
             const {changeAva, currentId} = req.body;
 
             const {userId} = req.user as IOauth;
@@ -44,10 +43,10 @@ class FileMiddleware {
             if (changeAva) {
                 if (req?.files?.avatar) {
                     if (user?.avatar) {
-                        const {url} = await this.cloudService.updateFile(user?.avatar, req.files.avatar.tempFilePath as any, `user/${user?._id}`)
+                        const {url} = await this.cloudService.updateFile(user?.avatar, req.files.avatar, `user/${user?._id}`)
                         req.body.avatar = url;
                     } else {
-                        const {url} = await this.cloudService.uploadFile(req.files.avatar?.tempFilePath as any, `user/${user?._id}`);
+                        const {url} = await this.cloudService.uploadFile(req.files.avatar, `user/${user?._id}`);
                         req.body.avatar = url;
                     }
                 }

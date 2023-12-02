@@ -53,23 +53,6 @@ const User = new Schema<IUser>({
                 ref: "institution"
             }
         ],
-        favoritePlaces: {
-            type: Schema.Types.ObjectId,
-            ref: "userFavoritePlaces",
-            unique: true
-        },
-        favoriteNews: [
-            {
-                type: Schema.Types.ObjectId,
-                ref: 'institutionNews'
-            }
-        ],
-        myRatings: [
-            {
-                type: Schema.Types.ObjectId,
-                ref: "rating"
-            }
-        ],
         registerBy: {
             type: String,
             enum: ['Email', 'Google', 'Facebook'],

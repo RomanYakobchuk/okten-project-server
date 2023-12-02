@@ -6,6 +6,7 @@ dotenv.config({path: path.resolve(__dirname, "../../../.env")});
 interface ENV {
     PORT: string | undefined,
     SOCKET_PORT: string | undefined,
+    STAT_PORT: string | undefined,
     HOST: any | undefined,
     MONGO_URL: string | undefined,
     DB_URI: string | undefined,
@@ -31,6 +32,8 @@ interface ENV {
     FRONTEND_URL: string | undefined,
     CLIENT_URL: string | undefined,
     API_URL: string | undefined,
+    SOCKET_URL: string | undefined,
+    STAT_URL: string | undefined,
     GOOGLE_CLIENT_ID: string | undefined,
     GOOGLE_CLIENT_SECRET: string | undefined,
     GOOGLE_API_GET_USER_INFO: string | undefined,
@@ -47,6 +50,7 @@ interface ENV {
 interface Config {
     PORT: string,
     SOCKET_PORT: string,
+    STAT_PORT: string,
     HOST: any,
     MONGO_URL: string,
     DB_URI: string,
@@ -79,6 +83,8 @@ interface Config {
     FRONTEND_URL: string,
     CLIENT_URL: string,
     API_URL: string,
+    SOCKET_URL: string,
+    STAT_URL: string,
 
     GOOGLE_CLIENT_ID: string,
     GOOGLE_CLIENT_SECRET: string,
@@ -95,6 +101,7 @@ interface Config {
 const getConfig = (): ENV => {
     return {
         PORT: process.env.PORT,
+        STAT_PORT: process.env.STAT_PORT,
         HOST: process.env.HOST,
         DB_URI: process.env.DB_URI,
         MONGO_URL: process.env.MONGO_URL,
@@ -109,6 +116,8 @@ const getConfig = (): ENV => {
         FRONTEND_URL: process.env.FRONTEND_URL,
         CLIENT_URL: process.env.CLIENT_URL,
         API_URL: process.env.API_URL,
+        SOCKET_URL: process.env.SOCKET_URL,
+        STAT_URL: process.env.STAT_URL,
 
         TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
         TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN,

@@ -7,7 +7,7 @@ import {
     UserService,
     SmsService,
     TokenService,
-    UserFavoritePlacesService
+    UserFavoritePlacesService, NotificationService
 } from '../services';
 import {OauthSchema, AdminSchema} from '../dataBase';
 import {emailActionTypeEnum, smsActionTypeEnum, tokenTypeEnum} from '../enums';
@@ -17,7 +17,7 @@ import {configs} from "../configs";
 import {smsTemplateBuilder} from "../common";
 import {CustomError} from "../errors";
 import {CustomRequest} from "../interfaces/func";
-import {IOauth, IUser, IUserFavoritePlaces} from "../interfaces/common";
+import {IOauth, IUser} from "../interfaces/common";
 import {Schema} from "mongoose";
 
 
@@ -27,7 +27,8 @@ class AuthController {
     private userService: UserService;
     private smsService: SmsService;
     private tokenService: TokenService;
-    private userFavPlaces: UserFavoritePlacesService;
+    private userFavoritePlacesService: UserFavoritePlacesService;
+    private notificationService: NotificationService;
 
     constructor() {
         this.smsService = new SmsService();
@@ -35,7 +36,8 @@ class AuthController {
         this.tokenService = new TokenService();
         this.userService = new UserService();
         this.passwordService = new PasswordService();
-        this.userFavPlaces = new UserFavoritePlacesService();
+        this.userFavoritePlacesService = new UserFavoritePlacesService();
+        this.notificationService = new NotificationService();
 
         this.login = this.login.bind(this)
         this.register = this.register.bind(this)
@@ -53,10 +55,9 @@ class AuthController {
     }
 
     async login(req: CustomRequest, res: Response, next: NextFunction) {
-        const favoritePlaces = req.favPlaces as IUserFavoritePlaces;
         const isAuth = req.isAuth as boolean;
+        const newStatus = req.newStatus;
         try {
-            const newStatus = req.newStatus;
             if (!isAuth) {
                 const {password: hashPassword} = req.user as IUser;
                 const {password} = req.body;
@@ -69,6 +70,8 @@ class AuthController {
             if (user?.blocked?.isBlocked) {
                 return next(new CustomError('Account is blocked', 403));
             }
+            const {items} = await this.userFavoritePlacesService.findWithQuery(Number(100), Number(0), "", user?._id, "withoutData");
+
             const tokens = await this.tokenService.generateAuthTokens();
 
             await OauthSchema.create({
@@ -81,10 +84,14 @@ class AuthController {
             resultUser.status = newStatus!;
 
             const {token} = await this.tokenService.tokenWithData(resultUser, "3h");
+
+            const {countIsNotRead} = await this.notificationService.getUserCount({id: user?._id, status: newStatus})
+
             res.status(200).json({
                 user: token,
-                favoritePlaces: favoritePlaces?.places,
+                favoritePlaces: items,
                 ...tokens,
+                countNotReadNotifications: countIsNotRead,
                 message: 'Login success'
             });
         } catch (e) {
@@ -96,11 +103,10 @@ class AuthController {
         const {email, password, name, phone, dOB, status, userData, registerBy} = req.body;
         try {
             let hash: string = '', activationLink: string = '';
-            let newUser: any;
             if (!userData?.email && registerBy === 'Email') {
                 hash = await this.passwordService.hashPassword(password);
                 activationLink = uuid.v4();
-                newUser = await this.userService.createUser({
+                await this.userService.createUser({
                     email,
                     name,
                     phone: phone ?? "",
@@ -111,7 +117,7 @@ class AuthController {
                     registerBy
                 });
             } else if (registerBy === 'Google' || registerBy === 'Facebook') {
-                newUser = await this.userService.createUser({
+                await this.userService.createUser({
                     email: userData?.email,
                     name: userData?.name,
                     avatar: userData?.picture,
@@ -122,7 +128,7 @@ class AuthController {
                 return next(new CustomError('Register failed', 400));
             }
 
-            const userFavPlaces = await this.userFavPlaces.create({userId: newUser._id});
+            // const userFavPlaces = await this.userFavPlaces.create({userId: newUser._id});
 
             // if (status === 'manager') {
             //     await Manager.create({
@@ -133,9 +139,9 @@ class AuthController {
             //     });
             // }
 
-            newUser.favoritePlaces = userFavPlaces._id;
-
-            await newUser.save();
+            // newUser.favoritePlaces = userFavPlaces._id;
+            //
+            // await newUser.save();
 
             if (!userData?.email_verified) {
                 await Promise.allSettled([
@@ -145,7 +151,10 @@ class AuthController {
                 return;
             }
 
-            res.status(201).json({message: 'Welcome, you have successfully registered', isVerify: userData?.email_verified})
+            res.status(201).json({
+                message: 'Welcome, you have successfully registered',
+                isVerify: userData?.email_verified
+            })
 
         } catch (e) {
             console.log(`Помилка у створенні юзера`)
@@ -158,7 +167,7 @@ class AuthController {
             const {email} = req.body;
             const user = await this.userService.findOneUser({email: email});
             if (!user) {
-                throw new Error("UserSchema not found")
+                return next(new CustomError("User not found"))
             }
             const activationLink = uuid.v4();
 
@@ -180,7 +189,7 @@ class AuthController {
 
             const currentUser = await this.userService.findOneUser({_id: userId});
             if (!currentUser) {
-                throw new Error("UserSchema not found")
+                return next(new CustomError("User not found"))
             }
             let code = Math.floor(Math.random() * 90000) + 10000;
 
@@ -201,7 +210,11 @@ class AuthController {
     }
 
     async refreshToken(req: CustomRequest, res: Response, next: NextFunction) {
-        const favoritePlaces = req.favPlaces as IUserFavoritePlaces;
+        // const favoritePlaces = req.favPlaces;
+
+        const {userId} = req.tokenInfo as IOauth;
+        const user = userId as IUser;
+
         try {
             const {userId, refresh_token} = req.tokenInfo as IOauth;
 
@@ -213,10 +226,13 @@ class AuthController {
 
             const {token} = await this.tokenService.tokenWithData({...userId}, "3h");
 
+            const {items} = await this.userFavoritePlacesService.findWithQuery(Number(100), Number(0), "", user?._id, "withoutData");
+
+
             res.json({
                 user: token,
                 ...tokens,
-                favoritePlaces: favoritePlaces?.places
+                favoritePlaces: items ?? []
             });
         } catch (e) {
             next(e);
@@ -364,7 +380,7 @@ class AuthController {
         const user = userId as IUser;
 
         try {
-            const admin = await AdminSchema.findOne({user: user?._id});
+            const admin = await AdminSchema.findOne({user: user?._id}).populate('user');
 
             if (!admin) {
                 return res.status(403).json({message: 'Access denied'})

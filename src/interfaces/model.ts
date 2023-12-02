@@ -7,7 +7,7 @@ import {
     IComment,
     IMessage,
     IConversation,
-    ICityForCount, ISubscribe, INotification, IInstitution, IFreeSeats, IOauth
+    ICityForCount, ISubscribe, INotification, IInstitution, IFreeSeats, IOauth, INotificationSubscribe
 } from "./common";
 
 export interface IUserFavoritePlacesModel extends Model<IUserFavoritePlacesDoc> {
@@ -41,6 +41,9 @@ export interface ICityForCountModel extends Model<ICityForCount> {
 }
 
 export interface ISubscribeModel extends Model<ISubscribe> {
+}
+
+export interface INotificationSubscribeModel extends Model<INotificationSubscribe> {
 }
 
 export interface INotificationModel extends Model<INotification> {

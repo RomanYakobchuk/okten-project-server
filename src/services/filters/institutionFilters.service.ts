@@ -102,7 +102,53 @@ const _getFilterQuery = (otherFilter: any, isVerify: string) => {
     return searchObject;
 }
 
+const _getByUserFilter = (status: string, title_like: string, createdBy: string) => {
+    const searchObject = {};
+    const filters: any[] = [];
+
+    const isTag = title_like.split('')[0] === '#';
+    const tagValue: string = isTag ? title_like.substring(1, title_like.length) : '';
+
+    if (status) {
+        filters?.push({
+            $or: [
+                {verify: status}
+            ]
+        })
+    }
+    if (title_like && !isTag) {
+        filters?.push({
+            $or: [
+                {"place.city": {$regex: title_like, $options: 'i'}},
+                {"place.address": {$regex: title_like, $options: 'i'}},
+                {description: {$regex: title_like, $options: "i"}},
+                {title: {$regex: title_like, $options: 'i'}},
+                {features: {$elemMatch: {value: {$regex: title_like, $options: 'i'}}}},
+            ]
+        })
+    }
+    if (createdBy) {
+        filters?.push({
+            createdBy: createdBy
+        })
+    }
+    if (isTag) {
+        filters.push({
+            $or: [
+                {tags: {$elemMatch: {value: {$regex: tagValue, $options: 'i'}}}},
+            ]
+        })
+    }
+
+    if (filters?.length > 0) {
+        Object.assign(searchObject, {$and: filters})
+    }
+
+    return searchObject;
+}
+
 export {
     _freeSeatsFilterQuery,
-    _getFilterQuery
+    _getFilterQuery,
+    _getByUserFilter
 }

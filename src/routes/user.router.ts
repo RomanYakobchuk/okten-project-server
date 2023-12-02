@@ -1,6 +1,6 @@
 import {Router} from "express";
 
-import { userController} from '../controllers';
+import {savedPlacesController, userController} from '../controllers';
 import {
     commonMiddleware,
     userMiddleware,
@@ -57,12 +57,15 @@ router.delete('/:id',
 
 // add or del fav place
 router.post(
-    '/addDeleteFavoritePlace/:id',
+    '/addDeleteFavoritePlace',
     authMiddleware.checkAccessToken,
     newsMiddleware.checkNews,
     institutionMiddleware.checkInstitution('info'),
-    userFavoritePlacesMiddleware.checkUserFavPlaces('user', 'byUser', true),
-    userController.addDeleteFavoritePlace
+
+    userFavoritePlacesMiddleware.checkOne,
+    // userFavoritePlacesMiddleware.checkUserFavPlaces('user', 'byUser', true),
+    savedPlacesController.savePlace
+    // userController.addDeleteFavoritePlace
 );
 
 // add or del fav news
@@ -83,14 +86,19 @@ router.patch(
 router.get(
     `/getUserFavPlaces`,
     authMiddleware.checkAccessToken,
-    userFavoritePlacesMiddleware.checkUserFavPlaces("user", "byUser", true),
-    userController.getUserFavPlaces
+    authMiddleware.checkStatus('check'),
+    userFavoritePlacesMiddleware.getSavedPlaces("withoutData"),
+    // userFavoritePlacesMiddleware.checkUserFavPlaces("user", "byUser", true),
+    savedPlacesController.getUserFavPlaces
 )
 router.get(
     `/getByUserIdFavPlaces/:id`,
     authMiddleware.checkAccessToken,
-    userFavoritePlacesMiddleware.checkUserFavPlaces("user", "byId", true),
-    userController.getUserFavPlaces
+    authMiddleware.checkStatus('check'),
+    userFavoritePlacesMiddleware.getSavedPlaces("withData"),
+    // userFavoritePlacesMiddleware.checkUserFavPlaces("user", "byId", true),
+    savedPlacesController.getUserFavPlaces
 )
+
 
 export default router;

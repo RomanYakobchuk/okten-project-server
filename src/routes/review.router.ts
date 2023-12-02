@@ -33,7 +33,8 @@ router.get(
 router.get(
     `/allByUserId/:id`,
     authMiddleware.checkAccessToken,
-    userMiddleware.isUserPresent,
+    authMiddleware.checkStatus("check"),
+    // userMiddleware.isUserPresent,
     reviewController.allReviewByUserId
 )
 

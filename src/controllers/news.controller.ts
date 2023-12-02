@@ -191,8 +191,12 @@ class NewsController {
             }
             news?.pictures?.splice(0, news?.pictures?.length);
 
-            for (let element of req.body.pictures) {
-                news?.pictures?.push(element)
+            if (req.body.pictures?.url) {
+                news?.pictures?.push(req.body.pictures)
+            } else {
+                for (let element of req.body.pictures) {
+                    news?.pictures?.push(element)
+                }
             }
 
             await news?.save();

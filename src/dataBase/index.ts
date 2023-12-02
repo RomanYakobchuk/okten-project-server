@@ -32,9 +32,10 @@ import {CityForCount} from "./countByCity.schema";
 
 import {MessageModel, ConversationModel} from "./message.schema";
 
-import {SubscribeSchema, NotificationSchema} from "./subscribe.schema";
+import {SubscribeSchema, NotificationSubscribeSchema} from "./subscribe.schema";
 
 import {FreeSeatsSchema} from "./freeSeats.schema";
+import {Notification} from "./notification.schema";
 
 
 export {
@@ -58,6 +59,7 @@ export {
     InstitutionNewsSchema,
     CityForCount,
     SubscribeSchema,
-    NotificationSchema,
-    FreeSeatsSchema
+    NotificationSubscribeSchema,
+    FreeSeatsSchema,
+    Notification
 }

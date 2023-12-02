@@ -4,10 +4,17 @@ import {CreateReserve, ICapl} from "../interfaces/common";
 
 interface Repository {
     createReserve(params: CreateReserve): Promise<ICapl>,
+
     findAll(params: any): Promise<ICapl[]>,
-    findOneReserve(params: {_id: string}): Promise<ICapl | null>,
+
+    findOneReserve(params: { _id: string }): Promise<ICapl | null>,
+
     updateOne(params: any, newData: any): Promise<ICapl | null>,
-    findByPagination(institution_like: string, day: any, _end: number, _order: any | number, _start: number, _sort: any, search_like: string, userStatus: string, institutionStatus: string, userId: string, type: string, active: boolean): Promise<{count: number, items: ICapl[]}>
+
+    findByPagination(institution_like: string, day: any, _end: number, _order: any | number, _start: number, _sort: any, search_like: string, userStatus: string, institutionStatus: string, userId: string, type: string, active: "" | "true" | "false"): Promise<{
+        count: number,
+        items: ICapl[]
+    }>
 }
 
 class CaplService implements Repository {
@@ -27,18 +34,18 @@ class CaplService implements Repository {
         return CaplSchema.findByIdAndUpdate(params, newData, {new: true});
     }
 
-    async findByPagination(institution_like: string = '', day = null as any, _end: number, _order: any | number, _start: number, _sort: any, search_like = '', userStatus: string = '', institutionStatus: string = '', userId: string = '', type: string = '', active: boolean) {
+    async findByPagination(institution_like: string = '', day = null as any, _end: number, _order: any | number, _start: number, _sort: any, search_like = '', userStatus: string = '', institutionStatus: string = '', userId: string = '', type: string = '', active: "" | "true" | "false") {
 
         const filterQuery = _getFilterQuery({
             institution_like,
             day,
-            search_like,
+            search_like: search_like?.trim(),
             userStatus,
             institutionStatus,
             active
         }, userId, type);
 
-        const count = await CaplSchema.countDocuments({...filterQuery, createdBy: userId});
+        const count = await CaplSchema.countDocuments({...filterQuery});
 
         if (!_sort || !_order) {
             _sort = "createdAt"
@@ -54,12 +61,21 @@ class CaplService implements Repository {
             .sort({[_sort]: _order})
             .exec()
 
+        for (const item of items) {
+            const myDate = new Date(item?.date);
+            const currentDate = new Date();
+            if (item?.userStatus?.value === 'accepted' && myDate < currentDate) {
+                item.isActive = false;
+                await item.save();
+            }
+        }
         return {
             items,
             count
         }
     }
 }
+
 // export const caplService = {
 //     createReserve: (params: any) => {
 //         return CaplSchema.create(params)
@@ -138,13 +154,13 @@ function _getFilterQuery(otherFilter: any, userId: string, type: string) {
     if (otherFilter.institution_like) {
         filters.push({institution: otherFilter.institution_like})
     }
-    if (otherFilter.active) {
-        filters.push({
-            $or: [
-                {"reserved.isReserved": {$regex: otherFilter.isReserved, $options: 'i'}}
-            ]
-        },)
-    }
+    // if (otherFilter.active) {
+    //     filters.push({
+    //         $or: [
+    //             {"isActive": {$regex: otherFilter.active, $options: 'i'}}
+    //         ]
+    //     },)
+    // }
     if (otherFilter.day && otherFilter.day !== "[object Object]") {
         const date = new Date(otherFilter.day);
         const searchDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -153,9 +169,9 @@ function _getFilterQuery(otherFilter: any, userId: string, type: string) {
             date: {$gte: searchDay, $lt: nextDay}
         })
     }
-    if (otherFilter.active) {
+    if (otherFilter.active === "true" || otherFilter.active === "false") {
         filters.push({
-            isActive: otherFilter.active
+            isActive: otherFilter.active === 'true'
         })
     }
 

@@ -7,7 +7,6 @@ const InstitutionNews = new Schema<IInstitutionNews>({
         type: Schema.Types.ObjectId,
         ref: 'institution',
         required: true,
-        unique: true
     },
     title: {
         type: String,

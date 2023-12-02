@@ -1,6 +1,6 @@
 import {Router} from 'express';
 
-import {authMiddleware, institutionMiddleware, commentMiddleware} from "../middlewares";
+import {authMiddleware, institutionMiddleware, commentMiddleware, userMiddleware} from "../middlewares";
 import {commentController} from "../controllers";
 
 const router = Router();
@@ -23,12 +23,14 @@ router.get(
 )
 
 // all user`s comments
-// router.get(
-//     `/allByUserId/:id`,
-//     authMiddleware.checkAccessToken,
-//     userMiddleware.isUserPresent,
-//     commentController.allCommentsByInstitutionUserId('createdBy')
-// )
+router.get(
+    `/allByUserId/:id`,
+    authMiddleware.checkAccessToken,
+    authMiddleware.checkStatus("check"),
+    // userMiddleware.isUserPresent,
+    commentController.allCommentsByUserId
+    // commentController.allCommentsByInstitutionUserId('createdBy')
+)
 
 // all comments
 router.get(

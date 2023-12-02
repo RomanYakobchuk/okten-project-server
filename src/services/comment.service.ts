@@ -28,7 +28,7 @@ interface Repository {
         items: IComment[]
     }>
 
-    getEstablishmentTopLevelComments(id: string, _end: number, _start: number, _sort: any, _order: any): Promise<{
+    getEstablishmentTopLevelComments(id: string, by: "byUser" | "byEstablishment", _end: number, _start: number, _sort: any, _order: any,  parentId: string | null, refFieldCreate: string | null): Promise<{
         count: number,
         items: IComment[],
         currentSize: number
@@ -184,7 +184,7 @@ class CommentService implements Repository {
         }
     }
 
-    async getEstablishmentTopLevelComments(id: string, _end: number, _start: number, _sort: any, _order: any, parentId: string | null = null) {
+    async getEstablishmentTopLevelComments(id: string, by: "byUser" | "byEstablishment", _end: number, _start: number, _sort: any, _order: any, parentId: string | null = null, refFieldCreate: string | null = null) {
         if (!_sort || !_order) {
             _sort = "createdAt"
             _order = -1
@@ -197,16 +197,37 @@ class CommentService implements Repository {
         }
         const newSort = _sort?.split('_')[0];
 
-        const count = await CommentItemSchema.countDocuments({establishmentId: id, parentId: parentId});
 
         const skip = _start;
         const limit = _end - _start;
 
+        let countFilter = {};
         const aggregationPipeline: AggregationPipeline[] = [];
+        if (by === 'byEstablishment') {
+            aggregationPipeline.push(
+                {
+                    $match: {establishmentId: id, parentId: parentId ? new Types.ObjectId(parentId) : parentId}
+                },
+            )
+            countFilter = {establishmentId: id, parentId: parentId};
+        } else if (by === 'byUser' && refFieldCreate) {
+            aggregationPipeline.push(
+                {
+                    $match: {
+                        createdBy: new Types.ObjectId(id),
+                        refFieldCreate: refFieldCreate === 'establishment' ? "institution" : "user",
+                        parentId: parentId ? new Types.ObjectId(parentId) : parentId
+                    }
+                },
+            );
+            countFilter = {
+                createdBy: new Types.ObjectId(id),
+                refFieldCreate: refFieldCreate === 'establishment' ? "institution" : "user",
+                parentId: parentId ? new Types.ObjectId(parentId) : parentId
+            }
+        }
+        const count = await CommentItemSchema.countDocuments(countFilter);
         aggregationPipeline.push(
-            {
-                $match: {establishmentId: id, parentId: parentId ? new Types.ObjectId(parentId) : parentId}
-            },
             // {
             //     $skip: _start
             // },

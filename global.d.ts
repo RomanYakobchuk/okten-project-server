@@ -36,7 +36,8 @@ declare global {
 
             FRONTEND_URL: string,
             CLIENT_URL: string,
-            API_URL: string
+            API_URL: string,
+            SOCKET_URL: string
         }
     }
 }

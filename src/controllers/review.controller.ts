@@ -114,19 +114,20 @@ class ReviewController {
     async allReviewByUserId(req: CustomRequest, res: Response, next: NextFunction) {
         const {_order, _sort, _end, _start} = req.query;
         const {userId} = req.user as IOauth;
+        const {id} = req.params;
         const user = userId as IUser;
-        const userExist = req.userExist;
+        const status = req.newStatus;
 
         try {
 
-            if (userExist?._id?.toString() !== user?._id?.toString() && user?.status !== 'admin') {
+            if (user?._id?.toString() !== id && status !== 'admin') {
                 return next(new CustomError("Access denied", 403))
             }
 
             const {
                 items,
                 count
-            } = await this.reviewService.getAllByPlaceWithPagination(userExist?._id, Number(_end), Number(_start), _sort, _order, "createdBy", "institutionId", 'title pictures type _id');
+            } = await this.reviewService.getAllByPlaceWithPagination(id, Number(_end), Number(_start), "createdAt", -1, "createdBy", "createdBy", '_id name avatar');
 
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');

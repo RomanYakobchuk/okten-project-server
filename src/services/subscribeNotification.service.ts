@@ -1,4 +1,4 @@
-import {NotificationSchema, SubscribeSchema} from "../dataBase";
+import {NotificationSubscribeSchema as NotificationSchema, SubscribeSchema} from "../dataBase";
 import {SortOrder} from "mongoose";
 
 class SubscribeNotificationService {

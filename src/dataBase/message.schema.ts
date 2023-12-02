@@ -3,9 +3,6 @@ import {IMessage, IConversation} from "../interfaces/common";
 import {IConversationModel, IMessageModel} from "../interfaces/model";
 
 const Conversation = new Schema({
-    userName: {
-        type: String
-    },
     institutionId: {
         type: Schema.Types.ObjectId,
         ref: 'institution'
@@ -21,14 +18,16 @@ const Conversation = new Schema({
             type: Date
         }
     },
+    type: {
+        type: String,
+        enum: ['group', 'reserve', 'oneToOne']
+    },
     members: [{
         user: Schema.Types.ObjectId,
         connectedAt: Date,
+        conversationTitle: String,
         role: String
     }],
-    institutionTitle: {
-        type: String
-    },
 }, {timestamps: true});
 
 const Message = new Schema({

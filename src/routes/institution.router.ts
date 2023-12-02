@@ -25,6 +25,7 @@ router.post(
     authMiddleware.checkAccessToken,
     commonMiddleware.parseJsonStrings,
     commonMiddleware.isDateValid(establishmentValidator.createEstablishment, 'body'),
+    authMiddleware.checkStatus('check'),
     institutionController.createInstitution
 )
 
@@ -123,7 +124,7 @@ router.get(
     `/allByUserId/:id`,
     authMiddleware.checkAccessToken,
     authMiddleware.checkStatus('check'),
-    userMiddleware.isUserPresent,
+    userMiddleware.isUserPresent('userId'),
     institutionController.allByUserId
 )
 

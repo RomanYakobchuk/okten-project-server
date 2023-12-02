@@ -23,9 +23,11 @@ export interface IAdmin extends Ids {
 
 export interface ICapl extends Document {
     _id: string | string & ObjectId,
+    isAllowedEdit: boolean,
     user: Schema.Types.ObjectId | string,
     manager: Schema.Types.ObjectId,
     fullName: string,
+    isClientAppeared: boolean,
     institution: Schema.Types.ObjectId | IInstitution,
     eventType: string,
     date: Date,
@@ -191,7 +193,7 @@ export interface IInstitutionNews extends Document {
 
 export interface IManager extends Document {
     _id?: string | string & ObjectId,
-    user: Schema.Types.ObjectId,
+    user: Schema.Types.ObjectId | IUser,
     name: string,
     email: string,
     phone: string,
@@ -327,7 +329,8 @@ export interface IFavPlaces {
 }
 export interface IUserFavoritePlaces extends UserId, Document {
     _id: string | string & ObjectId,
-    places: IGenericArray<IFavPlaces>,
+    type: string,
+    item: Schema.Types.ObjectId,
     createdAt?: Date,
     updatedAt?: Date,
 }
@@ -357,6 +360,9 @@ export interface CreateReserve {
         numberOfSeats: number,
         status: "free" | "reserved"
     },
+    userStatus: ICapl['userStatus'],
+    isAllowedEdit: boolean,
+    institutionStatus: ICapl['institutionStatus'],
     writeMe: boolean,
     comment: string,
     fullName: string,
@@ -384,10 +390,28 @@ export interface ISubscribe extends Document, InstitutionId {
     updatedAt?: Date,
 }
 
-export interface INotification extends Document {
+export interface INotificationSubscribe extends Document {
     _id: string & ObjectId | string,
     subscribeId: Schema.Types.ObjectId,
     newsId: Schema.Types.ObjectId,
     createdAt?: Date,
     updatedAt?: Date,
 }
+
+export interface INotification extends UserId, Document {
+    _id: string & ObjectId | string,
+    createdAt?: Date,
+    updatedAt?: Date,
+    message: string,
+    description?: string,
+    isDelete: boolean,
+    isRead: boolean,
+    status: "usual" | "accepted" | "rejected",
+    forUser: {
+        role: 'manager' | 'admin' | 'user',
+        userId: string | string & ObjectId,
+    },
+    type: "newReservation" | "newMessage" | "newNews" |"newFunctional" | "newEstablishment" | "newUser"
+}
+
+export type TTypeNotification = ICapl | IMessage | IInstitutionNews | IInstitution | IUser

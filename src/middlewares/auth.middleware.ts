@@ -207,8 +207,11 @@ class AuthMiddleware {
         await this.userService.updateOneUser({_id: user?._id}, user);
     }
 
-    checkStatus = (type: "login" | "check") => async (req: CustomRequest, _: Response, next: NextFunction) => {
+    checkStatus = (type: "login" | "check" = "check") => async (req: CustomRequest, _: Response, next: NextFunction) => {
         try {
+            if (!type) {
+                type = 'check';
+            }
             let statusHandler = async (status: IUser['status'], _id: string | string & ObjectId) => {
                 if (status === 'manager') {
                     const isManager = await ManagerSchema.findOne({user: _id}) as IManager;

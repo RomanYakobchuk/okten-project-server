@@ -1,9 +1,9 @@
 import {Request} from "express";
 import {
-    ICapl,
+    ICapl, ICityForCount,
     IComment, IConversation,
     IInstitution,
-    IInstitutionNews,
+    IInstitutionNews, INotification,
     IOauth, ISubscribe,
     IUser,
     IUserFavoritePlaces
@@ -26,5 +26,10 @@ export interface CustomRequest extends Request {
     userExist?: IUser,
     isAllowedNewReview?: boolean,
     files?: any,
-    favPlaces?: IUserFavoritePlaces
+    cityForCount?: ICityForCount,
+    favPlaces?: {
+        items: IUserFavoritePlaces[],
+        count: number
+    },
+    notification?: INotification
 }

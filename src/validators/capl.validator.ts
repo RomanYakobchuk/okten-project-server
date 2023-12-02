@@ -17,7 +17,22 @@ const createReserve = Joi.object({
     writeMe: booleanValidator.required(),
     desiredAmount: numberValidator.required(),
     numberPeople: numberValidator.required(),
-    whoPay: stringValidator.required()
+    whoPay: stringValidator.required(),
+    userStatus: {
+        value: stringValidator.required(),
+        reasonRefusal: stringValidator.allow(""),
+    },
+    institutionStatus: {
+        value: stringValidator.required(),
+        freeDateFor: Joi.array().items(Joi.object({
+            day: dateValidator,
+            time: dateValidator
+        }).allow({})),
+        reasonRefusal: stringValidator.allow("")
+    },
+    isAllowedEdit: booleanValidator,
+    userId: stringValidator.required(),
+    managerId: stringValidator.required()
 });
 
 export {

@@ -3,6 +3,7 @@ import {PipelineStage} from "mongoose";
 import {InstitutionSchema} from "../dataBase";
 import {IInstitution} from "../interfaces/common";
 import {_freeSeatsFilterQuery, _getFilterQuery} from "./filters";
+import {_getByUserFilter} from "./filters/institutionFilters.service";
 
 type AggregationPipeline = PipelineStage;
 
@@ -71,9 +72,10 @@ class InstitutionService {
             description: 1,
             averageCheck: 1,
             freeSeats: 1,
+            verify: 1
         };
         const adminFieldsToInclude = {
-            'viewsContainer.viewsNumber': 1,
+            'viewsContainer': 1,
         };
 
         const aggregationPipeline: AggregationPipeline[] = [];
@@ -93,9 +95,9 @@ class InstitutionService {
                     [_sort]: _order
                 }
             },
-            {
-                $project: otherFieldsToInclude
-            }
+            // {
+            //     $project: otherFieldsToInclude
+            // }
         );
         const countFilter: AggregationPipeline[] = [
             {
@@ -149,14 +151,16 @@ class InstitutionService {
                 {
                     $lookup: {
                         from: 'views_containers',
-                        localField: '_id',
-                        foreignField: 'viewsWith',
+                        localField: 'views',
+                        foreignField: '_id',
                         as: 'viewsContainer',
-                        pipeline: [
-                            {
-                                $match: {refField: 'institution'}
-                            }
-                        ]
+                    }
+                },
+                {
+                    $addFields: {
+                        viewsContainer: {
+                            $arrayElemAt: ['$viewsContainer', 0]
+                        }
                     }
                 },
                 {
@@ -166,6 +170,10 @@ class InstitutionService {
                     }
                 }
             );
+        } else {
+            aggregationPipeline.push({
+                $project: otherFieldsToInclude
+            })
         }
 
         if (isVerify) {
@@ -191,7 +199,7 @@ class InstitutionService {
         return InstitutionSchema.findOne(params)
     }
 
-    async getAllByUserParams(_end: number, _start: number, _sort: any, _order: any, userId: string, verify: string) {
+    async getAllByUserParams(_end: number, _start: number, _sort: any, _order: any, userId: string, verify: string, title_like: string = '') {
         if (!_sort || !_order) {
             _sort = "createdAt"
             _order = -1
@@ -205,14 +213,17 @@ class InstitutionService {
         }
         const newSort = _sort?.split('_')[0];
 
-        const count = await InstitutionSchema.countDocuments({createdBy: userId, verify: verify});
+        const filters = _getByUserFilter(verify, title_like, userId);
+
+        const count = await InstitutionSchema.countDocuments(filters);
 
         const items = await InstitutionSchema
-            .find({createdBy: userId, verify: verify})
+            .find(filters)
             .select('_id pictures title place averageCheck type rating description createdBy createdAt')
             .limit(_end - _start)
             .skip(_start)
-            .sort({[newSort]: _order});
+            .sort({[newSort]: _order})
+            .exec();
 
         return {
             items,
@@ -282,12 +293,19 @@ class InstitutionService {
 
         const items = await InstitutionSchema
             .find({
-                "place.city": establishment.place.city,
-                type: establishment.type,
-                averageCheck: {$gte: minCheck, $lte: maxCheck},
-                verify: "published",
-                _id: {$ne: establishment._id}
+                $and: [
+                    {
+                        $or: [
+                            {"place.city": establishment.place.city},
+                            {type: establishment.type},
+                            {averageCheck: {$gte: minCheck, $lte: maxCheck}},
+                            {verify: "published"},
+                        ]
+                    },
+                    {_id: {$ne: establishment._id}}
+                ]
             })
+            .select('_id title type pictures createdBy reviewsLength rating place')
             .limit(5)
             .exec();
 

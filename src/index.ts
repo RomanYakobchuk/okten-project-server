@@ -28,6 +28,7 @@ import {
 import {configs} from './configs';
 import {CustomError} from "./errors";
 import {CustomRequest} from "./interfaces/func";
+import notificationRouter from "./routes/notification.router";
 dotenv.config({path: `./environments/.env`});
 
 const app = express();
@@ -43,7 +44,7 @@ app.use(function (req, res, next) {
 })
 app.use(cors(
     {
-        origin: configs.CLIENT_URL,
+        origin: [configs.CLIENT_URL, configs.STAT_URL],
     }
 ));
 app.use(compression());
@@ -68,6 +69,7 @@ app.use('/api/v1/city', cityRouter);
 app.use('/api/v1/menu', menuRouter);
 app.use('/api/v1/capl', caplRouter);
 app.use('/api/v1/subscribe', subscribeNotificationRouter);
+app.use('/api/v1/notification', notificationRouter);
 
 app.use('*', (req, res) => {
     res.status(404).json('Route not found');

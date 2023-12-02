@@ -1,6 +1,6 @@
 import {model, Schema} from "mongoose";
-import {INotification, ISubscribe} from "../interfaces/common";
-import {INotificationModel, ISubscribeModel} from "../interfaces/model";
+import {INotificationSubscribe, ISubscribe} from "../interfaces/common";
+import {INotificationSubscribeModel, ISubscribeModel} from "../interfaces/model";
 
 const Subscribe = new Schema({
     institutionId: {
@@ -25,9 +25,9 @@ const Notification = new Schema({
 }, {timestamps: true});
 
 const SubscribeSchema: ISubscribeModel = model<ISubscribe, ISubscribeModel>('subscribe', Subscribe);
-const NotificationSchema: INotificationModel = model<INotification, INotificationModel>('notification', Notification);
+const NotificationSubscribeSchema: INotificationSubscribeModel = model<INotificationSubscribe, INotificationSubscribeModel>('notificationSubscribe', Notification);
 
 export {
     SubscribeSchema,
-    NotificationSchema
+    NotificationSubscribeSchema
 }

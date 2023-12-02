@@ -1,4 +1,4 @@
-import {authMiddleware, caplMiddleware, institutionMiddleware, commonMiddleware} from "../middlewares";
+import {authMiddleware, caplMiddleware, institutionMiddleware, commonMiddleware, userMiddleware} from "../middlewares";
 import {caplController} from "../controllers";
 import {caplValidator} from "../validators";
 
@@ -14,6 +14,7 @@ router.get(
 router.patch(
     `/findOne/:id`,
     authMiddleware.checkAccessToken,
+    authMiddleware.checkStatus('check'),
     caplMiddleware.isExist,
     caplMiddleware.checkAccess('update'),
     caplController.updateInfoByUser
@@ -22,14 +23,18 @@ router.patch(
 router.get(
     `/allByUser`,
     authMiddleware.checkAccessToken,
+    authMiddleware.checkStatus('check'),
     caplController.findAllByUser
 )
 
 router.post(
     `/create`,
     authMiddleware.checkAccessToken,
+    authMiddleware.checkStatus('check'),
     commonMiddleware.isDateValid(caplValidator.createReserve, 'body'),
     institutionMiddleware.checkInstitution('info'),
+    userMiddleware.isUserPresent('userId'),
+    userMiddleware.isUserPresent('managerId'),
     caplController.crateReservation
 )
 
@@ -37,6 +42,7 @@ router.patch(
     `/updateByUser/:id`,
     authMiddleware.checkAccessToken,
     caplMiddleware.isExist,
+    authMiddleware.checkStatus("check"),
     caplMiddleware.checkAccess('update'),
     caplController.updateInfoByUser
 )
@@ -45,9 +51,18 @@ router.patch(
     `/updateInfoByInstitution/:id`,
     authMiddleware.checkAccessToken,
     caplMiddleware.isExist,
+    authMiddleware.checkStatus("check"),
     caplMiddleware.checkAccess('update'),
     caplController.updateInfoByInstitution
 )
 
+router.patch(
+    `/updateStatus/:id`,
+    authMiddleware.checkAccessToken,
+    caplMiddleware.isExist,
+    authMiddleware.checkStatus("check"),
+    caplMiddleware.checkAccess('update'),
+    caplController.updateStatus
+)
 
 export default router;

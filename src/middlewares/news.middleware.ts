@@ -15,13 +15,13 @@ class NewsMiddleware {
 
     async checkNews(req: CustomRequest, _: Response, next: NextFunction) {
         try {
-            const {newsId, refPath} = req.body;
+            const {placeId, refPath} = req.body;
             const {id} = req.params;
 
             if (refPath === 'institution') {
                 next();
             } else {
-                const currentId = newsId || id || "";
+                const currentId = placeId || id || "";
 
                 const news = await this.newsService
                     .getOneNews({_id: currentId}).populate({path: 'institutionId', select: '_id title pictures type place location'})

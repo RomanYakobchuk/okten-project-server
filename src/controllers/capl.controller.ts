@@ -1,31 +1,48 @@
 import {NextFunction, Response} from "express";
+import {Schema} from "mongoose";
 
-import {CaplService} from "../services";
+import {CaplService, NotificationService} from "../services";
 import {CustomError} from "../errors";
 import {CustomRequest} from "../interfaces/func";
-import {ICapl, IInstitution, IOauth, IUser} from "../interfaces/common";
+import {ICapl, IInstitution, INotification, IOauth, IUser} from "../interfaces/common";
 
 class CaplController {
     private caplService: CaplService;
+    private notificationService: NotificationService;
 
     constructor() {
         this.caplService = new CaplService();
+        this.notificationService = new NotificationService();
 
         this.findOneById = this.findOneById.bind(this)
         this.crateReservation = this.crateReservation.bind(this)
         this.findAllByUser = this.findAllByUser.bind(this)
         this.updateInfoByUser = this.updateInfoByUser.bind(this)
         this.updateInfoByInstitution = this.updateInfoByInstitution.bind(this)
+        this.updateStatus = this.updateStatus.bind(this)
     }
 
     async crateReservation(req: CustomRequest, res: Response, next: NextFunction) {
+        // const {userId: currentUserID} = req.user as IOauth;
+        // const user = currentUserID as IUser;
+        const institution = req.data_info as IInstitution;
+        const {
+            date,
+            comment,
+            writeMe,
+            desiredAmount,
+            numberPeople,
+            whoPay,
+            fullName,
+            eventType,
+            userId,
+            managerId,
+            userStatus,
+            institutionStatus,
+            isAllowedEdit
+        } = req.body;
         try {
-            const {userId} = req.user as IOauth;
-            const user = userId as IUser;
-            const institution = req.data_info as IInstitution;
-            const {date, comment, writeMe, desiredAmount, numberPeople, whoPay, fullName, eventType} = req.body;
-
-            await this.caplService.createReserve({
+            const reservation = await this.caplService.createReserve({
                 institution: institution?._id as string,
                 date: date as Date,
                 seats: {
@@ -33,25 +50,55 @@ class CaplController {
                     status: "reserved",
                     table: 1
                 },
+                userStatus,
+                institutionStatus,
                 writeMe: Boolean(writeMe),
                 comment: comment as string,
                 fullName: fullName as string,
                 desiredAmount: desiredAmount as number,
                 numberPeople: numberPeople as number,
                 whoPay: whoPay as string,
-                manager: institution?.createdBy as string,
-                user: user?._id,
+                manager: managerId,
+                user: userId,
+                isAllowedEdit,
                 eventType: eventType,
             });
+            let notification: INotification | null = null;
+            if (reservation?.userStatus?.value === 'accepted') {
+                notification = await this.notificationService.create({
+                    type: "newReservation",
+                    userId: userId as Schema.Types.ObjectId,
+                    isRead: false,
+                    message: 'User reserved seats',
+                    description: reservation?._id,
+                    forUser: {
+                        role: 'manager',
+                        userId: institution?.createdBy
+                    },
+                    status: 'usual'
+                });
+            }
 
-            res.status(201).json({message: 'Reservation created, wait for confirmation'})
+            res.status(201).json({
+                message: 'Reservation created, wait for confirmation',
+                reservation,
+                notification: notification
+            });
+
+            // await axios.post(`${configs.SOCKET_URL}/socket.io/api/v1/notification/create`, {
+            //     userId: reservation?.manager,
+            //     reservation
+            // });
+            // return;
         } catch (e) {
             next(e)
         }
     }
+
     async findAllByUser(req: CustomRequest, res: Response, next: NextFunction) {
         const {userId} = req.user as IOauth;
         const user = userId as IUser;
+        const status = req.newStatus;
 
         const {
             institution,
@@ -60,18 +107,17 @@ class CaplController {
             _order,
             _start,
             _sort,
-            search,
+            search_like,
             userStatus,
             institutionStatus,
-            active
+            active,
         } = req.query;
 
         try {
             const {
                 count,
                 items
-            } = await this.caplService.findByPagination(institution as string, day_gte, Number(_end), _order, Number(_start), _sort, search as string, userStatus as string, institutionStatus as string, user?._id as string, user?.status as string, Boolean(active));
-
+            } = await this.caplService.findByPagination(institution as string, day_gte, Number(_end), _order, Number(_start), _sort, search_like as string, userStatus as string, institutionStatus as string, user?._id as string, status as string, active as "" | "true" | "false");
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
 
@@ -107,26 +153,31 @@ class CaplController {
     }
 
     updateInfoByUser = async (req: CustomRequest, res: Response, next: NextFunction) => {
+        const reservation = req.reservation as ICapl;
+        const {userId} = req.user as IOauth;
+        const user = userId as IUser;
+        const status = req.newStatus;
+        // numberPeople, date, whoPay, desiredAmount, userStatus, institutionStatus, fullName, eventType, comment, writeMe
+        const {...dataToUpdate} = req.body;
         try {
-            const reservation = req.reservation as ICapl;
-            const {userId} = req.user as IOauth;
-            const user = userId as IUser;
-            // numberPeople, date, whoPay, desiredAmount, userStatus, institutionStatus, fullName, eventType, comment, writeMe
-            const {...dataToUpdate} = req.body;
 
             for (const field in dataToUpdate) {
                 if (dataToUpdate.hasOwnProperty(field)) {
+                    console.log('field: ', field)
                     let newValue = dataToUpdate[field];
                     const oldValue = reservation[field];
 
-                    if (user?.status === 'user' || user?.status === 'admin') {
-                        if (field !== 'userStatus' || 'institutionStatus' || 'numberPeople' || 'date' && newValue !== oldValue) {
+                    if (reservation?.user?.toString() === user?._id?.toString() || reservation?.manager?.toString() === user?._id?.toString() || status === 'admin') {
+                        if ((field !== ('userStatus' || 'institutionStatus' || 'date' || 'isAllowedEdit')) && newValue !== oldValue) {
                             reservation[field] = newValue;
+                        }
+                        if ((field === 'isAllowedEdit' && user?._id?.toString() === reservation?.manager?.toString()) || status === 'admin') {
+                            reservation[field] = newValue
                         }
                         if (field === 'date') {
                             const myDate = new Date(reservation?.date);
-                            const currentDate = new Date(new Date().getTime() - (6 * 60 * 60 * 1000));
-                            if (myDate > currentDate && reservation?.institutionStatus?.value !== 'accepted' || user?.status === 'admin') {
+                            const currentDate = new Date(new Date().getTime() - (1 * 60 * 60 * 1000));
+                            if (myDate > currentDate && reservation?.institutionStatus?.value !== 'accepted' || user?.status === 'admin' || reservation?.isAllowedEdit) {
                                 if (newValue) {
                                     reservation[field] = newValue;
                                 }
@@ -134,24 +185,28 @@ class CaplController {
                                 return next(new CustomError("You can`t updated your reservation date", 405))
                             }
                         }
-                        if (field === 'numberPeople' && reservation?.institutionStatus?.value !== 'accepted') {
-                            reservation[field] = newValue
-                        }
-                        if (field === 'userStatus' && (reservation?.institutionStatus?.value !== 'accepted' || reservation?.institutionStatus?.freeDateFor?.length > 0)) {
-                            reservation.userStatus = newValue?.value ? newValue : {value: newValue}
-                        }
+                        // if (field === 'userStatus' && (reservation?.institutionStatus?.value !== 'accepted' || reservation?.institutionStatus?.freeDateFor?.length > 0)) {
+                        //     reservation.userStatus = newValue?.value ? newValue?.value : {value: newValue}
+                        // }
                     }
-                    if (user?.status === 'manager' || user?.status === 'admin') {
-                        if (field === 'institutionStatus') {
-                            // if (newValue === '' && reservation?.userStatus?.value !== 'accepted')
-                            reservation.institutionStatus = newValue?.value ? newValue : {value: newValue};
-                        }
+                    if ((field === 'userStatus' && user?._id === reservation?.user) || status === 'admin') {
+                        reservation[field] = newValue
                     }
+                    if ((field === 'institutionStatus' && user?._id?.toString() === reservation?.manager?.toString()) || status === 'admin') {
+                        reservation[field] = newValue
+                    }
+                    // if (reservation?.manager === user?._id || status === 'admin') {
+                    //     if (field === 'institutionStatus') {
+                    //         // if (newValue === '' && reservation?.userStatus?.value !== 'accepted')
+                    //         reservation.institutionStatus = newValue?.value ? newValue : {value: newValue};
+                    //     }
+                    // }
                 }
             }
 
+
             await reservation.save();
-            res.status(200).json({message: 'Some data updated success'});
+            res.status(200).json({message: 'Some data updated success', reservation});
 
         } catch (e) {
             next(e)
@@ -194,5 +249,31 @@ class CaplController {
             next(e)
         }
     }
+
+    updateStatus = async (req: CustomRequest, res: Response, next: NextFunction) => {
+        const {type, newStatus} = req.body;
+        const ANewType = ['institutionStatus', "userStatus"];
+
+        try {
+            const reservation = req.reservation as ICapl;
+            if (ANewType.includes(type) && newStatus && reservation[type]?.value !== newStatus) {
+                reservation[type].value = newStatus;
+            }
+            await reservation?.save();
+
+            // const newReserve = await this.caplService.updateOne({_id: reservation?._id}, {
+            //     [type]: {
+            //         ...reservation[type],
+            //         value: newStatus
+            //     }
+            // })
+
+            res.status(200).json({message: 'Status updated successfully', reservation})
+
+        } catch (e) {
+            next(e);
+        }
+    }
 }
+
 export default new CaplController();

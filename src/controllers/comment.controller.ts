@@ -54,7 +54,7 @@ class CommentController {
     }
 
     allCommentsByEstablishment = async (req: CustomRequest, res: Response, next: NextFunction) => {
-        const {_order, _sort, _end, _start, parentId} = req.query;
+        const {_order, _sort, _end, _start, parentId, } = req.query;
         const institution = req.data_info as IInstitution;
 
         try {
@@ -63,7 +63,7 @@ class CommentController {
                 items,
                 count,
                 currentSize
-            } = await this.commentService.getEstablishmentTopLevelComments(institution?._id, Number(_end), Number(_start), _sort, _order, parentId as string | null)
+            } = await this.commentService.getEstablishmentTopLevelComments(institution?._id, "byEstablishment", Number(_end), Number(_start), _sort, _order, parentId as string | null, null)
 
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
@@ -97,32 +97,32 @@ class CommentController {
     }
 
     async allCommentsByUserId(req: CustomRequest, res: Response, next: NextFunction) {
+        const {userId} = req.user as IOauth;
+        const user = userId as IUser;
+        const {id} = req.params;
+        const status = req.newStatus;
+
+        const {_end, _start, refFieldCreate} = req.query;
         try {
-            const {userId} = req.user as IOauth;
-            const {id} = req.params;
-
-            const user = userId as IUser;
-
-            if (id !== user?._id?.toString() && user?.status !== 'admin') {
+            if (status !== "admin" && user?._id?.toString() !== id && status !== "manager") {
                 return next(new CustomError("Access denied", 403))
             }
-            let searchId: string;
-            if (user?.status === 'admin') {
-                searchId = id
-            } else {
-                searchId = user?._id
-            }
 
-            const comments = await this.commentService.getItemsByParams({createdBy: searchId})
-                .populate([{path: 'institutionId', select: 'title pictures type _id', options: {limit: 1}}, {
-                    path: 'createdBy',
-                    select: 'avatar name _id'
-                }])
+            const {items, count, currentSize} = await this.commentService.getEstablishmentTopLevelComments(id, "byUser", Number(_end), Number(_start), "createdAt", -1, null, refFieldCreate as string);
+            // const comments = await this.commentService.getItemsByParams({createdBy: user?._id})
+            //     .populate([{path: 'institutionId', select: 'title pictures type _id', options: {limit: 1}}, {
+            //         path: 'createdBy',
+            //         select: 'avatar name _id'
+            //     }])
 
+            res.header('x-total-count', `${count}`);
+            res.header('Access-Control-Expose-Headers', 'x-total-count');
 
             res.status(200).json({
-                user_comments: comments ?? []
-            })
+                items,
+                count,
+                currentSize
+            });
         } catch (e) {
             next(e)
         }
@@ -155,7 +155,6 @@ class CommentController {
                 establishmentId: institution?._id,
                 refFieldCreate: refFieldCreate === 'establishment' ? 'institution' : refFieldCreate,
             });
-
 
 
             res.status(200).json({message: "Comment added successfully", comment: comment, parentReviewsLength});

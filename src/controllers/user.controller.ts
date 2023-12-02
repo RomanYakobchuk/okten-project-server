@@ -26,7 +26,6 @@ class UserController {
         this.addDeleteFavoritePlace = this.addDeleteFavoritePlace.bind(this);
         this.findUserByQuery = this.findUserByQuery.bind(this);
         this.updateUserByAdmin = this.updateUserByAdmin.bind(this);
-        this.getUserFavPlaces = this.getUserFavPlaces.bind(this);
     }
 
     async findUsers(_: CustomRequest, res: Response, next: NextFunction) {
@@ -46,7 +45,6 @@ class UserController {
 
             const user = await this.userService
                 .findOneUser({_id: id})
-                .populate("favoritePlaces") as IUser;
 
             if (!user) {
                 return next(new CustomError('UserSchema not found', 404));
@@ -116,28 +114,28 @@ class UserController {
 
         const institution = req.data_info as IInstitution;
         const news = req.news as IInstitutionNews;
-        const {refPath} = req.body;
-        const favPlaces = req.favPlaces as IUserFavoritePlaces;
+        const {refPath, savedPlace} = req.body;
+        // const favPlaces = req.favPlaces;
         try {
 
-            let isInclude: boolean = false;
-            let followId: Schema.Types.ObjectId;
-            if (refPath === 'institution') {
-                isInclude = favPlaces?.places?.some((item) => item.type === refPath && item.item.toString() === institution?._id?.toString());
-                followId = institution?._id as Schema.Types.ObjectId;
-            } else if (refPath === 'institutionNews') {
-                isInclude = favPlaces?.places?.some((item) => item.type === refPath && item.item.toString() === news?._id?.toString())
-                followId = news?._id as Schema.Types.ObjectId;
-            } else {
-                return next(new CustomError('Something went wrong'))
-            }
+            // let isInclude: boolean = false;
+            // let followId: Schema.Types.ObjectId;
+            // if (refPath === 'institution') {
+            //     isInclude = favPlaces?.places?.some((item) => item.type === refPath && item.item.toString() === institution?._id?.toString());
+            //     followId = institution?._id as Schema.Types.ObjectId;
+            // } else if (refPath === 'institutionNews') {
+            //     isInclude = favPlaces?.places?.some((item) => item.type === refPath && item.item.toString() === news?._id?.toString())
+            //     followId = news?._id as Schema.Types.ObjectId;
+            // } else {
+            //     return next(new CustomError('Something went wrong'))
+            // }
 
-            if (isInclude && followId) {
-                favPlaces.places?.pull({item: followId as Schema.Types.ObjectId, type: refPath})
-            } else if (!isInclude) {
-                favPlaces.places?.push({item: followId as Schema.Types.ObjectId, type: refPath});
-            }
-            await favPlaces.save();
+            // if (isInclude && followId) {
+            //     favPlaces.places?.pull({item: followId as Schema.Types.ObjectId, type: refPath})
+            // } else if (!isInclude) {
+            //     favPlaces.places?.push({item: followId as Schema.Types.ObjectId, type: refPath});
+            // }
+            // await favPlaces.save();
 
             user.favoritePlaces
 
@@ -145,7 +143,8 @@ class UserController {
 
             const {token} = await this.tokenService.tokenWithData(userForResponse, "12h");
 
-            return res.status(201).json({user: token, institution: institution, favoritePlaces: favPlaces.places});
+            // return res.status(201).json({user: token, institution: institution});
+            return res.status(201).json({});
         } catch (e) {
             next(e)
         }
@@ -186,15 +185,6 @@ class UserController {
             //     other code...
         } catch (e) {
             next(e)
-        }
-    }
-
-    async getUserFavPlaces(req: CustomRequest, res: Response, next: NextFunction) {
-        const favPlaces = req.favPlaces as IUserFavoritePlaces;
-        try {
-            res.status(200).json(favPlaces?.places);
-        } catch (e) {
-            next(e);
         }
     }
 }

@@ -18,6 +18,8 @@ import {UserFavoritePlacesService} from './userFavoritePlaces.service';
 import * as scheduler from './other/scheduler';
 import * as reserve from './other/isActiveReserve';
 import {isProfaneText} from "./other/checkBadWords";
+import {NotificationService} from "./notification.service";
+import {newNotificationType} from "./newNotificationType.service";
 
 import {SubscribeNotificationService} from "./subscribeNotification.service"
 
@@ -41,5 +43,7 @@ export {
     SubscribeNotificationService,
     scheduler,
     reserve,
-    isProfaneText
+    isProfaneText,
+    NotificationService,
+    newNotificationType
 }

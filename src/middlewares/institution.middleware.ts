@@ -20,16 +20,19 @@ class InstitutionMiddleware {
     checkInstitution = (type: "all_info" | "info" = 'info') => async (req: CustomRequest, _: Response, next: NextFunction) => {
         const news = req.news as IInstitutionNews;
         try {
-            const {institutionId, refPath} = req.body;
+            const {placeId, institutionId, refPath} = req.body;
             const {id} = req.params;
 
             if (refPath === 'institutionNews') {
                 next();
             } else {
-                const currentId = institutionId || id || "";
+                const currentId = placeId || institutionId || id || "";
 
-                if (news?.institutionId && news?.institutionId === institutionId) {
+                if (news?.institutionId && news?.institutionId === placeId) {
                     next();
+                }
+                if (!currentId) {
+                    return next(new CustomError('Establishment not found!', 404))
                 }
                 let institution: IInstitution;
 
@@ -45,7 +48,6 @@ class InstitutionMiddleware {
                     return next(new CustomError("InstitutionSchema not found", 404))
                 }
                 req.data_info = institution;
-
                 next();
             }
         } catch (e) {

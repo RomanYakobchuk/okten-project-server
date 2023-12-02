@@ -12,6 +12,8 @@ import conversationController from './conversation.controller';
 import caplController from './capl.controller';
 import viewsController from "./views.controller";
 import subscribeNotificationController from "./subscribeNotification.controller";
+import notificationController from "./notification.controller";
+import savedPlacesController from "./savedPlaces.controller";
 
 export {
     userController,
@@ -27,5 +29,7 @@ export {
     conversationController,
     caplController,
     viewsController,
-    subscribeNotificationController
+    subscribeNotificationController,
+    savedPlacesController,
+    notificationController
 }
