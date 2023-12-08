@@ -24,10 +24,7 @@ const createReserve = Joi.object({
     },
     institutionStatus: {
         value: stringValidator.required(),
-        freeDateFor: Joi.array().items(Joi.object({
-            day: dateValidator,
-            time: dateValidator
-        }).allow({})),
+        freeDateFor: Joi.array().items(Joi.date().allow(null)),
         reasonRefusal: stringValidator.allow("")
     },
     isAllowedEdit: booleanValidator,

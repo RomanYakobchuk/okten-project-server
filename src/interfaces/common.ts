@@ -42,12 +42,7 @@ export interface ICapl extends Document {
     },
     institutionStatus: {
         value: "accepted" | "rejected" | "draft",
-        freeDateFor: [
-            {
-                day: Date,
-                time: Date
-            }
-        ],
+        freeDateFor: [Date],
         reasonRefusal: string
     },
     isActive: boolean,

@@ -38,6 +38,7 @@ class CaplMiddleware {
         const {userId} = req.user as IOauth;
         const user = userId as IUser;
         const status = req.newStatus;
+        const {newStatus, institutionStatus, userStatus} = req.body;
 
         try {
             const institution = reservation?.institution as IInstitution;
@@ -45,13 +46,15 @@ class CaplMiddleware {
             if ((status !== 'admin') && (status !== 'manager' && institution?.createdBy?.toString() !== user?._id?.toString()) && reservation?.user?.toString() !== user?._id?.toString()) {
                 return next(new CustomError('Access denied', 403))
             }
-            if (!reservation?.isActive && status !== 'admin') {
-                return next(new CustomError('Reservation is inactive', 403))
-            }
 
             if (type === 'update') {
-                if (reservation?.userStatus?.value === 'accepted' && reservation?.institutionStatus?.value === 'accepted' && status !== 'admin') {
-                    return next(new CustomError("The place is already reserved", 405))
+                if (reservation?.userStatus?.value === 'accepted' && reservation?.institutionStatus?.value === 'accepted') {
+                    if (newStatus !== 'rejected' && (status !== 'manager' && institutionStatus?.value !== 'rejected') && (status !== 'user' && userStatus?.value !== 'rejected') && status !== 'admin') {
+                        if (!reservation?.isActive && status !== 'admin') {
+                            return next(new CustomError('Reservation is inactive', 403))
+                        }
+                        return next(new CustomError("The place is already reserved", 405))
+                    }
                 }
                 if (
                     (user?._id?.toString() !== reservation?.manager?.toString() &&

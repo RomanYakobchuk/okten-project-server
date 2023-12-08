@@ -64,10 +64,7 @@ const Capl = new Schema({
             type: String,
             default: 'draft' // draft | rejected | accepted
         },
-        freeDateFor: [{
-            day: Date,
-            time: Date
-        }],
+        freeDateFor: [Date],
         reasonRefusal: {
             type: String
         }

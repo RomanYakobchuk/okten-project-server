@@ -145,6 +145,12 @@ class CaplController {
             if ((user?.status !== 'admin') && (user?.status !== 'manager' && (institution?.createdBy?.toString() !== user?._id?.toString() || reservation?.manager?.toString() !== user?._id?.toString())) && reservation?.user?.toString() !== user?._id?.toString()) {
                 return next(new CustomError('Access denied', 403))
             }
+            const myDate = new Date(reservation?.date);
+            const currentDate = new Date();
+            if (((reservation?.userStatus?.value === 'accepted' && myDate < currentDate) || (reservation?.userStatus?.value === 'rejected' && reservation?.institutionStatus?.reasonRefusal)) && reservation?.institutionStatus?.value === 'rejected') {
+                reservation.isActive = false;
+                await reservation.save();
+            }
 
             res.status(200).json(reservation);
         } catch (e) {
@@ -163,7 +169,6 @@ class CaplController {
 
             for (const field in dataToUpdate) {
                 if (dataToUpdate.hasOwnProperty(field)) {
-                    console.log('field: ', field)
                     let newValue = dataToUpdate[field];
                     const oldValue = reservation[field];
 
@@ -185,25 +190,15 @@ class CaplController {
                                 return next(new CustomError("You can`t updated your reservation date", 405))
                             }
                         }
-                        // if (field === 'userStatus' && (reservation?.institutionStatus?.value !== 'accepted' || reservation?.institutionStatus?.freeDateFor?.length > 0)) {
-                        //     reservation.userStatus = newValue?.value ? newValue?.value : {value: newValue}
-                        // }
                     }
-                    if ((field === 'userStatus' && user?._id === reservation?.user) || status === 'admin') {
+                    if ((field === 'userStatus' && user?._id?.toString() === reservation?.user?.toString()) || status === 'admin') {
                         reservation[field] = newValue
                     }
                     if ((field === 'institutionStatus' && user?._id?.toString() === reservation?.manager?.toString()) || status === 'admin') {
                         reservation[field] = newValue
                     }
-                    // if (reservation?.manager === user?._id || status === 'admin') {
-                    //     if (field === 'institutionStatus') {
-                    //         // if (newValue === '' && reservation?.userStatus?.value !== 'accepted')
-                    //         reservation.institutionStatus = newValue?.value ? newValue : {value: newValue};
-                    //     }
-                    // }
                 }
             }
-
 
             await reservation.save();
             res.status(200).json({message: 'Some data updated success', reservation});
@@ -256,6 +251,7 @@ class CaplController {
 
         try {
             const reservation = req.reservation as ICapl;
+
             if (ANewType.includes(type) && newStatus && reservation[type]?.value !== newStatus) {
                 reservation[type].value = newStatus;
             }

@@ -128,7 +128,7 @@ class NotificationController {
         const notification = req.notification as INotification;
         try {
             await this.notificationService.deleteOne(notification?._id);
-            res.status(201)
+            res.status(201).send({message: 'Notification deleted'})
         } catch (e) {
             next(e)
         }

@@ -216,7 +216,7 @@ class CommentService implements Repository {
                     $match: {
                         createdBy: new Types.ObjectId(id),
                         refFieldCreate: refFieldCreate === 'establishment' ? "institution" : "user",
-                        parentId: parentId ? new Types.ObjectId(parentId) : parentId
+                        // parentId: parentId ? new Types.ObjectId(parentId) : parentId
                     }
                 },
             );
@@ -445,7 +445,13 @@ _getFilterQuery(otherFilter: any) {
     }
 
     if (filterConditions.length > 0) {
-        Object.assign(searchObject, {$and: [...filterConditions, {parentId: null}]});
+        const filters = [...filterConditions];
+        if (!otherFilter.user) {
+            filters.push({
+                parentId: null
+            })
+        }
+        Object.assign(searchObject, {$and: filters});
     }
 
     return searchObject;

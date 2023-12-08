@@ -48,7 +48,7 @@ class CaplService implements Repository {
         const count = await CaplSchema.countDocuments({...filterQuery});
 
         if (!_sort || !_order) {
-            _sort = "createdAt"
+            _sort = "date"
             _order = -1
         }
         _sort = _sort?.split('_')[0];
@@ -64,7 +64,7 @@ class CaplService implements Repository {
         for (const item of items) {
             const myDate = new Date(item?.date);
             const currentDate = new Date();
-            if (item?.userStatus?.value === 'accepted' && myDate < currentDate) {
+            if (((item?.userStatus?.value === 'accepted' && myDate < currentDate) || (item?.userStatus?.value === 'rejected' && item?.institutionStatus?.reasonRefusal)) && item?.institutionStatus?.value === 'rejected') {
                 item.isActive = false;
                 await item.save();
             }

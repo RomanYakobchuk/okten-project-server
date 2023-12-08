@@ -53,7 +53,6 @@ class NotificationService {
         // if (isReading !== 'null') {
         //     countFilter['isRead'] = isReading === 'true';
         // }
-
         // const countIsRead = await Notification.countDocuments({...countFilter, isRead: true});
         // const countIsNotRead = await Notification.countDocuments({...countFilter, isRead: false});
         const count = await Notification.countDocuments({...countFilter});

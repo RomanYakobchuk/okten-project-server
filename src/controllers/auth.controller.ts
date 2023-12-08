@@ -321,7 +321,6 @@ class AuthController {
 
             const hash = await this.passwordService.hashPassword(password);
 
-            console.log(req.body)
             await this.userService.updateOneUser({email: email}, {password: hash});
 
             res.status(200).json({message: "Password updated successful"})
