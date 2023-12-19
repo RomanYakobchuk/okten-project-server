@@ -1,16 +1,30 @@
 import {Router} from 'express';
 
 import {conversationController} from "../controllers";
-import {authMiddleware, userMiddleware, institutionMiddleware, conversationMiddleware} from "../middlewares";
+import {
+    authMiddleware,
+    userMiddleware,
+    institutionMiddleware,
+    conversationMiddleware,
+    commonMiddleware
+} from "../middlewares";
 
 const router = Router();
 
 router.post(
     `/create`,
     authMiddleware.checkAccessToken,
-    userMiddleware.isUserPresent,
+    userMiddleware.isUserPresent('userId'),
     institutionMiddleware.checkInstitution("info"),
     conversationController.createConv
+)
+router.post(
+    `/createOwnChat`,
+    authMiddleware.checkAccessToken,
+    commonMiddleware.parseJsonStrings,
+    conversationMiddleware.conversationOneByOneExist(),
+    // conversationMiddleware.checkConversation("allInfo"),
+    conversationController.createOwnChat
 )
 
 router.patch(
@@ -22,8 +36,9 @@ router.patch(
 )
 
 router.get(
-    `/findChat`,
+    `/findChat/:id`,
     authMiddleware.checkAccessToken,
+    userMiddleware.isUserPresent('userId'),
     authMiddleware.checkStatus('check'),
     conversationController.getConvByUserId
 )

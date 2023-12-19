@@ -25,7 +25,7 @@ router.get(
     commonMiddleware.isIdValid,
     authMiddleware.checkAccessToken,
     authMiddleware.checkStatus("check"),
-    // userMiddleware.isUserPresent,
+    userMiddleware.isUserPresent,
     userController.getUserInfo
 );
 
@@ -61,19 +61,10 @@ router.post(
     authMiddleware.checkAccessToken,
     newsMiddleware.checkNews,
     institutionMiddleware.checkInstitution('info'),
-
     userFavoritePlacesMiddleware.checkOne,
-    // userFavoritePlacesMiddleware.checkUserFavPlaces('user', 'byUser', true),
     savedPlacesController.savePlace
-    // userController.addDeleteFavoritePlace
 );
 
-// add or del fav news
-router.post(
-    '/addDeleteFavoriteNews',
-    authMiddleware.checkAccessToken,
-    userController.addDeleteFavoritePlace
-);
 
 router.patch(
     `/updateUserByAdmin/:id`,
@@ -100,5 +91,25 @@ router.get(
     savedPlacesController.getUserFavPlaces
 )
 
-
+router.get(
+    `/checkUniqueIndicator/:id`,
+    authMiddleware.checkAccessToken,
+    userMiddleware.isUserPresent('userId'),
+    userMiddleware.checkUniqueIndicator({type: 'create'}),
+    userController.checkUniqueIndicator
+)
+router.post(
+    `/findUserByIndicator/:id`,
+    authMiddleware.checkAccessToken,
+    userMiddleware.isUserPresent('userId'),
+    userMiddleware.checkUniqueIndicator({type: 'find'}),
+    userController.findUserByIndicator
+)
+router.post(
+    `/createUniqueIndicator/:id`,
+    authMiddleware.checkAccessToken,
+    userMiddleware.isUserPresent('userId'),
+    userMiddleware.checkUniqueIndicator({type: 'create'}),
+    userController.createUniqueIndicator
+)
 export default router;

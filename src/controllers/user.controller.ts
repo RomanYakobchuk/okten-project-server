@@ -1,4 +1,3 @@
-import {Schema} from "mongoose";
 import {NextFunction, Response} from "express";
 
 import {CustomRequest} from "../interfaces/func";
@@ -6,7 +5,7 @@ import {UserService, CloudService, TokenService} from '../services';
 import {userPresenter} from '../presenters/user.presenter';
 import {CustomError} from "../errors";
 import managerController from "./manager.controller";
-import {IInstitution, IInstitutionNews, IOauth, IUser, IUserFavoritePlaces} from "../interfaces/common";
+import {IOauth, IUser} from "../interfaces/common";
 
 class UserController {
 
@@ -23,9 +22,11 @@ class UserController {
         this.getUserInfo = this.getUserInfo.bind(this);
         this.updateUserById = this.updateUserById.bind(this);
         this.deleteUserById = this.deleteUserById.bind(this);
-        this.addDeleteFavoritePlace = this.addDeleteFavoritePlace.bind(this);
         this.findUserByQuery = this.findUserByQuery.bind(this);
         this.updateUserByAdmin = this.updateUserByAdmin.bind(this);
+        this.checkUniqueIndicator = this.checkUniqueIndicator.bind(this);
+        this.createUniqueIndicator = this.createUniqueIndicator.bind(this);
+        this.findUserByIndicator = this.findUserByIndicator.bind(this);
     }
 
     async findUsers(_: CustomRequest, res: Response, next: NextFunction) {
@@ -37,11 +38,10 @@ class UserController {
     }
 
     async getUserInfo(req: CustomRequest, res: Response, next: NextFunction) {
-        try {
             const {id} = req.params;
             const userStatus = req.newStatus;
-            const {userId} = req.user as IOauth;
-            const currentUser = userId as IUser;
+            const currentUser = req.userExist as IUser;
+        try {
 
             const user = await this.userService
                 .findOneUser({_id: id})
@@ -108,48 +108,6 @@ class UserController {
         }
     }
 
-    async addDeleteFavoritePlace(req: CustomRequest, res: Response, next: NextFunction) {
-        const {userId} = req.user as IOauth;
-        const user = userId as IUser;
-
-        const institution = req.data_info as IInstitution;
-        const news = req.news as IInstitutionNews;
-        const {refPath, savedPlace} = req.body;
-        // const favPlaces = req.favPlaces;
-        try {
-
-            // let isInclude: boolean = false;
-            // let followId: Schema.Types.ObjectId;
-            // if (refPath === 'institution') {
-            //     isInclude = favPlaces?.places?.some((item) => item.type === refPath && item.item.toString() === institution?._id?.toString());
-            //     followId = institution?._id as Schema.Types.ObjectId;
-            // } else if (refPath === 'institutionNews') {
-            //     isInclude = favPlaces?.places?.some((item) => item.type === refPath && item.item.toString() === news?._id?.toString())
-            //     followId = news?._id as Schema.Types.ObjectId;
-            // } else {
-            //     return next(new CustomError('Something went wrong'))
-            // }
-
-            // if (isInclude && followId) {
-            //     favPlaces.places?.pull({item: followId as Schema.Types.ObjectId, type: refPath})
-            // } else if (!isInclude) {
-            //     favPlaces.places?.push({item: followId as Schema.Types.ObjectId, type: refPath});
-            // }
-            // await favPlaces.save();
-
-            user.favoritePlaces
-
-            const userForResponse = userPresenter(user);
-
-            const {token} = await this.tokenService.tokenWithData(userForResponse, "12h");
-
-            // return res.status(201).json({user: token, institution: institution});
-            return res.status(201).json({});
-        } catch (e) {
-            next(e)
-        }
-    }
-
     async findUserByQuery(req: CustomRequest, res: Response, next: NextFunction) {
         const {_end, _start, _sort, title_like = "", _order, status, isActivated, phoneVerify, isBlocked} = req.query;
         const userStatus = req.newStatus;
@@ -185,6 +143,51 @@ class UserController {
             //     other code...
         } catch (e) {
             next(e)
+        }
+    }
+
+    async checkUniqueIndicator(_: CustomRequest, res: Response, next: NextFunction) {
+        try {
+            res.status(200).json({message: 'Unique indicator access'})
+        } catch (e) {
+            next(e);
+        }
+    }
+
+    async createUniqueIndicator(req: CustomRequest, res: Response, next: NextFunction) {
+        const user = req.userExist as IUser;
+        const {type, indicator} = req.body;
+        try {
+            user.uniqueIndicator = {
+                value: indicator,
+                type: type
+            }
+            await user.save();
+            const {token} = await this.tokenService.tokenWithData(user, "3h");
+
+            res.status(200).json({
+                user: token,
+                message: 'Unique indicator created'
+            })
+        } catch (e) {
+            next(e);
+        }
+    }
+    async findUserByIndicator(req: CustomRequest, res: Response, next: NextFunction) {
+        const userExist = req.userExist as IUser;
+        try {
+            res.status(200).json({
+                user: {
+                    _id: userExist?._id,
+                    name: userExist?.name,
+                    avatar: userExist?.avatar,
+                    uniqueIndicator: userExist?.uniqueIndicator,
+                    status: userExist?.status
+                },
+                message: 'User founded'
+            })
+        } catch (e) {
+            next(e);
         }
     }
 }

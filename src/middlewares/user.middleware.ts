@@ -21,6 +21,7 @@ class UserMiddleware {
         this.isUserUniqByEmail = this.isUserUniqByEmail.bind(this);
         this.isUserUniqByGoogle = this.isUserUniqByGoogle.bind(this);
         this.isUserUniqByFacebook = this.isUserUniqByFacebook.bind(this);
+        this.checkUniqueIndicator = this.checkUniqueIndicator.bind(this);
     }
 
     isUserPresent = (bodyData: string = 'userId') => async (req: CustomRequest, _: Response, next: NextFunction) => {
@@ -117,6 +118,31 @@ class UserMiddleware {
                     email_verified: true
                 }
             }
+            next();
+        } catch (e) {
+            next(e);
+        }
+    }
+
+    checkUniqueIndicator = ({type}: {
+        type: "find" | "create"
+    }) => async (req: CustomRequest, _: Response, next: NextFunction) => {
+        const {indicator} = req.body;
+        try {
+            const userExist = await this.userService.findOneUser({
+                'uniqueIndicator.value': indicator
+            });
+            if (type === 'create' && userExist) {
+                return next(new CustomError('Indicator is exist, change another', 409));
+            }
+            if (type === 'find') {
+                if (!userExist) {
+                    return next(new CustomError('User not found', 404));
+                } else {
+                    req.userExist = userExist;
+                }
+            }
+
             next();
         } catch (e) {
             next(e);

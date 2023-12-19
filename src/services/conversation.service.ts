@@ -1,13 +1,12 @@
 import {ConversationModel} from "../dataBase";
-import {IConvMembers, ILastConvMessage} from "../interfaces/common";
+import {IConvMembers, ILastConvMessage, IConversation} from "../interfaces/common";
 import {Schema} from "mongoose";
 
 interface CreateConv {
     members: IConvMembers[],
-    institutionId: Schema.Types.ObjectId,
-    userName: string,
-    institutionTitle: string,
-    lastMessage: ILastConvMessage,
+    institutionId?: Schema.Types.ObjectId,
+    lastMessage?: ILastConvMessage,
+    chatInfo: IConversation['chatInfo']
 }
 
 class ConversationService {
@@ -34,8 +33,11 @@ class ConversationService {
         const items = await ConversationModel
             .find(_filterQuery)
             .populate([
-                {path: 'institutionId', select: '_id title pictures', options: {limit: 1}},
-                {path: 'members.user', select: '_id name avatar'},
+                // {path: 'institutionId', select: '_id title pictures', options: {limit: 1}},
+                // {path: 'members.user', select: '_id name avatar'},
+                {path: 'chatInfo.field.id'},
+                {path: 'members.user', select: '_id avatar name uniqueIndicator'}
+                // {path: 'creator', select: "_id name avatar status"},
             ])
             .limit(_end - _start)
             .skip(_start)
@@ -57,34 +59,34 @@ function getFilters(otherFilter: any) {
     if (otherFilter.userId) {
         filters.push({members: {$elemMatch: {user: otherFilter.userId}}})
     }
-    if (otherFilter.institutionId && otherFilter.type === 'manager') {
-        filters.push(
-            {institutionId: otherFilter.institutionId},
-        )
-    }
-    if (otherFilter.title_like) {
-        filters.push({
-            $or: [
-                {institutionTitle: {$regex: otherFilter.title_like, $options: 'i'}},
-                {userName: {$regex: otherFilter.title_like, $options: 'i'}},
-            ]
-        })
-    }
+    // if (otherFilter.institutionId && otherFilter.type === 'manager') {
+    //     filters.push(
+    //         {institutionId: otherFilter.institutionId},
+    //     )
+    // }
+    // if (otherFilter.title_like) {
+    //     filters.push({
+    //         $or: [
+    //             {institutionTitle: {$regex: otherFilter.title_like, $options: 'i'}},
+    //             {userName: {$regex: otherFilter.title_like, $options: 'i'}},
+    //         ]
+    //     })
+    // }
+    //
+    // if (otherFilter.title_like) {
+    //     filters.push({
+    //             $or: [
+    //                 {institutionTitle: {$regex: otherFilter.title_like, $options: 'i'}},
+    //                 {userName: {$regex: otherFilter.title_like, $options: 'i'}},]
+    //         },
+    //     )
+    // }
 
-    if (otherFilter.title_like) {
-        filters.push({
-                $or: [
-                    {institutionTitle: {$regex: otherFilter.title_like, $options: 'i'}},
-                    {userName: {$regex: otherFilter.title_like, $options: 'i'}},]
-            },
-        )
-    }
-
-    if (otherFilter.institutionId) {
-        filters.push(
-            {institutionId: otherFilter.institutionId}
-        )
-    }
+    // if (otherFilter.institutionId) {
+    //     filters.push(
+    //         {institutionId: otherFilter.institutionId}
+    //     )
+    // }
 
     if (filters.length > 0) {
         Object.assign(searchObject, {$and: filters})

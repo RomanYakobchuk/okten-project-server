@@ -3,7 +3,8 @@ import {NextFunction, Response} from "express";
 import {ConversationService, InstitutionService} from "../services";
 import {CustomError} from "../errors";
 import {CustomRequest} from "../interfaces/func";
-import {IConversation, IOauth, IUser} from "../interfaces/common";
+import {IConversation, IConvMembers, IOauth, IUser} from "../interfaces/common";
+import {checkNewChatByMembers, validateChatInfoField} from "../controllers/conversation.controller"
 
 class ConversationMiddleware {
     private conversationService: ConversationService;
@@ -16,7 +17,35 @@ class ConversationMiddleware {
         this.checkConversation = this.checkConversation.bind(this);
     }
 
-    checkConversation = (type: string) => async (req: CustomRequest, res: Response, next: NextFunction) => {
+    conversationOneByOneExist = () => async (req: CustomRequest, _: Response, next: NextFunction) => {
+        const {members, chatType} = req.body;
+        try {
+            const byType = await checkNewChatByMembers({members: members, type: chatType});
+            if (!byType.isAccess) {
+                return next(new CustomError(byType.message, 400));
+            }
+            const ids = members?.map((member: IConvMembers) => member?.user);
+             if (chatType === 'oneByOne' && members?.length === 2) {
+                const exist = await this.conversationService.getOne({
+                    members: {
+                        $all: [
+                            {$elemMatch: {user: ids[0]}},
+                            {$elemMatch: {user: ids[1]}},
+                        ],
+                        $size: 2
+                    },
+                    "chatInfo.type": "oneByOne"
+                });
+                if (exist) {
+                    return next(new CustomError('Chat is exist', 409))
+                }
+             }
+             next();
+        } catch (e) {
+            next(e);
+        }
+    }
+    checkConversation = (type: "allInfo" | "someInfo") => async (req: CustomRequest, res: Response, next: NextFunction) => {
 
         const {userId} = req.user as IOauth;
         const user = userId as IUser;
@@ -25,17 +54,21 @@ class ConversationMiddleware {
 
         try {
             let conversation = {} as IConversation;
-            if (type === 'allInfo') {
-                conversation = await this.conversationService
-                    .getOne({_id: id})
-                    .populate([
-                        {path: 'members.user', select: '_id name avatar'},
-                        {path: 'institutionId', select: '_id title pictures'},
-                    ]) as IConversation
-            } else if (type === 'someInfo') {
-                conversation = await this.conversationService.getOne({_id: id}) as IConversation;
-            }
-            const isExist = conversation.members.some((member) => member.user.toString() === user._id.toString())
+            const chatInfo = {
+                allInfo: validateChatInfoField({item: await this.conversationService
+                        .getOne({_id: id})
+                        .populate([
+                            {path: 'members.user', select: '_id name avatar uniqueIndicator'},
+                            {path: 'chatInfo.field.id'}
+                        ]) as IConversation, user: user}),
+                someInfo: await this.conversationService.getOne({_id: id}) as IConversation
+            };
+            conversation = chatInfo[type];
+
+            const isExist = conversation.members.some((member) => {
+                const memberUser = member?.user as IUser;
+                return memberUser?._id.toString() === user._id.toString()
+            })
             if (!isExist && status !== 'admin') {
                 return next(new CustomError('Access denied', 403))
             }
