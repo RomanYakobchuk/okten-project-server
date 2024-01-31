@@ -67,7 +67,7 @@ class ConversationMiddleware {
 
             const isExist = conversation.members.some((member) => {
                 const memberUser = member?.user as IUser;
-                return memberUser?._id.toString() === user._id.toString()
+                return memberUser?._id?.toString() === user._id?.toString()
             })
             if (!isExist && status !== 'admin') {
                 return next(new CustomError('Access denied', 403))

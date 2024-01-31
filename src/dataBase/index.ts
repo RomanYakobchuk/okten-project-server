@@ -37,7 +37,7 @@ import {SubscribeSchema, NotificationSubscribeSchema} from "./subscribe.schema";
 import {FreeSeatsSchema} from "./freeSeats.schema";
 import {Notification} from "./notification.schema";
 
-
+import {ReactionsSchema} from "./reaction.schema"
 export {
     UserSchema,
     View,
@@ -61,5 +61,6 @@ export {
     SubscribeSchema,
     NotificationSubscribeSchema,
     FreeSeatsSchema,
-    Notification
+    Notification,
+    ReactionsSchema
 }

@@ -27,7 +27,7 @@ const User = new Schema<IUser>({
         },
         status: {
             type: String,
-            enum: ['user', 'admin', 'manger'],
+            enum: ['user', 'admin', 'manager'],
             default: 'user'
         },
         dOB: {

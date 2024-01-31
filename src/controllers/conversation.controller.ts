@@ -1,19 +1,21 @@
 import {NextFunction, Response} from "express";
 
 import {CustomRequest} from "../interfaces/func";
-import {CloudService, ConversationService} from "../services";
+import {CloudService, ConversationService, MessageService} from "../services";
 import {ICapl, IConversation, IConvMembers, IInstitution, ILastConvMessage, IOauth, IUser} from "../interfaces/common";
-import {Schema} from "mongoose";
-import {type} from "node:os";
 import {CustomError} from "../errors";
+import {userPresenter} from "../presenters/user.presenter";
+import {filterObjectByType} from "../services/other/validateObjectByType";
 
 class ConversationController {
     private conversationService: ConversationService;
     private cloudService: CloudService;
+    private messageService: MessageService;
 
     constructor() {
         this.conversationService = new ConversationService();
         this.cloudService = new CloudService();
+        this.messageService = new MessageService();
 
         this.createConv = this.createConv.bind(this);
         this.getConvByUserId = this.getConvByUserId.bind(this);
@@ -21,6 +23,7 @@ class ConversationController {
         this.updateTitleName = this.updateTitleName.bind(this);
         this.getConvById = this.getConvById.bind(this);
         this.createOwnChat = this.createOwnChat.bind(this);
+        this.deleteChat = this.deleteChat.bind(this);
     }
 
     async createOwnChat(req: CustomRequest, res: Response, next: NextFunction) {
@@ -56,51 +59,59 @@ class ConversationController {
         }
     }
 
-    async createConv(req: CustomRequest, res: Response, next: NextFunction) {
+    createConv = () => async (req: CustomRequest, res: Response, next: NextFunction) => {
         const user = req.userExist as IUser;
-        const institution = req.data_info as IInstitution;
-        const {chatName, status} = req.body;
+        const {chatName, status, members, chatType, chatFieldName, chatFieldId} = req.body;
+        const picture = req.files?.picture;
+
         try {
-            const conv = await this.conversationService.getOne({
-                userId: user?._id,
-                managerId: institution?.createdBy,
-                institutionId: institution?._id
-            });
+            const filters = {
+                members: {$elemMatch: {user: user?._id}},
+                'chatInfo.type': chatType,
+                'chatInfo.field.name': chatFieldName,
+                'chatInfo.field.id': chatFieldId
+            }
+            const conv = await this.conversationService.getOne(filters)
+                .populate([
+                    {path: 'chatInfo.field.id'},
+                    {path: 'members.user', select: '_id avatar name uniqueIndicator'}
+                ]);
 
             if (conv) {
-                res.status(400).json('Conversation is exist');
+                const newInfo = validateChatInfoField({user: user, item: conv as IConversation});
+                return res.status(200).json({message: 'Conversation is exist', chat: newInfo});
             } else {
-                const currentDate = new Date();
-                const members = [
-                    {
-                        user: user?._id as Schema.Types.ObjectId,
-                        connectedAt: currentDate as Date,
-                        role: user?.status,
-                    },
-                    {
-                        user: institution?.createdBy as Schema.Types.ObjectId,
-                        connectedAt: currentDate as Date,
-                        role: 'manager'
-                    }
-                ]
+                const byType = await checkNewChatByMembers({members: members, type: chatType});
+                if (!byType.isAccess) {
+                    return next(new CustomError(byType.message, 400));
+                }
                 const newConv = await this.conversationService.createConv({
                     members: members as IConvMembers[],
                     chatInfo: {
                         status: status,
                         creator: user?._id,
                         field: {
-                            name: 'capl',
-                            id: institution?._id
+                            name: chatFieldName,
+                            id: chatFieldId
                         },
                         chatName,
-                        picture: institution?.pictures?.length ? institution?.pictures[0]?.url : '',
-                        type: 'oneByOne'
+                        picture: '',
+                        type: chatType,
                     },
-                    institutionId: institution?._id as Schema.Types.ObjectId,
                     lastMessage: {} as ILastConvMessage,
                 });
+                if (req.files?.picture) {
+                    const {url} = await this.cloudService.uploadFile(picture, `chats/${newConv?._id}/picture`);
+                    newConv.chatInfo.picture = url;
+                    await newConv.save();
+                }
+                const populated = await newConv.populate([
+                    {path: 'chatInfo.field.id'},
+                    {path: 'members.user', select: '_id avatar name uniqueIndicator'}
+                ]);
+                const newInfo = validateChatInfoField({user: user, item: populated as IConversation});
 
-                res.status(200).json(newConv);
+                return res.status(200).json({message: 'Chat created successfully', chat: newInfo});
             }
         } catch (e) {
             next(e)
@@ -137,8 +148,8 @@ class ConversationController {
             const conv = await this.conversationService
                 .getOne({members: {$elemMatch: {user: userId}}, institutionId})
                 .populate([
-                    {path: 'members.user', select: '_id avatar name'},
-                    {path: 'institutionId', select: '_id title pictures'},
+                    {path: 'members.user', select: '_id avatar name uniqueIndicator'},
+                    {path: 'chatInfo.field.id'}
                 ]);
 
             res.status(200).json(conv);
@@ -167,9 +178,45 @@ class ConversationController {
     }
 
     async getConvById(req: CustomRequest, res: Response, next: NextFunction) {
-        const conversation = req.conversation;
+        const conversation = req.conversation as IConversation;
         try {
             res.status(200).json(conversation)
+        } catch (e) {
+            next(e)
+        }
+    }
+
+    async deleteChat(req: CustomRequest, res: Response, next: NextFunction) {
+        const {userId} = req.user as IOauth;
+        const user = userId as IUser;
+        const conversation = req.conversation as IConversation;
+        try {
+            const isUserInChat = conversation?.members?.find((member) => member?.user?.toString() === user?._id?.toString());
+
+            if (isUserInChat) {
+                const deleteChatOneByOne = async () => {
+                    await this.messageService.deleteAllByParams({conversationId: conversation?._id});
+                    // потрібно додати видалення файлів
+                    await this.conversationService.deleteOne({_id: conversation?._id});
+                }
+                const deleteChatByGroup = async () => {
+                    if (conversation?.members?.length === 1) {
+                        await deleteChatOneByOne();
+                    } else {
+                        conversation?.members?.filter((member) => member?.user?.toString() !== user?._id?.toString());
+                        await conversation.save();
+                    }
+                }
+                const deleteByType = {
+                    oneByOne: await deleteChatOneByOne(),
+                    group: deleteChatByGroup()
+                }
+                await deleteByType[conversation?.chatInfo?.type];
+
+                return res.status(200);
+            } else {
+                return res.status(200);
+            }
         } catch (e) {
             next(e)
         }
@@ -178,11 +225,23 @@ class ConversationController {
 
 export default new ConversationController();
 
-const variantInstitution = (item: IInstitution) => {
+const variantInstitution = ({item, members, user}: { item: IInstitution, members: IConvMembers[], user: IUser }) => {
+    const currentMember = members?.find((member) => {
+        const m = member?.user as IUser;
+        return m?._id?.toString() === user?._id?.toString();
+    });
+    const receiverMember = members?.find((member) => {
+        const m = member?.user as IUser;
+        return m?._id?.toString() !== user?._id?.toString();
+    });
+    const receiverMemberUser = receiverMember?.user as IUser;
+    const name = currentMember?.conversationTitle || item?.title;
+    const image = currentMember?.role === 'user' ? (item?.pictures?.length && item?.pictures[0]?.url) : receiverMemberUser?.avatar;
     return {
         _id: item?._id,
-        avatar: item?.pictures?.length && item?.pictures[0]?.url,
-        name: item?.title
+        avatar: image,
+        name: name,
+        createdBy: item?.createdBy || null
     }
 }
 const variantUser = ({currentUser, conversation}: { currentUser: IUser, conversation: IConversation }) => {
@@ -248,10 +307,33 @@ export const checkNewChatByMembers = async ({members, type}: {
     };
 }
 
-export const validateChatInfoField = ({user, item}: {item: IConversation, user: IUser}) => {
+export const validateChatInfoField = ({user, item}: { item: IConversation, user: IUser }) => {
     const model = item?.chatInfo?.field?.id;
+    const validateByType = {
+        institution: model,
+        user: (() => {
+            type allowedType = Omit<IUser, "password | registerBy | email | dOB | isActivated | phone | phoneVerify | status">;
+            const fieldsArray: (keyof IUser)[] = Object.keys({} as allowedType);
+
+            const user = userPresenter(model as IUser);
+
+            return filterObjectByType({
+                ...user,
+                uniqueIndicator: {
+                    type: user?.uniqueIndicator?.type,
+                    value: user?.uniqueIndicator?.type === 'public' ? user?.uniqueIndicator?.value : null
+                }
+            } as IUser, fieldsArray);
+        })(),
+        capl: model
+    }
+
     const variant = {
-        institution: variantInstitution(model as IInstitution),
+        institution: variantInstitution({
+            user: user,
+            item: model as IInstitution,
+            members: item?.members
+        }),
         user: variantUser({currentUser: user, conversation: item}),
         capl: variantCapl(model as ICapl)
     };
@@ -261,6 +343,11 @@ export const validateChatInfoField = ({user, item}: {item: IConversation, user: 
         const nV = value?._doc || value;
         return {
             ...nV,
+            user: {
+                avatar: currentUserInfo?.avatar,
+                name: currentUserInfo?.name,
+                _id: currentUserInfo?.id
+            },
             indicator: currentUserInfo?.uniqueIndicator?.type === 'private' ? null : currentUserInfo?.uniqueIndicator?.value
         }
     });
@@ -272,7 +359,7 @@ export const validateChatInfoField = ({user, item}: {item: IConversation, user: 
             ...item?.chatInfo,
             field: {
                 name: item?.chatInfo?.field?.name,
-                id: info?._id
+                id: validateByType[item?.chatInfo?.field?.name]
             },
             chatName: info?.name,
             picture: info?.avatar

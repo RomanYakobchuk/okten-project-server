@@ -76,6 +76,11 @@ router.post(
      authMiddleware.checkAccessToken,
      authController.checkAuthAdmin
  )
+ router.get(
+     `/check_auth_user`,
+     authMiddleware.checkAccessToken,
+     authController.checkAuth
+ )
  export default router;
 
 

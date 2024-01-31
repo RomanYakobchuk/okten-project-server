@@ -14,6 +14,7 @@ import viewsController from "./views.controller";
 import subscribeNotificationController from "./subscribeNotification.controller";
 import notificationController from "./notification.controller";
 import savedPlacesController from "./savedPlaces.controller";
+import reactionController from "./reaction.controller";
 
 export {
     userController,
@@ -31,5 +32,6 @@ export {
     viewsController,
     subscribeNotificationController,
     savedPlacesController,
-    notificationController
+    notificationController,
+    reactionController
 }

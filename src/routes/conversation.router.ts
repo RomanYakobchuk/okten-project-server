@@ -14,9 +14,9 @@ const router = Router();
 router.post(
     `/create`,
     authMiddleware.checkAccessToken,
+    commonMiddleware.parseJsonStrings,
     userMiddleware.isUserPresent('userId'),
-    institutionMiddleware.checkInstitution("info"),
-    conversationController.createConv
+    conversationController.createConv()
 )
 router.post(
     `/createOwnChat`,
@@ -55,6 +55,14 @@ router.get(
     authMiddleware.checkStatus('check'),
     conversationMiddleware.checkConversation('allInfo'),
     conversationController.getConvById
+)
+
+router.delete(
+    `/deleteChat/:id`,
+    authMiddleware.checkAccessToken,
+    authMiddleware.checkStatus('check'),
+    conversationMiddleware.checkConversation('someInfo'),
+    conversationController.deleteChat
 )
 
 export default router;

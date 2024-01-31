@@ -4,7 +4,6 @@ import {Schema} from "mongoose";
 
 interface CreateConv {
     members: IConvMembers[],
-    institutionId?: Schema.Types.ObjectId,
     lastMessage?: ILastConvMessage,
     chatInfo: IConversation['chatInfo']
 }
@@ -14,6 +13,9 @@ class ConversationService {
         return ConversationModel.findOne(params)
     }
 
+    deleteOne(params = {}) {
+        return ConversationModel.deleteOne(params);
+    }
     createConv(params: CreateConv) {
         return ConversationModel.create(params);
     }

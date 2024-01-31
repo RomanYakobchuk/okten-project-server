@@ -128,6 +128,12 @@ const Institution = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'freeSeats',
         unique: true
+    },
+    reactions: {
+        reaction: {
+            type: Schema.Types.ObjectId,
+            ref: 'reaction'
+        }
     }
 }, {timestamps: true});
 

@@ -4,7 +4,7 @@ import {
     IComment, IConversation,
     IInstitution,
     IInstitutionNews, INotification,
-    IOauth, ISubscribe,
+    IOauth, IReaction, ISubscribe,
     IUser,
     IUserFavoritePlaces
 } from "./common";
@@ -22,6 +22,7 @@ export interface CustomRequest extends Request {
     conversation?: IConversation,
     comments?: IComment[]
     comment?: IComment,
+    reaction?: IReaction,
     isAuth?: boolean,
     userExist?: IUser,
     isAllowedNewReview?: boolean,

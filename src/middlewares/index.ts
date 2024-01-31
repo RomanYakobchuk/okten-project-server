@@ -10,6 +10,7 @@ import conversationMiddleware from  './conversation.middleware';
 import cityMiddleware from  './city.middleware';
 import subscribeNotificationMiddleware from  './subscribeNotification.middleware';
 import notificationMiddleware from  './notifications.middleware';
+import reactionMiddleware from  './reaction.middleware';
 
 export {
     authMiddleware,
@@ -23,5 +24,6 @@ export {
     conversationMiddleware,
     subscribeNotificationMiddleware,
     cityMiddleware,
-    notificationMiddleware
+    notificationMiddleware,
+    reactionMiddleware
 }

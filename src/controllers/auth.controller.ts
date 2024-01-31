@@ -52,6 +52,8 @@ class AuthController {
         this.sendVerifyCodeAgain = this.sendVerifyCodeAgain.bind(this)
         this.refreshToken = this.refreshToken.bind(this)
         this.verifyNumber = this.verifyNumber.bind(this)
+        this.checkAuth = this.checkAuth.bind(this)
+        this.checkAuthAdmin = this.checkAuthAdmin.bind(this)
     }
 
     async login(req: CustomRequest, res: Response, next: NextFunction) {
@@ -387,6 +389,26 @@ class AuthController {
 
             res.status(200).json({
                 user: admin,
+                status: 'auth'
+            })
+        } catch (e) {
+            next(e);
+        }
+    }
+    async checkAuth(req: CustomRequest, res: Response, next: NextFunction) {
+
+        const {userId} = req.user as IOauth;
+
+        const currentUser = userId as IUser;
+        try {
+            const user = await this.userService.findOneUser({_id: currentUser?._id});
+
+            if (!user) {
+                return res.status(403).json({message: 'Access denied'})
+            }
+
+            res.status(200).json({
+                user: user,
                 status: 'auth'
             })
         } catch (e) {

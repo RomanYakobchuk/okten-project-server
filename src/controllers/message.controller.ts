@@ -53,22 +53,12 @@ class MessageController {
                 .sort({createdAt: -1})
                 .exec();
 
-            const newArr = messages?.reduce((acc: any, obj: IMessage) => {
-                const createdAt = new Date(obj?.createdAt as Date);
 
-                const dayMonthYear = `${createdAt.getDate()}-${createdAt.getMonth() + 1}-${createdAt.getFullYear()}`;
-
-                if (!acc[dayMonthYear]) {
-                    acc[dayMonthYear] = [];
-                }
-                acc[dayMonthYear].push(obj);
-                return acc;
-            }, {});
 
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
 
-            res.status(200).json(newArr)
+            res.status(200).json(messages)
         } catch (e) {
             next(e)
         }

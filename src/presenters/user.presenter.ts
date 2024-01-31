@@ -15,7 +15,8 @@ const userPresenter = (user: IUser) => {
         updatedAt: user.updatedAt,
         favoritePlaces: user.favoritePlaces as string | string & ObjectId | IUserFavoritePlaces | IObjectIdArray,
         allInstitutions: user.allInstitutions,
-        status: user.status
+        status: user.status,
+        uniqueIndicator: user.uniqueIndicator
     }
 }
 

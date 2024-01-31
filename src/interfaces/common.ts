@@ -54,7 +54,7 @@ export interface ICity extends Ids {
     name: string,
 }
 
-export interface IComment extends Document {
+export interface IComment extends Document, DocumentResult<IComment> {
     createdBy: Schema.Types.ObjectId | IUser | IInstitution | {_id: string, name: string, avatar: string},
     _id: string | string & ObjectId | ObjectId,
     text: string,
@@ -64,7 +64,7 @@ export interface IComment extends Document {
     createdAt?: Date,
     updatedAt?: Date,
     refFieldCreate?: "user" | "institution",
-    _doc?: IComment
+    reactions: string | IReaction
     // [key: string]: any
 }
 
@@ -233,17 +233,17 @@ export interface ILastConvMessage {
     updatedAt: Date
 }
 
-export interface IConvMembers extends DocumentResultConversation<IConvMembers>{
+export interface IConvMembers extends DocumentResult<IConvMembers>{
     user: Schema.Types.ObjectId | IUser,
     connectedAt: Date,
     indicator?: null | string,
     role: "admin" | "manager" | "user",
     conversationTitle: string
 }
-export interface DocumentResultConversation<T> {
+export interface DocumentResult<T> {
     _doc: T;
 }
-export interface IConversation extends Document, DocumentResultConversation<IConversation> {
+export interface IConversation extends Document, DocumentResult<IConversation> {
     _id: string | string & ObjectId,
     lastMessage: ILastConvMessage,
     members: IConvMembers[],
@@ -301,7 +301,7 @@ export interface IReview extends InstitutionId, Ids {
     reviews: Schema.Types.ObjectId[],
 }
 
-export interface IUser extends Document, DocumentResultConversation<IUser> {
+export interface IUser extends Document, DocumentResult<IUser> {
     name: string,
     email: string,
     status: "user" | "manager" | "admin",
@@ -309,8 +309,8 @@ export interface IUser extends Document, DocumentResultConversation<IUser> {
     registerBy: "Google" | "Email" | "GitHub" | "Facebook",
     password: string,
     uniqueIndicator: {
-        value: string,
-        type: "public" | "private"
+        value: string | null,
+        type: "public" | "private" | null
     },
     phone: string,
     avatar: string,
@@ -427,3 +427,13 @@ export interface INotification extends UserId, Document {
 }
 
 export type TTypeNotification = ICapl | IMessage | IInstitutionNews | IInstitution | IUser
+
+export interface IReaction extends Document {
+    _id: Ids['_id'],
+    item: string | IInstitution | IInstitutionNews | IComment,
+    field: 'institution' | 'institutionNew' | 'commentItem',
+    likes: string[],
+    unLikes: string[],
+    createdAt: Date,
+    updatedAt: Date,
+}

@@ -10,6 +10,7 @@ import menuRouter from './menu.router';
 import messageRouter from './message.router';
 import conversationRouter from './conversation.router';
 import caplRouter from './capl.router';
+import reactionRouter from './reaction.router';
 import subscribeNotificationRouter from './subscribeNotification.router';
 
 export {
@@ -25,5 +26,6 @@ export {
     messageRouter,
     conversationRouter,
     caplRouter,
-    subscribeNotificationRouter
+    subscribeNotificationRouter,
+    reactionRouter
 }

@@ -20,6 +20,7 @@ import * as reserve from './other/isActiveReserve';
 import {isProfaneText} from "./other/checkBadWords";
 import {NotificationService} from "./notification.service";
 import {newNotificationType} from "./newNotificationType.service";
+import {ReactionService} from "./reaction.service";
 
 import {SubscribeNotificationService} from "./subscribeNotification.service"
 
@@ -45,5 +46,6 @@ export {
     reserve,
     isProfaneText,
     NotificationService,
-    newNotificationType
+    newNotificationType,
+    ReactionService
 }

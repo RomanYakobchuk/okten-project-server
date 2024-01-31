@@ -27,6 +27,10 @@ const CommentItem = new Schema({
     repliesLength: {
         type: Number,
         default: 0
+    },
+    reactions: {
+        type: Schema.Types.ObjectId,
+        ref: 'reaction'
     }
 }, {timestamps: true});
 

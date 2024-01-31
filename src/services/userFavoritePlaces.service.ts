@@ -20,6 +20,7 @@ class UserFavoritePlacesService {
 
         const items = await UserFavPlaces
             .find(filters)
+            .select('_id type item')
             // .lean()
             .skip(_start)
             .limit(_end - _start)

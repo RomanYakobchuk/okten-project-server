@@ -10,6 +10,9 @@ class MessageService {
     findOne(params: any) {
         return MessageModel.findOne(params)
     }
+    deleteAllByParams(params = {}) {
+        return MessageModel.deleteMany(params);
+    }
 }
 
 export {

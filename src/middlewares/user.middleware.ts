@@ -128,12 +128,15 @@ class UserMiddleware {
         type: "find" | "create"
     }) => async (req: CustomRequest, _: Response, next: NextFunction) => {
         const {indicator} = req.body;
+        const user = req.userExist as IUser;
         try {
             const userExist = await this.userService.findOneUser({
                 'uniqueIndicator.value': indicator
             });
             if (type === 'create' && userExist) {
-                return next(new CustomError('Indicator is exist, change another', 409));
+                if (user?._id?.toString() !== userExist?._id?.toString()) {
+                    return next(new CustomError('Indicator is exist, change another', 409));
+                }
             }
             if (type === 'find') {
                 if (!userExist) {
