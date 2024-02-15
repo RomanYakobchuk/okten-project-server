@@ -1,7 +1,7 @@
 import userController from './user.controller';
 import managerController from './manager.controller';
 import authController from './auth.controller';
-import institutionController from './institution.controller';
+import establishmentController from './establishment.controller';
 import newsController from './news.controller';
 import reviewController from './review.controller';
 import commentController from './comment.controller';
@@ -20,7 +20,7 @@ export {
     userController,
     managerController,
     authController,
-    institutionController,
+    establishmentController,
     newsController,
     reviewController,
     commentController,

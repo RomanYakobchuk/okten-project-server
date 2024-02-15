@@ -3,7 +3,7 @@ import {NextFunction, Response} from "express";
 import {CustomRequest} from "../interfaces/func";
 import {NewsService, UserService, CloudService} from "../services";
 import {CustomError} from "../errors";
-import {IInstitution, IInstitutionNews, IOauth, IUser} from "../interfaces/common";
+import {IEstablishment, IEstablishmentNews, IOauth, IUser} from "../interfaces/common";
 import {Schema} from "mongoose";
 
 
@@ -20,7 +20,7 @@ class NewsController {
 
         this.createNews = this.createNews.bind(this);
         this.allNews = this.allNews.bind(this);
-        this.allInstitutionsNewsByPublished = this.allInstitutionsNewsByPublished.bind(this);
+        this.allEstablishmentNewsByPublished = this.allEstablishmentNewsByPublished.bind(this);
         this.newsInfo = this.newsInfo.bind(this);
         this.updateNewsInfo = this.updateNewsInfo.bind(this);
         this.otherPlaceNews = this.otherPlaceNews.bind(this);
@@ -40,7 +40,7 @@ class NewsController {
                 category,
             } = req.body;
             const {pictures} = req.files;
-            const institution = req.data_info as IInstitution;
+            const establishment = req.data_info as IEstablishment;
             const {userId} = req.user as IOauth;
 
             const user = userId as IUser;
@@ -50,10 +50,10 @@ class NewsController {
             if (!currentUser) {
                 return next(new CustomError('UserSchema not found'));
             }
-            const isUserInstitution = currentUser?._id?.toString() === institution?.createdBy?.toString();
+            const isUserEstablishment = currentUser?._id?.toString() === establishment?.createdBy?.toString();
 
-            if (!isUserInstitution && currentUser?.status !== 'admin') {
-                return next(new CustomError("It is not your institution", 403))
+            if (!isUserEstablishment && currentUser?.status !== 'admin') {
+                return next(new CustomError("It is not your establishment", 403))
             }
 
             let newDataEvent: any[] = [];
@@ -72,7 +72,7 @@ class NewsController {
                 title,
                 place: place,
                 createdBy: currentUser?._id === user?._id ? user?._id : currentUser?._id,
-                institutionId: institution?._id,
+                establishmentId: establishment?._id,
                 dateEvent: newDataEvent,
                 publishAt: {
                     isPublish: isDatePublished,
@@ -80,7 +80,7 @@ class NewsController {
                 }
             })
 
-            institution.news?.push(news?._id as Schema.Types.ObjectId);
+            establishment.news?.push(news?._id as Schema.Types.ObjectId);
 
             if (pictures) {
                 let currentPictures: any[] = [];
@@ -96,7 +96,7 @@ class NewsController {
             }
 
             await news?.save();
-            await institution.save();
+            await establishment.save();
 
             res.status(200).json({message: 'News create successfully'})
 
@@ -117,7 +117,7 @@ class NewsController {
             category,
             date_event_gte,
             date_event_lte,
-            institution = '',
+            establishment = '',
             status = ''
         } = req.query;
         const userStatus = req.newStatus;
@@ -133,7 +133,7 @@ class NewsController {
             const {
                 count,
                 items
-            } = await this.newsService.getWithPagination(Number(_end), _order, Number(_start), _sort, title_like as string, category as string, city_like as string, date_event_lte, date_event_gte, newsStatus, institution as string, '');
+            } = await this.newsService.getWithPagination(Number(_end), _order, Number(_start), _sort, title_like as string, category as string, city_like as string, date_event_lte, date_event_gte, newsStatus, establishment as string, '');
 
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
@@ -144,11 +144,11 @@ class NewsController {
         }
     }
 
-    async allInstitutionsNewsByPublished(req: CustomRequest, res: Response, next: NextFunction) {
+    async allEstablishmentNewsByPublished(req: CustomRequest, res: Response, next: NextFunction) {
         try {
-            const institution = req.data_info as IInstitution;
+            const establishment = req.data_info as IEstablishment;
 
-            const {items, total} = await this.newsService.getInstitutionNews('published', institution?._id as string);
+            const {items, total} = await this.newsService.getNews('published', establishment?._id as string);
 
             res.header('x-total-count', `${total}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
@@ -161,7 +161,7 @@ class NewsController {
 
     async newsInfo(req: CustomRequest, res: Response, next: NextFunction) {
         try {
-            const news = req.news as IInstitutionNews;
+            const news = req.news as IEstablishmentNews;
             const {userId} = req.user as IOauth;
             const user = userId as IUser;
 
@@ -179,7 +179,7 @@ class NewsController {
     async updateNewsInfo(req: CustomRequest, res: Response, next: NextFunction) {
         try {
             const {...dataToUpdate} = req.body;
-            const news = req.news as IInstitutionNews;
+            const news = req.news as IEstablishmentNews;
             for (const field in dataToUpdate) {
                 if (dataToUpdate.hasOwnProperty(field)) {
                     let newValue = dataToUpdate[field];
@@ -208,7 +208,7 @@ class NewsController {
 
     async otherPlaceNews(req: CustomRequest, res: Response, next: NextFunction) {
 
-        const institution = req.data_info as IInstitution;
+        const establishment = req.data_info as IEstablishment;
         const {_sort, _order, _end, _start, newsId} = req.query;
 
         try {
@@ -223,7 +223,7 @@ class NewsController {
                 null,
                 null,
                 "published",
-                institution?._id as string,
+                establishment?._id as string,
                 newsId as string
             );
 
@@ -240,7 +240,7 @@ class NewsController {
 
 // async function checkScheduledNews() {
 //     const currentDateTime = new Date();
-//     const scheduledNews = await Institution_newsSchema.find({ status: 'draft', publishAt: { $lte: currentDateTime } });
+//     const scheduledNews = await Establishment_newsSchema.find({ status: 'draft', publishAt: { $lte: currentDateTime } });
 //
 //     for (const scheduledNew of scheduledNews) {
 //         scheduledNew.status = 'published';

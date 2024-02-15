@@ -18,13 +18,13 @@ class NewsMiddleware {
             const {placeId, refPath} = req.body;
             const {id} = req.params;
 
-            if (refPath === 'institution') {
+            if (refPath === 'establishment') {
                 next();
             } else {
                 const currentId = placeId || id || "";
 
                 const news = await this.newsService
-                    .getOneNews({_id: currentId}).populate({path: 'institutionId', select: '_id title pictures type place location'})
+                    .getOneNews({_id: currentId}).populate({path: 'establishmentId', select: '_id title pictures type place location'})
 
                 if (!news) {
                     return next(new CustomError('News not found', 404));

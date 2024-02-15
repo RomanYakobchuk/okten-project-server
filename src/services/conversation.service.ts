@@ -24,9 +24,9 @@ class ConversationService {
         return ConversationModel.updateOne({_id: id}, {...params})
     }
 
-    async getAllByUser(_end: number, _start: number, _sort: any, _order: any, type: string = '', title_like: string = '', userId: string = '', institutionId: string = '') {
+    async getAllByUser(_end: number, _start: number, _sort: any, _order: any, type: string = '', title_like: string = '', userId: string = '', establishmentId: string = '') {
 
-        const _filterQuery = getFilters({userId, institutionId, type, title_like});
+        const _filterQuery = getFilters({userId, establishmentId: establishmentId, type, title_like});
         if (!_sort || !_order) {
             _sort = 'createdAt'
             _order = -1
@@ -35,7 +35,7 @@ class ConversationService {
         const items = await ConversationModel
             .find(_filterQuery)
             .populate([
-                // {path: 'institutionId', select: '_id title pictures', options: {limit: 1}},
+                // {path: 'establishmentId', select: '_id title pictures', options: {limit: 1}},
                 // {path: 'members.user', select: '_id name avatar'},
                 {path: 'chatInfo.field.id'},
                 {path: 'members.user', select: '_id avatar name uniqueIndicator'}
@@ -61,15 +61,15 @@ function getFilters(otherFilter: any) {
     if (otherFilter.userId) {
         filters.push({members: {$elemMatch: {user: otherFilter.userId}}})
     }
-    // if (otherFilter.institutionId && otherFilter.type === 'manager') {
+    // if (otherFilter.establishmentId && otherFilter.type === 'manager') {
     //     filters.push(
-    //         {institutionId: otherFilter.institutionId},
+    //         {establishmentId: otherFilter.establishmentId},
     //     )
     // }
     // if (otherFilter.title_like) {
     //     filters.push({
     //         $or: [
-    //             {institutionTitle: {$regex: otherFilter.title_like, $options: 'i'}},
+    //             {establishmentTitle: {$regex: otherFilter.title_like, $options: 'i'}},
     //             {userName: {$regex: otherFilter.title_like, $options: 'i'}},
     //         ]
     //     })
@@ -78,15 +78,15 @@ function getFilters(otherFilter: any) {
     // if (otherFilter.title_like) {
     //     filters.push({
     //             $or: [
-    //                 {institutionTitle: {$regex: otherFilter.title_like, $options: 'i'}},
+    //                 {establishmentTitle: {$regex: otherFilter.title_like, $options: 'i'}},
     //                 {userName: {$regex: otherFilter.title_like, $options: 'i'}},]
     //         },
     //     )
     // }
 
-    // if (otherFilter.institutionId) {
+    // if (otherFilter.establishmentId) {
     //     filters.push(
-    //         {institutionId: otherFilter.institutionId}
+    //         {establishmentId: otherFilter.establishmentId}
     //     )
     // }
 

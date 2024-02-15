@@ -1,123 +1,123 @@
 import {Router} from "express";
 import {
     authMiddleware,
-    institutionMiddleware,
+    establishmentMiddleware,
     fileMiddleware,
     userMiddleware,
     subscribeNotificationMiddleware, commonMiddleware
 } from "../middlewares";
-import {institutionController, viewsController} from "../controllers";
+import {establishmentController, viewsController} from "../controllers";
 import {establishmentValidator} from "../validators";
 
 
 const router = Router();
-// all published institution
+// all published Establishment
 router.get(
     `/all`,
     authMiddleware.checkAccessToken,
     authMiddleware.checkStatus("check"),
-    institutionController.allInstitutionByVerify
+    establishmentController.allEstablishmentByVerify
 );
 
-// create institution
+// create Establishment
 router.post(
     `/create`,
     authMiddleware.checkAccessToken,
     commonMiddleware.parseJsonStrings,
     commonMiddleware.isDateValid(establishmentValidator.createEstablishment, 'body'),
     authMiddleware.checkStatus('check'),
-    institutionController.createInstitution
+    establishmentController.createEstablishment
 )
 
-// all institution info with field
+// all Establishment info with field
 router.get(
     `/infoById/:id`,
     authMiddleware.checkAccessToken,
-    institutionMiddleware.checkInstitution('all_info'),
-    institutionMiddleware.getAllInfoById,
+    establishmentMiddleware.checkEstablishment('all_info'),
+    establishmentMiddleware.getAllInfoById,
     subscribeNotificationMiddleware.checkSubscribe,
-    viewsController.addViewForInstitution
+    viewsController.addViewForEstablishment
 )
 
-// institution info
+// establishment info
 // router.get(
 //     `/infoById/:id`,
 //     authMiddleware.checkAccessToken,
-//     institutionMiddleware.checkInstitution('info'),
-//     institutionController.getById
+//     establishmentMiddleware.checkEstablishment('info'),
+//     establishmentController.getById
 // )
 
-// update institution info
+// update establishment info
 router.patch(
     `/infoById/:id`,
     authMiddleware.checkAccessToken,
-    institutionMiddleware.checkInstitution('info'),
+    establishmentMiddleware.checkEstablishment('info'),
     commonMiddleware.parseJsonStrings,
     commonMiddleware.isDateValid(establishmentValidator.updateEstablishment, 'body'),
-    fileMiddleware.checkImagesForUpdated('institution'),
-    institutionController.updateInstitutionById
+    fileMiddleware.checkImagesForUpdated('establishment'),
+    establishmentController.updateEstablishmentById
 )
 
-// user`s institution
+// user`s establishment
 router.get(
-    `/userInstitutions`,
+    `/userEstablishments`,
     authMiddleware.checkAccessToken,
     authMiddleware.checkStatus('check'),
-    institutionController.userInstitutionsByQuery
+    establishmentController.userEstablishmentsByQuery
 )
 
 // count cities
 router.get(
     `/countByCity`,
     authMiddleware.checkAccessToken,
-    institutionController.countByCity
+    establishmentController.countByCity
 )
 
-// count institutions type
+// count Establishments type
 router.get(
     `/countByType`,
     authMiddleware.checkAccessToken,
-    institutionController.countByType
+    establishmentController.countByType
 )
 
-// count institution with more views
+// count establishment with more views
 router.get(
     `/countMoreViews`,
     authMiddleware.checkAccessToken,
-    institutionController.countMoreViews
+    establishmentController.countMoreViews
 )
 
 // unique places
 router.get(
     `/uniquePlaces`,
     authMiddleware.checkAccessToken,
-    institutionController.uniquePlaces
+    establishmentController.uniquePlaces
 )
 
 
-// delete institution
+// delete establishment
 router.delete(
     `/deleteOne/:id`,
     authMiddleware.checkAccessToken,
     authMiddleware.checkStatus('check'),
-    institutionMiddleware.checkInstitution('info'),
-    institutionController.deleteInstitutions
+    establishmentMiddleware.checkEstablishment('info'),
+    establishmentController.deleteEstablishments
 )
 
 router.patch(
     `/updateStatus/:id`,
     authMiddleware.checkAccessToken,
     authMiddleware.checkStatus('check'),
-    institutionMiddleware.checkInstitution('info'),
-    institutionController.updateStatus
+    establishmentMiddleware.checkEstablishment('info'),
+    establishmentController.updateStatus
 )
 
 router.get(
     `/updateStatus/:id`,
     authMiddleware.checkAccessToken,
     authMiddleware.checkStatus('check'),
-    institutionMiddleware.checkInstitution('info'),
-    institutionController.getStatus
+    establishmentMiddleware.checkEstablishment('info'),
+    establishmentController.getStatus
 )
 
 router.get(
@@ -125,27 +125,27 @@ router.get(
     authMiddleware.checkAccessToken,
     authMiddleware.checkStatus('check'),
     userMiddleware.isUserPresent('userId'),
-    institutionController.allByUserId
+    establishmentController.allByUserId
 )
 
 router.get(
     `/similar/:id`,
     authMiddleware.checkAccessToken,
-    institutionMiddleware.checkInstitution('info'),
-    institutionController.similarEstablishment
+    establishmentMiddleware.checkEstablishment('info'),
+    establishmentController.similarEstablishment
 )
 
 router.get(
     `/nearby`,
     authMiddleware.checkAccessToken,
-    institutionController.establishmentNearby
+    establishmentController.establishmentNearby
 )
 
 router.get(
     `/getNumberOfEstablishmentProperties/:id`,
     authMiddleware.checkAccessToken,
-    institutionMiddleware.checkInstitution('info'),
-    institutionController.getNumberOfEstablishmentProperties
+    establishmentMiddleware.checkEstablishment('info'),
+    establishmentController.getNumberOfEstablishmentProperties
 )
 
 export default router;

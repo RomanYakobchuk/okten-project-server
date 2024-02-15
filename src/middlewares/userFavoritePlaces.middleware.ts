@@ -39,7 +39,7 @@ class UserFavoritePlacesMiddleware {
             }
             // const savedPlaces = await this.userFavoritePlacesService.findWithQuery()
             let favPlaces = await this.userFavoritePlacesService.findOne({_id: user?.favoritePlaces})?.populate({path: 'places.item', select: (doc) => {
-                if (doc.type === 'institution') {
+                if (doc.type === 'establishment') {
                     return '_id type pictures title '
                 }
                 }})
@@ -71,7 +71,7 @@ class UserFavoritePlacesMiddleware {
                 _start = '0'
             }
             if (newStatus !== 'admin' || !userId) {
-                userId = user?._id
+                userId = user?._id as string
             }
             const {count, items} = await this.userFavoritePlacesService.findWithQuery(Number(_end), Number(_start), type as string, userId as string, variant);
 

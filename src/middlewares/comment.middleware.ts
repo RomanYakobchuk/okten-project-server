@@ -1,27 +1,27 @@
-import {CommentService, InstitutionService} from "../services";
+import {CommentService, EstablishmentService} from "../services";
 import {CustomError} from "../errors";
 import {CustomRequest} from "../interfaces/func";
 import {NextFunction, Response} from "express";
-import {IInstitution, IOauth, IUser} from "../interfaces/common";
+import {IEstablishment, IOauth, IUser} from "../interfaces/common";
 
 class CommentMiddleware {
     private commentService: CommentService;
-    private institutionService: InstitutionService;
+    private establishmentService: EstablishmentService;
 
     constructor() {
         this.commentService = new CommentService();
-        this.institutionService = new InstitutionService();
+        this.establishmentService = new EstablishmentService();
 
-        this.checkCommentsByInstitution = this.checkCommentsByInstitution.bind(this);
+        this.checkCommentsByestablishment = this.checkCommentsByestablishment.bind(this);
         this.checkCommentById = this.checkCommentById.bind(this);
         this.checkCreatorIsExist = this.checkCreatorIsExist.bind(this);
     }
 
-    async checkCommentsByInstitution(req: CustomRequest, res: Response, next: NextFunction) {
+    async checkCommentsByestablishment(req: CustomRequest, res: Response, next: NextFunction) {
         try {
-            const institution = req.data_info as IInstitution;
+            const establishment = req.data_info as IEstablishment;
 
-            const comments = await this.commentService.getItemsByParams({institutionId: institution?._id}).populate('items');
+            const comments = await this.commentService.getItemsByParams({establishmentId: establishment?._id}).populate('items');
 
             if (!comments) {
                 return res.status(404).json({message: 'Comments not found'})
@@ -54,12 +54,12 @@ class CommentMiddleware {
         const {userId} = req.user as IOauth;
         const user = userId as IUser;
         try {
-            let IdOfCreatedBy: IUser | IInstitution;
+            let IdOfCreatedBy: IUser | IEstablishment;
             if (refFieldCreate !== 'establishment' && refFieldCreate !== 'user' && !createdBy) {
                 return next(new CustomError('Invalid refFieldCreate value or createdBy not exist', 400))
             }
             if (refFieldCreate === 'establishment') {
-                IdOfCreatedBy = await this.institutionService.getOneInstitution({_id: createdBy}) as IInstitution;
+                IdOfCreatedBy = await this.establishmentService.getOneEstablishment({_id: createdBy}) as IEstablishment;
             } else if (refFieldCreate === 'user') {
                 IdOfCreatedBy = user;
             } else {

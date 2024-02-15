@@ -2,31 +2,31 @@ import {NextFunction, Response} from "express";
 
 import {CustomRequest} from "../interfaces/func";
 import {Views, View} from "../dataBase";
-import {IInstitution, IOauth, ISubscribe, IUser, IViews} from "../interfaces/common";
+import {IEstablishment, IOauth, ISubscribe, IUser, IViews} from "../interfaces/common";
 
 class ViewsController {
 
     constructor() {
-        this.addViewForInstitution = this.addViewForInstitution.bind(this);
+        this.addViewForEstablishment = this.addViewForEstablishment.bind(this);
     }
-    async addViewForInstitution(req: CustomRequest, res: Response, next: NextFunction) {
-        const institution = req.data_info as IInstitution;
+    async addViewForEstablishment(req: CustomRequest, res: Response, next: NextFunction) {
+        const establishment = req.data_info as IEstablishment;
         const subscribe = req.subscribe as ISubscribe;
         const {userId} = req.user as IOauth;
         const user = userId as IUser;
         try {
-            if (user?._id?.toString() !== institution?.createdBy?.toString()) {
-                const views = institution.views as IViews;
+            if (user?._id?.toString() !== establishment?.createdBy?.toString()) {
+                const views = establishment.views as IViews;
                 let currentViews = await Views.findById(views?._id);
 
-                if (!currentViews || currentViews.viewsWith?.toString() !== institution?._id?.toString()) {
+                if (!currentViews || currentViews.viewsWith?.toString() !== establishment?._id?.toString()) {
                     currentViews = await Views.create({
-                        refField: 'institution',
-                        viewsWith: institution?._id
+                        refField: 'establishment',
+                        viewsWith: establishment?._id
                     })
 
-                    institution.views = currentViews?._id;
-                    await institution.save();
+                    establishment.views = currentViews?._id;
+                    await establishment.save();
                 }
 
                 const isExistView = await View.findOne({viewsId: currentViews?._id, user: user?._id});
@@ -34,7 +34,7 @@ class ViewsController {
                     await View.create({
                         viewsId: currentViews?._id,
                         user: user?._id,
-                        verify: institution.verify
+                        verify: establishment.verify
                     })
                     currentViews.viewsNumber++;
 
@@ -42,7 +42,7 @@ class ViewsController {
                 }
             }
             res.status(200).json({
-                institution,
+                establishment,
                 subscribe
             });
         } catch (e) {

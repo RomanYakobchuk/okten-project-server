@@ -3,9 +3,9 @@ import {IMenuItem} from "../interfaces/common";
 
 const MenuItemSchema = new Schema<IMenuItem>({
     description: String,
-    institutionId: {
+    establishmentId: {
         type: Schema.Types.ObjectId,
-        ref: 'institution'
+        ref: 'establishment'
     },
     title: String,
     category: String,

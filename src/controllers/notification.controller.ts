@@ -25,7 +25,7 @@ class NotificationController {
         const user = req.userExist as IUser;
         const status = req.newStatus;
         try {
-            const {countIsNotRead} = await this.notificationService.getUserCount({id: user?._id, status});
+            const {countIsNotRead} = await this.notificationService.getUserCount({id: user?._id as string, status});
 
             res.status(200).json({
                 countIsNotRead
@@ -46,7 +46,7 @@ class NotificationController {
                 _sort: _sort as string,
                 _order: _order as string | number,
                 title_like: title_like as string,
-                userId: user?._id,
+                userId: user?._id as string,
                 status,
                 isReading: isReading as string,
                 isDelete: isDelete === 'true'

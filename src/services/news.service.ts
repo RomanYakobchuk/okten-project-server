@@ -1,28 +1,28 @@
-import {InstitutionNewsSchema} from "../dataBase";
-import {IInstitutionNews} from "../interfaces/common";
+import {EstablishmentNewsSchema} from "../dataBase";
+import {IEstablishmentNews} from "../interfaces/common";
 
 interface Repository {
-    createNews(news: {}): Promise<IInstitutionNews>,
+    createNews(news: {}): Promise<IEstablishmentNews>,
 
-    getWithPagination(_end: number, _order: any, _start: number, _sort: any, title_like: string, category: string, city_like: string, date_event_lte: any, date_event_gte: any, isPublished: string, institution: string, cutId: string): Promise<{
+    getWithPagination(_end: number, _order: any, _start: number, _sort: any, title_like: string, category: string, city_like: string, date_event_lte: any, date_event_gte: any, isPublished: string, establishment: string, cutId: string): Promise<{
         count: number,
-        items: IInstitutionNews[]
+        items: IEstablishmentNews[]
     }>,
 
-    getInstitutionNews(status: string, institutionId: string): Promise<{total: number, items: IInstitutionNews[]}>,
+    getNews(status: string, establishmentId: string): Promise<{total: number, items: IEstablishmentNews[]}>,
 
-    getOneNews(params: any): Promise<IInstitutionNews | null>,
+    getOneNews(params: any): Promise<IEstablishmentNews | null>,
 
-    findByParams(params: any): Promise<IInstitutionNews[] | null>,
+    findByParams(params: any): Promise<IEstablishmentNews[] | null>,
 
 }
 
 class NewsService implements Repository {
     createNews(news = {}) {
-        return InstitutionNewsSchema.create(news);
+        return EstablishmentNewsSchema.create(news);
     }
 
-    async getWithPagination(_end: number, _order: any, _start: number, _sort: any, title_like = "", category = "", city_like = "", date_event_lte: any = null, date_event_gte: any = null, isPublished: string, institution = '', cutId = '') {
+    async getWithPagination(_end: number, _order: any, _start: number, _sort: any, title_like = "", category = "", city_like = "", date_event_lte: any = null, date_event_gte: any = null, isPublished: string, establishment = '', cutId = '') {
 
         const filterQuery = _getFilterQuery({
             title_like,
@@ -30,16 +30,16 @@ class NewsService implements Repository {
             city_like,
             date_event_gte,
             date_event_lte,
-            institution,
+            establishment,
             cutId
         }, isPublished);
 
         let count: number;
 
         if (isPublished) {
-            count = await InstitutionNewsSchema.countDocuments({...filterQuery, status: isPublished});
+            count = await EstablishmentNewsSchema.countDocuments({...filterQuery, status: isPublished});
         } else {
-            count = await InstitutionNewsSchema.countDocuments({...filterQuery});
+            count = await EstablishmentNewsSchema.countDocuments({...filterQuery});
         }
 
         if (!_sort || !_order) {
@@ -48,9 +48,9 @@ class NewsService implements Repository {
         }
         const newSort = _sort?.split('_')[0];
 
-        const items = await InstitutionNewsSchema
+        const items = await EstablishmentNewsSchema
             .find(filterQuery)
-            .populate([{path: 'institutionId', select: '_is pictures title type'}])
+            .populate([{path: 'establishmentId', select: '_is pictures title type'}])
             .limit(_end - _start)
             .skip(_start)
             .sort({[newSort]: _order})
@@ -63,10 +63,10 @@ class NewsService implements Repository {
         }
     }
 
-    async getInstitutionNews(status: string, institutionId: string) {
-        const filters = {institutionId: institutionId, status: status};
-        const total = await InstitutionNewsSchema.countDocuments(filters);
-        const items = await InstitutionNewsSchema
+    async getNews(status: string, establishmentId: string) {
+        const filters = {establishmentId: establishmentId, status: status};
+        const total = await EstablishmentNewsSchema.countDocuments(filters);
+        const items = await EstablishmentNewsSchema
             .find(filters)
             .limit(20)
             .sort({['publishAt.datePublish']: -1});
@@ -78,11 +78,11 @@ class NewsService implements Repository {
     }
 
     getOneNews(params = {}) {
-        return InstitutionNewsSchema.findOne(params)
+        return EstablishmentNewsSchema.findOne(params)
     }
 
     findByParams(params = {}) {
-        return InstitutionNewsSchema.find(params);
+        return EstablishmentNewsSchema.find(params);
     }
 }
 
@@ -105,9 +105,9 @@ function _getFilterQuery(otherFilter: any, isPublished: string) {
         });
     }
 
-    if (otherFilter.institution) {
+    if (otherFilter.establishment) {
         filterConditions.push({
-            institutionId: otherFilter.institution
+            establishmentId: otherFilter.establishment
         })
     }
 

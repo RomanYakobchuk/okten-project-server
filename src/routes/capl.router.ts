@@ -1,4 +1,4 @@
-import {authMiddleware, caplMiddleware, institutionMiddleware, commonMiddleware, userMiddleware} from "../middlewares";
+import {authMiddleware, caplMiddleware, establishmentMiddleware, commonMiddleware, userMiddleware} from "../middlewares";
 import {caplController} from "../controllers";
 import {caplValidator} from "../validators";
 
@@ -32,7 +32,7 @@ router.post(
     authMiddleware.checkAccessToken,
     authMiddleware.checkStatus('check'),
     commonMiddleware.isDateValid(caplValidator.createReserve, 'body'),
-    institutionMiddleware.checkInstitution('info'),
+    establishmentMiddleware.checkEstablishment('info'),
     userMiddleware.isUserPresent('userId'),
     userMiddleware.isUserPresent('managerId'),
     caplController.crateReservation
@@ -48,12 +48,12 @@ router.patch(
 )
 
 router.patch(
-    `/updateInfoByInstitution/:id`,
+    `/updateInfoByEstablishment/:id`,
     authMiddleware.checkAccessToken,
     caplMiddleware.isExist,
     authMiddleware.checkStatus("check"),
     caplMiddleware.checkAccess('update'),
-    caplController.updateInfoByInstitution
+    caplController.updateInfoByEstablishment
 )
 
 router.patch(

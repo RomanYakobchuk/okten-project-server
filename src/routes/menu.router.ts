@@ -1,6 +1,6 @@
 import {Router} from "express";
 
-import {institutionMiddleware, authMiddleware} from "../middlewares";
+import {establishmentMiddleware, authMiddleware} from "../middlewares";
 import {menuController} from "../controllers";
 
 const router = Router();
@@ -9,15 +9,15 @@ const router = Router();
 router.get(
     `/one_menu/:id`,
     authMiddleware.checkAccessToken,
-    institutionMiddleware.checkInstitution('info'),
-    menuController.menuByInstitutionId
+    establishmentMiddleware.checkEstablishment('info'),
+    menuController.menuByEstablishmentId
 )
 
 // create menu
 router.post(
     `/create/:id`,
     authMiddleware.checkAccessToken,
-    institutionMiddleware.checkInstitution('info'),
+    establishmentMiddleware.checkEstablishment('info'),
     menuController.createMenu
 )
 

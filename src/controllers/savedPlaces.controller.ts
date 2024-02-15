@@ -1,7 +1,7 @@
 import {NextFunction, Response} from "express";
 
 import {CustomRequest} from "../interfaces/func";
-import {IInstitution, IInstitutionNews, IOauth, IUser} from "../interfaces/common";
+import {IEstablishment, IEstablishmentNews, IOauth, IUser} from "../interfaces/common";
 import {UserFavoritePlacesService} from "../services";
 import {ObjectId} from "mongoose";
 
@@ -19,18 +19,18 @@ class SavedPlacesController {
         const {userId} = req.user as IOauth;
         const user = userId as IUser;
 
-        const institution = req.data_info as IInstitution;
-        const news = req.news as IInstitutionNews;
+        const establishment = req.data_info as IEstablishment;
+        const news = req.news as IEstablishmentNews;
         const {refPath, savedPlace} = req.body;
         try {
             let newSavedPlace: {_id?: string, item?: ObjectId, type?: string} = {};
             if (savedPlace?._id) {
-                await this.userFavoritePlacesService.deleteOne({userId: user?._id, type: refPath, item: refPath === 'institution' ? institution?._id : news?._id});
+                await this.userFavoritePlacesService.deleteOne({userId: user?._id, type: refPath, item: refPath === 'establishment' ? establishment?._id : news?._id});
             } else {
                 const savPlace = await this.userFavoritePlacesService.create({
                     userId: user?._id,
                     type: refPath,
-                    item: refPath === 'institution' ? institution?._id : news?._id
+                    item: refPath === 'establishment' ? establishment?._id : news?._id
                 });
                 newSavedPlace = {
                     item: savPlace?.item,

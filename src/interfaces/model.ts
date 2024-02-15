@@ -2,12 +2,12 @@ import {Model} from "mongoose";
 import {IUserFavoritePlacesDoc} from "./doc";
 import {
     IUser,
-    IInstitutionNews,
+    IEstablishmentNews,
     ICapl,
     IComment,
     IMessage,
     IConversation,
-    ICityForCount, ISubscribe, INotification, IInstitution, IFreeSeats, IOauth, INotificationSubscribe, IReaction
+    ICityForCount, ISubscribe, INotification, IEstablishment, IFreeSeats, IOauth, INotificationSubscribe, IReaction
 } from "./common";
 
 export interface IUserFavoritePlacesModel extends Model<IUserFavoritePlacesDoc> {
@@ -16,13 +16,13 @@ export interface IUserFavoritePlacesModel extends Model<IUserFavoritePlacesDoc> 
 export interface UserModel extends Model<IUser> {
 }
 
-export interface IInstitutionModel extends Model<IInstitution> {
+export interface IEstablishmentModel extends Model<IEstablishment> {
 }
 
 export interface IFreeSeatsModel extends Model<IFreeSeats> {
 }
 
-export interface IInstitutionNewsModel extends Model<IInstitutionNews> {
+export interface IEstablishmentNewsModel extends Model<IEstablishmentNews> {
 }
 
 export interface ICaplModel extends Model<ICapl> {

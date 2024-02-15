@@ -3,7 +3,7 @@ import commonMiddleware from  './common.middleware';
 import fileMiddleware from  './file.middleware';
 import userMiddleware from  './user.middleware';
 import commentMiddleware from  './comment.middleware';
-import institutionMiddleware from  './institution.middleware';
+import establishmentMiddleware from './establishment.middleware';
 import newsMiddleware from  './news.middleware';
 import caplMiddleware from  './capl.middleware';
 import conversationMiddleware from  './conversation.middleware';
@@ -18,7 +18,7 @@ export {
     fileMiddleware,
     userMiddleware,
     commentMiddleware,
-    institutionMiddleware,
+    establishmentMiddleware,
     newsMiddleware,
     caplMiddleware,
     conversationMiddleware,

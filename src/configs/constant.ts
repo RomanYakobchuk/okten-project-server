@@ -20,6 +20,7 @@ const EMAIL_REGEX = /^([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)$/;
 const PHONE_REGEX = /\(?\+[0-9]{1,3}\)? ?-?[0-9]{1,3} ?-?[0-9]{3,5} ?-?[0-9]{4}( ?-?[0-9]{3})? ?(\w{1,10}\s?\d{1,6})?/;
 
 const AUTHORIZATION = 'Authorization';
+const USER_AGENT = 'User-Agent';
 
 const IMAGE_MAX_SIZE = 3 * 1024 * 1024; // 3MB
 
@@ -36,5 +37,6 @@ export {
     IMAGE_MIMETYPES,
     EMAIL_REGEX,
     PASSWORD_REGEX,
-    PHONE_REGEX
+    PHONE_REGEX,
+    USER_AGENT
 }

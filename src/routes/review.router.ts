@@ -1,6 +1,6 @@
 import {Router} from "express";
 
-import {authMiddleware, institutionMiddleware, userMiddleware} from "../middlewares";
+import {authMiddleware, establishmentMiddleware, userMiddleware} from "../middlewares";
 import {reviewController} from "../controllers";
 
 const router = Router();
@@ -9,23 +9,23 @@ const router = Router();
 router.post(
     `/create`,
     authMiddleware.checkAccessToken,
-    institutionMiddleware.checkInstitution('info'),
+    establishmentMiddleware.checkEstablishment('info'),
     reviewController.latestUserReview('check'),
     reviewController.createReview
 )
 
-// all institution`s review
+// all Establishment`s review
 router.get(
-    `/allByInstitutionId/:id`,
+    `/allByEstablishmentId/:id`,
     authMiddleware.checkAccessToken,
-    institutionMiddleware.checkInstitution('info'),
-    reviewController.allReviewByInstitutionId
+    establishmentMiddleware.checkEstablishment('info'),
+    reviewController.allReviewByEstablishmentId
 )
 
 router.get(
     `/latestUserReview/:id`,
     authMiddleware.checkAccessToken,
-    institutionMiddleware.checkInstitution('info'),
+    establishmentMiddleware.checkEstablishment('info'),
     reviewController.latestUserReview('info')
 )
 

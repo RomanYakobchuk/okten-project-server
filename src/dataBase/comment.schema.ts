@@ -18,7 +18,7 @@ const CommentItem = new Schema({
     },
     establishmentId: {
         type: Schema.Types.ObjectId,
-        ref: "institution"
+        ref: "establishment"
     },
     parentId: {
         type: Schema.Types.ObjectId,

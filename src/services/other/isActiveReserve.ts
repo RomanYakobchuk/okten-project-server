@@ -13,7 +13,7 @@
 //     const count = await CaplSchema.countDocuments({
 //         'data.day': { $lte: twelveHoursAgo },
 //         'userStatus.value': 'accepted',
-//         'institutionStatus.value': 'accepted'
+//         'establishmentStatus.value': 'accepted'
 //     });
 //
 //     if (count >= 2) {

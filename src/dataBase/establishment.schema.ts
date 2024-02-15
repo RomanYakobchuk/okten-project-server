@@ -1,8 +1,8 @@
 import {Schema, model} from "mongoose";
-import {IInstitution} from "../interfaces/common";
-import {IInstitutionModel} from "../interfaces/model";
+import {IEstablishment} from "../interfaces/common";
+import {IEstablishmentModel} from "../interfaces/model";
 
-const Institution = new Schema({
+const Establishment = new Schema({
     title: {
         type: String,
         required: true
@@ -115,15 +115,19 @@ const Institution = new Schema({
         type: Number,
         default: 0
     },
+    newsLength: {
+        type: Number,
+        default: 0
+    },
+    commentsLength: {
+        type: Number,
+        default: 0
+    },
     createdBy: {
         type: Schema.Types.ObjectId,
         ref: 'user',
         required: true
     },
-    news: [{
-        type: Schema.Types.ObjectId,
-        ref: 'institutionNews',
-    }],
     freeSeats: {
         type: Schema.Types.ObjectId,
         ref: 'freeSeats',
@@ -134,12 +138,12 @@ const Institution = new Schema({
             type: Schema.Types.ObjectId,
             ref: 'reaction'
         }
-    }
+    },
 }, {timestamps: true});
 
 
-const InstitutionSchema: IInstitutionModel = model<IInstitution, IInstitutionModel>('institution', Institution);
+const EstablishmentSchema: IEstablishmentModel = model<IEstablishment, IEstablishmentModel>('establishment', Establishment);
 
 export {
-    InstitutionSchema
+    EstablishmentSchema
 }

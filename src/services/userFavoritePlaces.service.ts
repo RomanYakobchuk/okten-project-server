@@ -31,14 +31,14 @@ class UserFavoritePlacesService {
             const elements = await Promise.all(items.map(async (item) => {
                 const populate = {
                     path: 'item',
-                    select: item.type === 'institution'
+                    select: item.type === 'establishment'
                         ? '_id title pictures type place rating averageCheck createdBy reviewsLength'
-                        : '_id title pictures place category institutionId description place createdBy status dateEvent',
+                        : '_id title pictures place category establishmentId description place createdBy status dateEvent',
                     // model: item.type,
                 } as PopulateOptions;
-                if (item.type === 'institutionNews') {
+                if (item.type === 'establishmentNews') {
                     populate.populate = {
-                        path: 'institutionId',
+                        path: 'establishmentId',
                         select: '_id title pictures type'
                     }
                 }
@@ -47,13 +47,13 @@ class UserFavoritePlacesService {
             // for (let item of items) {
             //     const populate = {
             //         path: 'item',
-            //         select: item?.type === 'institution'
+            //         select: item?.type === 'establishment'
             //             ? '_id title pictures type place rating averageCheck createdBy reviewsLength'
-            //             : '_id title pictures place category institutionId description place createdBy status dateEvent',
+            //             : '_id title pictures place category establishmentId description place createdBy status dateEvent',
             //     } as PopulateOptions;
-            //     if (item?.type === 'institutionNews') {
+            //     if (item?.type === 'establishmentNews') {
             //         populate.populate = {
-            //             path: 'institutionId',
+            //             path: 'establishmentId',
             //             select: '_id title pictures type place rating averageCheck createdBy reviewsLength'
             //         }
             //     }
@@ -81,7 +81,7 @@ const _getByFilter = (type: string, userId: string) => {
     const filters: any[] = [];
     const obj = {};
 
-    if (type === 'institution' || type === 'institutionNews') {
+    if (type === 'establishment' || type === 'establishmentNews') {
         filters.push({
             $or: [
                 {type: type}

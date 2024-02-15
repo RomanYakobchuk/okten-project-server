@@ -1,7 +1,7 @@
 import authRouter from './auth.router';
 import userRouter from './user.router';
 import managerRouter from './manager.router';
-import institutionRouter from './institution.router';
+import establishmentRouter from './establishment.router';
 import newsRouter from './news.router';
 import reviewRouter from './review.router';
 import commentRouter from './comment.router';
@@ -17,7 +17,7 @@ export {
     authRouter,
     userRouter,
     managerRouter,
-    institutionRouter,
+    establishmentRouter,
     newsRouter,
     reviewRouter,
     commentRouter,

@@ -73,7 +73,7 @@ class UserController {
 
             const updatedUser = await this.userService.updateOneUser({_id: id}, {name, avatar, phone, dOB}) as IUser;
 
-            await managerController.updateManagersFromUserChanges(updatedUser._id, updatedUser);
+            await managerController.updateManagersFromUserChanges(updatedUser._id as string, updatedUser);
 
             const userForResponse = userPresenter(updatedUser);
 

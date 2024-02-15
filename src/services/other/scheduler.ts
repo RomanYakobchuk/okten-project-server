@@ -1,7 +1,7 @@
 // import schedule from "node-schedule";
 // import dayjs from "dayjs";
 //
-// import {Institution_newsSchema} from "../dataBase";
+// import {establishment_newsSchema} from "../dataBase";
 //
 // const checkScheduledNews = async () => {
 //     try {
@@ -11,14 +11,14 @@
 //         console.log(`|\x1b[33m Started check draft news \x1b[0m`)
 //         console.log(`| Date: ${dayjs(startTime).format('DD/MM/YYYY')}`)
 //         console.log(`| Time: ${dayjs(startTime).format('HH:mm:ss')}`)
-//         const draftNews = await Institution_newsSchema.find({ status: 'draft' }).exec();
+//         const draftNews = await establishment_newsSchema.find({ status: 'draft' }).exec();
 //
 //         for (const news of draftNews) {
 //             const publishTime = news.publishAt.datePublish;
 //             console.log('checking...')
 //
 //             if (news?.publishAt?.isPublish && publishTime <= currentTime) {
-//                 await Institution_newsSchema.updateOne(
+//                 await establishment_newsSchema.updateOne(
 //                     { _id: news._id },
 //                     { $set: { status: 'published' } }
 //                 ).exec();

@@ -3,7 +3,7 @@ import {NextFunction, Response} from "express";
 import {CustomRequest} from "../interfaces/func";
 import {CommentService, isProfaneText} from "../services";
 import {CustomError} from "../errors";
-import {IComment, IInstitution, IOauth, IUser} from "../interfaces/common";
+import {IComment, IEstablishment, IOauth, IUser} from "../interfaces/common";
 
 class CommentController {
     private commentService: CommentService;
@@ -28,7 +28,7 @@ class CommentController {
             text_like = "",
             day_gte,
             user = '',
-            institution = ''
+            establishment = ''
         } = req.query;
 
         const userStatus = req.newStatus;
@@ -42,7 +42,7 @@ class CommentController {
             const {
                 count,
                 items
-            } = await this.commentService.getWithPagination(Number(_end), _order, Number(_start), _sort, text_like as string, user as string, institution as string, day_gte);
+            } = await this.commentService.getWithPagination(Number(_end), _order, Number(_start), _sort, text_like as string, user as string, establishment as string, day_gte);
 
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
@@ -55,7 +55,7 @@ class CommentController {
 
     allCommentsByEstablishment = async (req: CustomRequest, res: Response, next: NextFunction) => {
         const {_order, _sort, _end, _start, parentId, } = req.query;
-        const institution = req.data_info as IInstitution;
+        const establishment = req.data_info as IEstablishment;
 
         try {
 
@@ -63,7 +63,7 @@ class CommentController {
                 items,
                 count,
                 currentSize
-            } = await this.commentService.getEstablishmentTopLevelComments(institution?._id, "byEstablishment", Number(_end), Number(_start), _sort, _order, parentId as string | null, null)
+            } = await this.commentService.getEstablishmentTopLevelComments(establishment?._id, "byEstablishment", Number(_end), Number(_start), _sort, _order, parentId as string | null, null)
 
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
@@ -81,7 +81,7 @@ class CommentController {
 
     async allAnsweredCommentById(req: CustomRequest, res: Response, next: NextFunction) {
         const comment = req.comment as IComment;
-        const establishment = req.data_info as IInstitution;
+        const establishment = req.data_info as IEstablishment;
         const {_end, _start} = req.query;
 
         try {
@@ -110,7 +110,7 @@ class CommentController {
 
             const {items, count, currentSize} = await this.commentService.getEstablishmentTopLevelComments(id, "byUser", Number(_end), Number(_start), "createdAt", -1, null, refFieldCreate as string);
             // const comments = await this.commentService.getItemsByParams({createdBy: user?._id})
-            //     .populate([{path: 'institutionId', select: 'title pictures type _id', options: {limit: 1}}, {
+            //     .populate([{path: 'establishmentId', select: 'title pictures type _id', options: {limit: 1}}, {
             //         path: 'createdBy',
             //         select: 'avatar name _id'
             //     }])
@@ -130,7 +130,7 @@ class CommentController {
 
     async createComment(req: CustomRequest, res: Response, next: NextFunction) {
         const {text, parentId, refFieldCreate, createdBy} = req.body;
-        const institution = req.data_info as IInstitution;
+        const establishment = req.data_info as IEstablishment;
 
         try {
 
@@ -140,7 +140,7 @@ class CommentController {
             }
             let parentCommentId: string | null = null;
             if (parentId) {
-                const parent = await this.commentService.getItemByParams({_id: parentId, establishmentId: institution?._id});
+                const parent = await this.commentService.getItemByParams({_id: parentId, establishmentId: establishment?._id});
                 if (!parent) {
                     return next(new CustomError("Comment not found", 404));
                 }
@@ -152,8 +152,8 @@ class CommentController {
                 text: text,
                 parentId: parentCommentId,
                 createdBy: createdBy,
-                establishmentId: institution?._id,
-                refFieldCreate: refFieldCreate === 'establishment' ? 'institution' : refFieldCreate,
+                establishmentId: establishment?._id,
+                refFieldCreate: refFieldCreate === 'establishment' ? 'establishment' : refFieldCreate,
             });
 
 

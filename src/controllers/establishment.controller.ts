@@ -3,49 +3,49 @@ import {NextFunction, Response} from "express";
 
 import {CustomRequest} from "../interfaces/func";
 import {
-    InstitutionSchema,
+    EstablishmentSchema,
     Views,
     MenuSchema,
     CityForCount,
     FreeSeatsSchema,
-    InstitutionNewsSchema,
+    EstablishmentNewsSchema,
     ReviewItemSchema,
     CommentItemSchema
 } from "../dataBase";
 import {
-    UserService, InstitutionService, CloudService, TokenService, NotificationService
+    UserService, EstablishmentService, CloudService, TokenService, NotificationService
 } from '../services';
 import {CustomError} from "../errors";
 import {userPresenter} from "../presenters/user.presenter";
-import {institutionMiddleware} from "../middlewares";
-import {IInstitution, IOauth, IUser} from "../interfaces/common";
+import {establishmentMiddleware} from "../middlewares";
+import {IEstablishment, IOauth, IUser} from "../interfaces/common";
 
-class InstitutionController {
+class EstablishmentController {
 
     private userService: UserService;
     private cloudService: CloudService;
-    private institutionService: InstitutionService;
+    private establishmentService: EstablishmentService;
     private tokenService: TokenService;
     private notificationService: NotificationService;
 
     constructor() {
         this.cloudService = new CloudService();
         this.userService = new UserService();
-        this.institutionService = new InstitutionService();
+        this.establishmentService = new EstablishmentService();
         this.tokenService = new TokenService();
         this.notificationService = new NotificationService();
 
         this.similarEstablishment = this.similarEstablishment.bind(this);
-        this.allInstitutionByVerify = this.allInstitutionByVerify.bind(this);
-        this.createInstitution = this.createInstitution.bind(this);
-        this.updateInstitutionById = this.updateInstitutionById.bind(this);
+        this.allEstablishmentByVerify = this.allEstablishmentByVerify.bind(this);
+        this.createEstablishment = this.createEstablishment.bind(this);
+        this.updateEstablishmentById = this.updateEstablishmentById.bind(this);
         this.getById = this.getById.bind(this);
-        this.deleteInstitutions = this.deleteInstitutions.bind(this);
+        this.deleteEstablishments = this.deleteEstablishments.bind(this);
         this.countByType = this.countByType.bind(this);
         this.countByCity = this.countByCity.bind(this);
         this.countMoreViews = this.countMoreViews.bind(this);
         this.uniquePlaces = this.uniquePlaces.bind(this);
-        this.userInstitutionsByQuery = this.userInstitutionsByQuery.bind(this);
+        this.userEstablishmentsByQuery = this.userEstablishmentsByQuery.bind(this);
         this.updateStatus = this.updateStatus.bind(this);
         this.getStatus = this.getStatus.bind(this);
         this.allByUserId = this.allByUserId.bind(this);
@@ -53,13 +53,13 @@ class InstitutionController {
         this.getNumberOfEstablishmentProperties = this.getNumberOfEstablishmentProperties.bind(this);
     }
 
-    async allInstitutionByVerify(req: CustomRequest, res: Response, next: NextFunction) {
+    async allEstablishmentByVerify(req: CustomRequest, res: Response, next: NextFunction) {
         const {
             _end,
             _order,
             _start,
             _sort,
-            title_like = "",
+            title = "",
             propertyType = "",
             averageCheck_lte,
             averageCheck_gte,
@@ -83,12 +83,12 @@ class InstitutionController {
             const {
                 count,
                 items
-            } = await this.institutionService.getWithPagination(
+            } = await this.establishmentService.getWithPagination(
                 Number(_end),
                 _order,
                 Number(_start),
                 _sort,
-                title_like as string,
+                title as string,
                 propertyType as string,
                 placeStatus as string,
                 averageCheck_gte,
@@ -112,7 +112,7 @@ class InstitutionController {
         }
     }
 
-    async createInstitution(req: CustomRequest, res: Response, next: NextFunction) {
+    async createEstablishment(req: CustomRequest, res: Response, next: NextFunction) {
         const status = req.newStatus;
         try {
             const {
@@ -146,7 +146,7 @@ class InstitutionController {
 
             const newVerify = user?.status === 'admin' ? verify : 'draft';
 
-            const institution = await this.institutionService.createInstitution({
+            const establishment = await this.establishmentService.createEstablishment({
                 title,
                 sendNotifications,
                 workSchedule: workSchedule,
@@ -170,42 +170,42 @@ class InstitutionController {
                 } else {
                     currentPictures = pictures;
                 }
-                const uploadedPictures = await this.cloudService.uploadPictures(`institution/${institution?._id}/pictures`, currentPictures);
+                const uploadedPictures = await this.cloudService.uploadPictures(`establishment/${establishment?._id}/pictures`, currentPictures);
                 for (const uploadedPicture of uploadedPictures) {
-                    institution?.pictures?.push({name: uploadedPicture?.name, url: uploadedPicture.url})
+                    establishment?.pictures?.push({name: uploadedPicture?.name, url: uploadedPicture.url})
                 }
             }
 
             const viewsDB = await Views.create({
-                refField: 'institution',
-                viewsWith: institution?._id
+                refField: 'establishment',
+                viewsWith: establishment?._id
             });
 
-            institution.views = viewsDB?._id;
+            establishment.views = viewsDB?._id;
 
-            await institution.save();
+            await establishment.save();
 
-            await institutionMiddleware.existCity(place?.city);
+            await establishmentMiddleware.existCity(place?.city);
 
             await MenuSchema.create({
-                institutionId: institution?._id,
+                establishmentId: establishment?._id,
                 createdBy: currentUser?._id === user?._id ? user?._id : currentUser?._id,
             })
 
             const freeSeats = await FreeSeatsSchema.create({
-                establishmentId: institution?._id,
+                establishmentId: establishment?._id,
                 list: []
             })
-            institution.freeSeats = freeSeats._id as ObjectId;
+            establishment.freeSeats = freeSeats._id as ObjectId;
 
-            await institution.save();
+            await establishment.save();
 
             const notification = await this.notificationService.create({
                 type: "newEstablishment",
                 userId: currentUser?._id as Schema.Types.ObjectId,
                 isRead: false,
                 message: 'User reserved seats',
-                description: institution?._id,
+                description: establishment?._id,
                 forUser: {
                     role: 'admin'
                 }
@@ -222,35 +222,35 @@ class InstitutionController {
                     notification
                 });
             } else {
-                res.status(201).json({message: "InstitutionSchema created successful"})
+                res.status(201).json({message: "EstablishmentSchema created successful"})
             }
         } catch (e) {
-            console.log('Error created institution')
+            console.log('Error created establishment')
             next(e)
         }
     }
 
-    async updateInstitutionById(req: CustomRequest, res: Response, next: NextFunction) {
+    async updateEstablishmentById(req: CustomRequest, res: Response, next: NextFunction) {
         try {
             const {...dataToUpdate} = req.body;
-            const institution = req.data_info as IInstitution;
+            const establishment = req.data_info as IEstablishment;
             for (const field in dataToUpdate) {
                 if (dataToUpdate.hasOwnProperty(field)) {
                     let newValue = dataToUpdate[field];
-                    const oldValue = institution[field];
+                    const oldValue = establishment[field];
                     if (field !== 'pictures' && newValue !== oldValue) {
-                        institution[field] = newValue;
+                        establishment[field] = newValue;
                     }
                 }
             }
-            institution?.pictures?.splice(0, institution?.pictures?.length);
+            establishment?.pictures?.splice(0, establishment?.pictures?.length);
 
             for (let element of req.body.pictures) {
-                institution?.pictures?.push(element)
+                establishment?.pictures?.push(element)
             }
 
-            await institution?.save();
-            res.status(200).json({message: 'InstitutionSchema updated successfully'});
+            await establishment?.save();
+            res.status(200).json({message: 'EstablishmentSchema updated successfully'});
         } catch (e) {
             next(e)
         }
@@ -258,32 +258,32 @@ class InstitutionController {
 
     async getById(req: CustomRequest, res: Response, next: NextFunction) {
         try {
-            const institution = req.data_info as IInstitution;
+            const establishment = req.data_info as IEstablishment;
 
-            res.status(200).json(institution);
+            res.status(200).json(establishment);
         } catch (e) {
             next(e)
         }
     }
 
-    async deleteInstitutions(_: CustomRequest, res: Response, next: NextFunction) {
+    async deleteEstablishments(_: CustomRequest, res: Response, next: NextFunction) {
         try {
             // const {userId: user} = req.user;
-            // const institution = req.data_info;
+            // const establishment = req.data_info;
             // const status = req.newStatus;
             //
-            // if (status !== 'admin' && user?._id?.toString() !== institution?.createdBy?.toString()) {
+            // if (status !== 'admin' && user?._id?.toString() !== establishment?.createdBy?.toString()) {
             //     return next(new CustomError('Access denied', 403));
             // }
             //
-            // await cloudService.deleteFile(institution?.mainPhoto, `institution/${institution?._id}/mainPhoto`);
+            // await cloudService.deleteFile(establishment?.mainPhoto, `establishment/${establishment?._id}/mainPhoto`);
             //
-            // for (const institutionElement of institution?.otherPhoto) {
-            //     await cloudService.deleteFile(institutionElement?.url, `institution/${institution?._id}/otherPhoto`)
+            // for (const establishmentElement of establishment?.otherPhoto) {
+            //     await cloudService.deleteFile(establishmentElement?.url, `establishment/${establishment?._id}/otherPhoto`)
             // }
-            // user?.allInstitutions?.filter((value) => value !== institution?._id);
+            // user?.allestablishments?.filter((value) => value !== establishment?._id);
             //
-            // await institutionService.deleteOne({_id: institution?._id});
+            // await establishmentService.deleteOne({_id: establishment?._id});
             //
             // await user.save();
 
@@ -301,7 +301,7 @@ class InstitutionController {
 
             const result = await Promise.all(
                 cities.map(async (city) => {
-                    const institutionCount = await InstitutionSchema.countDocuments({
+                    const establishmentCount = await EstablishmentSchema.countDocuments({
                         $and: [
                             {"place.city": {$regex: city.name_ua, $options: 'i'}},
                             {verify: 'published'},
@@ -312,7 +312,7 @@ class InstitutionController {
                         name_ua: city.name_ua,
                         name_en: city.name_en,
                         url: city.url,
-                        institutionCount,
+                        establishmentCount: establishmentCount,
                     };
                 })
             );
@@ -324,9 +324,9 @@ class InstitutionController {
 
     async countByType(_: CustomRequest, res: Response, next: NextFunction) {
         try {
-            const cafeCount = await InstitutionSchema.countDocuments({type: 'cafe', verify: 'published'})
-            const barCount = await InstitutionSchema.countDocuments({type: 'bar', verify: 'published'})
-            const restaurantCount = await InstitutionSchema.countDocuments({type: 'restaurant', verify: 'published'})
+            const cafeCount = await EstablishmentSchema.countDocuments({type: 'cafe', verify: 'published'})
+            const barCount = await EstablishmentSchema.countDocuments({type: 'bar', verify: 'published'})
+            const restaurantCount = await EstablishmentSchema.countDocuments({type: 'restaurant', verify: 'published'})
 
             res.status(200).json([
                 {type: 'cafe', count: cafeCount},
@@ -366,7 +366,7 @@ class InstitutionController {
         const regex = new RegExp(keyword as string, 'i');
 
         try {
-            const cities = await InstitutionSchema?.aggregate([
+            const cities = await EstablishmentSchema?.aggregate([
                 {$match: {"place.city": regex}},
                 {$group: {_id: "$place.city"}},
                 {$limit: 20}
@@ -377,7 +377,7 @@ class InstitutionController {
         }
     }
 
-    async userInstitutionsByQuery(req: CustomRequest, res: Response, next: NextFunction) {
+    async userEstablishmentsByQuery(req: CustomRequest, res: Response, next: NextFunction) {
         try {
             const {title_like = "", _end, _start} = req.query;
             const {userId} = req.user as IOauth;
@@ -394,7 +394,7 @@ class InstitutionController {
                 return next(new CustomError("Access denied", 403));
             }
 
-            const {items} = await this.institutionService.getUserInstitutionsByQuery(title_like as string, createdBy, Number(_end), Number(_start));
+            const {items} = await this.establishmentService.getUserEstablishmentsByQuery(title_like as string, createdBy as string, Number(_end), Number(_start));
 
             res.status(200).json(items);
 
@@ -405,7 +405,7 @@ class InstitutionController {
 
     async updateStatus(req: CustomRequest, res: Response, next: NextFunction) {
         try {
-            const institution = req.data_info as IInstitution;
+            const establishment = req.data_info as IEstablishment;
             const userStatus = req.newStatus;
             const {status: newStatus} = req.body;
 
@@ -413,11 +413,11 @@ class InstitutionController {
                 return next(new CustomError('Access denied', 403));
             }
 
-            institution.verify = newStatus;
+            establishment.verify = newStatus;
 
-            await institution.save();
+            await establishment.save();
 
-            const view = await Views.findOne({viewsWith: institution?._id, refField: 'institution'});
+            const view = await Views.findOne({viewsWith: establishment?._id, refField: 'establishment'});
 
             if (view) {
                 view.verify = newStatus;
@@ -435,13 +435,13 @@ class InstitutionController {
     async getStatus(req: CustomRequest, res: Response, next: NextFunction) {
         try {
             const userStatus = req.newStatus;
-            const institution = req.data_info as IInstitution;
+            const establishment = req.data_info as IEstablishment;
 
             if (userStatus !== 'admin') {
                 return next(new CustomError("Access denied", 403));
             }
 
-            res.status(200).json(institution);
+            res.status(200).json(establishment);
         } catch (e) {
             next(e)
         }
@@ -450,13 +450,13 @@ class InstitutionController {
     async allByUserId(req: CustomRequest, res: Response, next: NextFunction) {
         const user = req.userExist;
 
-        const {_end, _start, _sort, _order, verify, title_like} = req.query;
+        const {_end, _start, _sort, _order, verify, title} = req.query;
 
         try {
             const {
                 items,
                 count
-            } = await this.institutionService.getAllByUserParams(Number(_end), Number(_start), _sort, _order, user?._id, verify as string, title_like as string);
+            } = await this.establishmentService.getAllByUserParams(Number(_end), Number(_start), _sort, _order, user?._id as string, verify as string, title as string);
 
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
@@ -468,9 +468,9 @@ class InstitutionController {
     }
 
     async similarEstablishment(req: CustomRequest, res: Response, next: NextFunction) {
-        const establishment = req.data_info as IInstitution;
+        const establishment = req.data_info as IEstablishment;
         try {
-            const {items} = await this.institutionService.getSimilar(establishment);
+            const {items} = await this.establishmentService.getSimilar(establishment);
 
             res.status(200).json(items)
         } catch (e) {
@@ -482,7 +482,7 @@ class InstitutionController {
         try {
             const {locationLng, locationLat, maxDistance, _end, _start, establishmentId} = req.query;
 
-            const {items, count} = await this.institutionService.getNearby({
+            const {items, count} = await this.establishmentService.getNearby({
                 lng: parseFloat(locationLng as string),
                 lat: parseFloat(locationLat as string)
             }, parseFloat(maxDistance as string), Number(_end), Number(_start), establishmentId as string);
@@ -498,10 +498,10 @@ class InstitutionController {
     }
 
     async getNumberOfEstablishmentProperties(req: CustomRequest, res: Response, next: NextFunction) {
-        const establishment = req.data_info as IInstitution;
+        const establishment = req.data_info as IEstablishment;
         try {
-            const reviewCount = await ReviewItemSchema.countDocuments({institutionId: establishment?._id});
-            const newsCount = await InstitutionNewsSchema.countDocuments({institutionId: establishment?._id});
+            const reviewCount = await ReviewItemSchema.countDocuments({establishmentId: establishment?._id});
+            const newsCount = await EstablishmentNewsSchema.countDocuments({establishmentId: establishment?._id});
             const commentCount = await CommentItemSchema.countDocuments({
                 establishmentId: establishment?._id,
                 parentId: null
@@ -518,4 +518,4 @@ class InstitutionController {
     }
 }
 
-export default new InstitutionController();
+export default new EstablishmentController();

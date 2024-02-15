@@ -18,11 +18,11 @@ class NotificationService {
     }
     async getUserCount({id, status}: {id: string, status: TGetAllByUser['status']}) {
         const filter = {
-            "forUser.role": status
+            "forUser.role": status,
+            'isDelete': false
         }
         if (status !== 'admin') {
             filter['forUser.userId'] = id;
-            filter['isDelete'] = false
         }
         const countIsNotRead= await Notification.countDocuments({...filter, isRead: false});
 

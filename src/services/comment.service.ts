@@ -1,5 +1,5 @@
 import {CommentItemSchema} from "../dataBase";
-import {IComment, ICreateCommentItem, IInstitution} from "../interfaces/common";
+import {IComment, ICreateCommentItem, IEstablishment} from "../interfaces/common";
 import {PipelineStage, Types} from "mongoose";
 
 type AggregationPipeline = PipelineStage;
@@ -23,7 +23,7 @@ interface Repository {
 
     getItemByParams(params: any): Promise<IComment | null>,
 
-    getWithPagination(_end: number, _order: any, _start: number, _sort: any, text_like: string, user: string, institution: string, day_gte: any): Promise<{
+    getWithPagination(_end: number, _order: any, _start: number, _sort: any, text_like: string, user: string, establishment: string, day_gte: any): Promise<{
         count: number,
         items: IComment[]
     }>
@@ -52,8 +52,8 @@ class CommentService implements Repository {
 
         let dataWithCreatedBy = await newComment.populate(populate);
 
-        if (newComment?.refFieldCreate === 'institution') {
-            const creatorEstablishment = dataWithCreatedBy?.createdBy as IInstitution;
+        if (newComment?.refFieldCreate === 'establishment') {
+            const creatorEstablishment = dataWithCreatedBy?.createdBy as IEstablishment;
             if (creatorEstablishment?.pictures?.length > 0 && creatorEstablishment?.title) {
                 dataWithCreatedBy = {
                     createdBy: {
@@ -155,8 +155,8 @@ class CommentService implements Repository {
         }
     }
 
-    async getWithPagination(_end: number, _order: any, _start: number, _sort: any, text_like: string = "", user = '', institution = '', day_gte: any = null) {
-        const filterQuery = _getFilterQuery({text_like, day_gte, user, institution});
+    async getWithPagination(_end: number, _order: any, _start: number, _sort: any, text_like: string = "", user = '', establishment = '', day_gte: any = null) {
+        const filterQuery = _getFilterQuery({text_like, day_gte, user, establishment});
 
         const count = await CommentItemSchema.countDocuments({...filterQuery});
 
@@ -169,7 +169,7 @@ class CommentService implements Repository {
 
         const items = await CommentItemSchema
             .find(filterQuery)
-            .populate([{path: 'institutionId', select: '_id title type place'}, {
+            .populate([{path: 'establishmentId', select: '_id title type place'}, {
                 path: 'createdBy',
                 select: '_id name email'
             }])
@@ -215,14 +215,14 @@ class CommentService implements Repository {
                 {
                     $match: {
                         createdBy: new Types.ObjectId(id),
-                        refFieldCreate: refFieldCreate === 'establishment' ? "institution" : "user",
+                        refFieldCreate: refFieldCreate === 'establishment' ? "establishment" : "user",
                         // parentId: parentId ? new Types.ObjectId(parentId) : parentId
                     }
                 },
             );
             countFilter = {
                 createdBy: new Types.ObjectId(id),
-                refFieldCreate: refFieldCreate === 'establishment' ? "institution" : "user",
+                refFieldCreate: refFieldCreate === 'establishment' ? "establishment" : "user",
                 parentId: parentId ? new Types.ObjectId(parentId) : parentId
             }
         }
@@ -275,16 +275,16 @@ class CommentService implements Repository {
             },
             {
                 $lookup: {
-                    from: "institutions",
+                    from: "establishments",
                     localField: 'createdBy',
                     foreignField: '_id',
-                    as: 'createdByInstitutions'
+                    as: 'createdByEstablishments'
                 }
             },
             {
                 $addFields: {
-                    createdByInstitutions: {
-                        $arrayElemAt: ['$createdByInstitutions', 0]
+                    createdByEstablishments: {
+                        $arrayElemAt: ['$createdByEstablishments', 0]
                     }
                 }
             },
@@ -313,15 +313,15 @@ class CommentService implements Repository {
             },
             {
                 $lookup: {
-                    from: 'institutions',
+                    from: 'establishments',
                     localField: '_id',
                     foreignField: 'commentAnswerTo.createdBy',
-                    as: 'answerToCreatedByInstitutions'
+                    as: 'answerToCreatedByEstablishments'
                 }
             },
             // {
             //     $addFields: {
-            //         answerToCreatedByInstitution: {$arrayElemAt: ['$answerToCreatedByInstitutions', 0]},
+            //         answerToCreatedByEstablishments: {$arrayElemAt: ['$answerToCreatedByEstablishments', 0]},
             //         answerToCreatedByUser: {$arrayElemAt: ['$answerToCreatedByUsers', 0]}
             //     }
             // },
@@ -330,6 +330,12 @@ class CommentService implements Repository {
                     _id: null,
                     totalTopLevelComments: {$sum: 1},
                     topLevelComments: {$push: '$$ROOT'}
+                }
+            },
+            {
+                $sort: {
+                    [newSort]:
+                    _order
                 }
             },
             {
@@ -371,11 +377,11 @@ class CommentService implements Repository {
                                                             }
                                                         },
                                                         else: {
-                                                            _id: '$$comment.createdByInstitutions._id',
-                                                            name: '$$comment.createdByInstitutions.title',
+                                                            _id: '$$comment.createdByEstablishments._id',
+                                                            name: '$$comment.createdByEstablishments.title',
                                                             avatar: {
                                                                 $ifNull: [
-                                                                    {$arrayElemAt: ['$$comment.createdByInstitutions.pictures.url', 0]},
+                                                                    {$arrayElemAt: ['$$comment.createdByEstablishments.pictures.url', 0]},
                                                                     null
                                                                 ]
                                                             }
@@ -394,12 +400,6 @@ class CommentService implements Repository {
                     }
                 }
             },
-            {
-                $sort: {
-                    [newSort]:
-                    _order
-                }
-            }
         )
 
         const result = await CommentItemSchema.aggregate(aggregationPipeline).exec();
@@ -425,9 +425,9 @@ _getFilterQuery(otherFilter: any) {
             text: {$regex: otherFilter.text_like, $options: 'i'}
         })
     }
-    if (otherFilter.institution) {
+    if (otherFilter.establishment) {
         filterConditions.push({
-            institutionId: otherFilter.institution
+            sstablishmentId: otherFilter.establishment
         })
     }
     if (otherFilter.user) {

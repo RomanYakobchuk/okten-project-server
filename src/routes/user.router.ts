@@ -6,7 +6,7 @@ import {
     userMiddleware,
     authMiddleware,
     fileMiddleware,
-    institutionMiddleware,
+    establishmentMiddleware,
     newsMiddleware
 } from '../middlewares';
 import { userQueryValidator } from '../validators';
@@ -60,7 +60,7 @@ router.post(
     '/addDeleteFavoritePlace',
     authMiddleware.checkAccessToken,
     newsMiddleware.checkNews,
-    institutionMiddleware.checkInstitution('info'),
+    establishmentMiddleware.checkEstablishment('info'),
     userFavoritePlacesMiddleware.checkOne,
     savedPlacesController.savePlace
 );

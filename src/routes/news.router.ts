@@ -1,6 +1,6 @@
 import {Router} from "express";
 
-import {authMiddleware, institutionMiddleware, newsMiddleware, fileMiddleware, commonMiddleware} from "../middlewares";
+import {authMiddleware, establishmentMiddleware, newsMiddleware, fileMiddleware, commonMiddleware} from "../middlewares";
 import {newsController} from "../controllers";
 import {newsValidator} from "../validators";
 
@@ -10,7 +10,7 @@ const router = Router();
 router.post(
     `/create`,
     authMiddleware.checkAccessToken,
-    institutionMiddleware.checkInstitution('info'),
+    establishmentMiddleware.checkEstablishment('info'),
     commonMiddleware.parseJsonStrings,
     commonMiddleware.isDateValid(newsValidator.createNews, 'body'),
     newsController.createNews
@@ -37,7 +37,7 @@ router.patch(
     `/infoById/:id`,
     authMiddleware.checkAccessToken,
     newsMiddleware.checkNews,
-    institutionMiddleware.checkInstitution('info'),
+    establishmentMiddleware.checkEstablishment('info'),
     commonMiddleware.parseJsonStrings,
     commonMiddleware.isDateValid(newsValidator.updateNews, 'body'),
     fileMiddleware.checkImagesForUpdated('news'),
@@ -48,15 +48,15 @@ router.patch(
 router.get(
     `/otherPlaceNews/:id`,
     authMiddleware.checkAccessToken,
-    institutionMiddleware.checkInstitution('info'),
+    establishmentMiddleware.checkEstablishment('info'),
     newsController.otherPlaceNews
 );
 
 router.get(
     `/getAllByEstablishment/:id`,
     authMiddleware.checkAccessToken,
-    institutionMiddleware.checkInstitution('info'),
-    newsController.allInstitutionsNewsByPublished
+    establishmentMiddleware.checkEstablishment('info'),
+    newsController.allEstablishmentNewsByPublished
 )
 
 

@@ -10,7 +10,7 @@ import {
 
 const createReserve = Joi.object({
     fullName: nameValidator.required(),
-    institutionId: stringValidator.required(),
+    establishmentId: stringValidator.required(),
     eventType: stringValidator,
     comment: stringValidator.allow(""),
     date: dateValidator.required(),
@@ -22,7 +22,7 @@ const createReserve = Joi.object({
         value: stringValidator.required(),
         reasonRefusal: stringValidator.allow(""),
     },
-    institutionStatus: {
+    establishmentStatus: {
         value: stringValidator.required(),
         freeDateFor: Joi.array().items(Joi.date().allow(null)),
         reasonRefusal: stringValidator.allow("")

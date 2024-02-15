@@ -1,7 +1,7 @@
 import {ReviewItemSchema as Review} from "../dataBase";
 
 class ReviewService {
-    createReview(review: {text: string, grade: number, createdBy: string, institutionId: string}) {
+    createReview(review: {text: string, grade: number, createdBy: string, establishmentId: string}) {
         return Review.create(review);
     }
     async getAllByPlaceWithPagination(id: string, _end: number, _start: number, _sort: any, _order: any, type: string, path: string, select: string) {

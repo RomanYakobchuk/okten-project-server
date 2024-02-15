@@ -2,18 +2,18 @@ import {NotificationSubscribeSchema as NotificationSchema, SubscribeSchema} from
 import {SortOrder} from "mongoose";
 
 class SubscribeNotificationService {
-    getOneSubscribe(institutionId: string, subscriberId: string) {
-        return SubscribeSchema.findOne({institutionId: institutionId, subscriberId})
+    getOneSubscribe(establishmentId: string, subscriberId: string) {
+        return SubscribeSchema.findOne({establishmentId: establishmentId, subscriberId})
     }
-    async createSubscribe(institutionId: string, subscriberId: string) {
+    async createSubscribe(establishmentId: string, subscriberId: string) {
         return await SubscribeSchema.create({
-            institutionId,
+            establishmentId: establishmentId,
             subscriberId
         })
     }
-    deleteSubscribe(institutionId: string, subscriberId: string) {
+    deleteSubscribe(establishmentId: string, subscriberId: string) {
         return SubscribeSchema.deleteOne({
-            institutionId,
+            establishmentId: establishmentId,
             subscriberId
         })
     }
@@ -21,7 +21,7 @@ class SubscribeNotificationService {
         return NotificationSchema.findOne({subscribeId})
     }
 
-    async getAllSubscribes(id: string, type: 'institutionId' | "subscriberId", _end: number = 40, _start: number = 0, _order: SortOrder = -1, _sort: string = 'createdAt',) {
+    async getAllSubscribes(id: string, type: 'establishmentId' | "subscriberId", _end: number = 40, _start: number = 0, _order: SortOrder = -1, _sort: string = 'createdAt',) {
 
         const filter = _getFilterQuery({id, type});
 

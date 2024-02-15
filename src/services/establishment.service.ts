@@ -1,9 +1,9 @@
 import {PipelineStage} from "mongoose";
 
-import {InstitutionSchema} from "../dataBase";
-import {IInstitution} from "../interfaces/common";
+import {EstablishmentSchema} from "../dataBase";
+import {IEstablishment} from "../interfaces/common";
 import {_freeSeatsFilterQuery, _getFilterQuery} from "./filters";
-import {_getByUserFilter} from "./filters/institutionFilters.service";
+import {_getByUserFilter} from "./filters/establishmentFilters.service";
 
 type AggregationPipeline = PipelineStage;
 
@@ -20,7 +20,7 @@ interface NearbyFilter {
     _id?: { $ne: string }; // Опціонально додаємо _id
 }
 
-class InstitutionService {
+class EstablishmentService {
     async getWithPagination(
         _end: number,
         _order: any,
@@ -72,7 +72,8 @@ class InstitutionService {
             description: 1,
             averageCheck: 1,
             freeSeats: 1,
-            verify: 1
+            verify: 1,
+            workSchedule: 1
         };
         const adminFieldsToInclude = {
             'viewsContainer': 1,
@@ -85,19 +86,16 @@ class InstitutionService {
                 $match: filterQuery
             },
             {
+                $sort: {
+                    [_sort]: _order
+                }
+            },
+            {
                 $skip: _start
             },
             {
                 $limit: _end - _start
             },
-            {
-                $sort: {
-                    [_sort]: _order
-                }
-            },
-            // {
-            //     $project: otherFieldsToInclude
-            // }
         );
         const countFilter: AggregationPipeline[] = [
             {
@@ -182,8 +180,16 @@ class InstitutionService {
             })
         }
 
-        const items = await InstitutionSchema.aggregate(aggregationPipeline).exec();
-        const countArray = await InstitutionSchema.aggregate(countFilter).count('count').exec();
+        // const filters = _getFilterQuery({title_like, type, averageCheck_gte, averageCheck_lte, city_like}, isVerify)
+        const items = await EstablishmentSchema.aggregate(aggregationPipeline).exec();
+        // const items = await EstablishmentSchema
+        //     .find(filters)
+        //     .select('_id pictures title place averageCheck type rating description createdBy createdAt workSchedule')
+        //     .limit(_end - _start)
+        //     .skip(_start)
+        //     .sort({[_sort]: _order})
+        //     .exec();
+        const countArray = await EstablishmentSchema.aggregate(countFilter).count('count').exec();
         const count = countArray?.length > 0 ? countArray[0]?.count : 0
         return {
             count,
@@ -191,12 +197,12 @@ class InstitutionService {
         }
     }
 
-    createInstitution(institution: any) {
-        return InstitutionSchema.create(institution);
+    createEstablishment(establishment: any) {
+        return EstablishmentSchema.create(establishment);
     }
 
-    getOneInstitution(params: { _id: string }) {
-        return InstitutionSchema.findOne(params)
+    getOneEstablishment(params: { _id: string }) {
+        return EstablishmentSchema.findOne(params)
     }
 
     async getAllByUserParams(_end: number, _start: number, _sort: any, _order: any, userId: string, verify: string, title_like: string = '') {
@@ -215,11 +221,11 @@ class InstitutionService {
 
         const filters = _getByUserFilter(verify, title_like, userId);
 
-        const count = await InstitutionSchema.countDocuments(filters);
+        const count = await EstablishmentSchema.countDocuments(filters);
 
-        const items = await InstitutionSchema
+        const items = await EstablishmentSchema
             .find(filters)
-            .select('_id pictures title place averageCheck type rating description createdBy createdAt')
+            .select('_id pictures title place averageCheck type rating description createdBy createdAt workSchedule')
             .limit(_end - _start)
             .skip(_start)
             .sort({[newSort]: _order})
@@ -232,10 +238,10 @@ class InstitutionService {
     }
 
     deleteOne(params: any) {
-        return InstitutionSchema.deleteOne(params)
+        return EstablishmentSchema.deleteOne(params)
     }
 
-    async getUserInstitutionsByQuery(search_like = '', createdBy: string, _end: number, _start: number) {
+    async getUserEstablishmentsByQuery(search_like = '', createdBy: string, _end: number, _start: number) {
         const searchObject = {};
         if (!_start) {
             _start = 0
@@ -274,24 +280,24 @@ class InstitutionService {
                 ]
             })
         }
-        const institutions = await InstitutionSchema
+        const establishments = await EstablishmentSchema
             .find(searchObject)
-            .select('_id title pictures place type location createdBy')
+            .select('_id title pictures place type location createdBy workSchedule')
             .limit(_end - _start)
             .skip(_start)
             .sort({['title']: 'asc'})
             .exec();
 
         return {
-            items: institutions
+            items: establishments
         }
     }
 
-    async getSimilar(establishment: IInstitution) {
+    async getSimilar(establishment: IEstablishment) {
         const minCheck = establishment.averageCheck * 0.8;
         const maxCheck = establishment.averageCheck * 1.2;
 
-        const items = await InstitutionSchema
+        const items = await EstablishmentSchema
             .find({
                 $and: [
                     {
@@ -305,7 +311,7 @@ class InstitutionService {
                     {_id: {$ne: establishment._id}}
                 ]
             })
-            .select('_id title type pictures createdBy reviewsLength rating place')
+            .select('_id title type pictures createdBy reviewsLength rating place workSchedule')
             .limit(5)
             .exec();
 
@@ -340,9 +346,9 @@ class InstitutionService {
             _end = 5
         }
 
-        const count = await InstitutionSchema.countDocuments(filter).exec();
+        const count = await EstablishmentSchema.countDocuments(filter).exec();
 
-        const items = await InstitutionSchema
+        const items = await EstablishmentSchema
             .find(filter)
             .limit(_end - _start)
             .skip(_start)
@@ -356,5 +362,5 @@ class InstitutionService {
 
 
 export {
-    InstitutionService
+    EstablishmentService
 }

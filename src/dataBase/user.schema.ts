@@ -58,12 +58,6 @@ const User = new Schema<IUser>({
         activationLink: {
             type: String //link for activate account by mail
         },
-        allInstitutions: [
-            {
-                type: Schema.Types.ObjectId,
-                ref: "institution"
-            }
-        ],
         registerBy: {
             type: String,
             enum: ['Email', 'Google', 'Facebook'],

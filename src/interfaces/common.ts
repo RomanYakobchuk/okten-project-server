@@ -21,14 +21,14 @@ export interface IAdmin extends Ids {
     user: Schema.Types.ObjectId,
 }
 
-export interface ICapl extends Document {
+export interface ICapl extends Document, DocumentResult<ICapl> {
     _id: string | string & ObjectId,
     isAllowedEdit: boolean,
     user: Schema.Types.ObjectId | string,
     manager: Schema.Types.ObjectId,
     fullName: string,
     isClientAppeared: boolean,
-    institution: Schema.Types.ObjectId | IInstitution,
+    establishment: Schema.Types.ObjectId | IEstablishment,
     eventType: string,
     date: Date,
     comment: string,
@@ -40,7 +40,7 @@ export interface ICapl extends Document {
         value: "accepted" | "rejected" | "draft",
         reasonRefusal: string
     },
-    institutionStatus: {
+    establishmentStatus: {
         value: "accepted" | "rejected" | "draft",
         freeDateFor: [Date],
         reasonRefusal: string
@@ -55,7 +55,7 @@ export interface ICity extends Ids {
 }
 
 export interface IComment extends Document, DocumentResult<IComment> {
-    createdBy: Schema.Types.ObjectId | IUser | IInstitution | {_id: string, name: string, avatar: string},
+    createdBy: Schema.Types.ObjectId | IUser | IEstablishment | {_id: string, name: string, avatar: string},
     _id: string | string & ObjectId | ObjectId,
     text: string,
     repliesLength: number,
@@ -63,14 +63,14 @@ export interface IComment extends Document, DocumentResult<IComment> {
     parentId: Schema.Types.ObjectId | string,
     createdAt?: Date,
     updatedAt?: Date,
-    refFieldCreate?: "user" | "institution",
+    refFieldCreate?: "user" | "establishment",
     reactions: string | IReaction
     // [key: string]: any
 }
 
 export interface ICreateCommentItem {
     text: string,
-    refFieldCreate: 'institution' | 'user',
+    refFieldCreate: 'establishment' | 'user',
     createdBy: string | string & ObjectId,
     parentId: string | string & ObjectId | null,
     establishmentId: string | string & ObjectId,
@@ -92,7 +92,7 @@ interface IWorkDays {
     }
 }
 
-export interface IInstitution extends Document {
+export interface IEstablishment extends Document {
     title: string,
     _id: string | string & ObjectId,
     views: IViews | Schema.Types.ObjectId,
@@ -140,7 +140,7 @@ export interface IFreeSeatsList {
 }
 export interface IFreeSeats extends Document {
     _id: string | string & ObjectId,
-    establishmentId: Schema.Types.ObjectId | IInstitution,
+    establishmentId: Schema.Types.ObjectId | IEstablishment,
     list: IFreeSeatsList[],
     allFreeSeats: number,
     isCombineTheSeats: boolean,
@@ -148,8 +148,8 @@ export interface IFreeSeats extends Document {
     updatedAt?: Date,
 }
 
-export interface IInstitutionNews extends Document {
-    institutionId: Schema.Types.ObjectId | IInstitution,
+export interface IEstablishmentNews extends Document {
+    establishmentId: Schema.Types.ObjectId | IEstablishment,
     _id: string | string & ObjectId,
     title: string,
     place: {
@@ -202,7 +202,7 @@ export interface IManager extends Document {
 }
 
 export interface IMenu extends Ids {
-    institutionId: Schema.Types.ObjectId,
+    establishmentId: Schema.Types.ObjectId,
     items: Schema.Types.ObjectId[] | IMenuItem[],
     fileMenu: string,
     createdBy: Schema.Types.ObjectId,
@@ -210,7 +210,7 @@ export interface IMenu extends Ids {
 
 export interface IMenuItem extends Ids {
     description: string,
-    institutionId: Schema.Types.ObjectId,
+    establishmentId: Schema.Types.ObjectId,
     title: string,
     category: string,
     weight: number,
@@ -218,8 +218,8 @@ export interface IMenuItem extends Ids {
     image: string,
 }
 
-interface InstitutionId {
-    institutionId: Schema.Types.ObjectId
+interface EstablishmentId {
+    establishmentId: Schema.Types.ObjectId
 }
 
 interface UserId {
@@ -251,8 +251,8 @@ export interface IConversation extends Document, DocumentResult<IConversation> {
         status: "public" | "private",
         type: "group" | "oneByOne",
         field: {
-            name: "institution" | "user" | "capl",
-            id: IInstitution | IUser | ICapl | (ObjectId | string)
+            name: "establishment" | "user" | "capl",
+            id: IEstablishment | IUser | ICapl | (ObjectId | string)
         },
         chatName: string,
         picture: string,
@@ -279,15 +279,36 @@ export interface IMessage extends Document {
     updatedAt?: Date
 }
 
-
+export interface IUserAgent {
+    browser: {
+        name: string,
+        version: string,
+        major: string
+    },
+    device: {
+        model: string | undefined,
+        type: string | undefined,
+        vendor: string | undefined,
+    },
+    engine: {
+        name: string,
+        version: string,
+    },
+    os: {
+        name: string,
+        version: string
+    }
+}
 export interface IOauth extends UserId, Document {
     access_token: string,
     refresh_token: string,
+    _id?: string | string & ObjectId | Schema.Types.ObjectId,
+    userAgent: IUserAgent,
     createdAt?: Date,
     updatedAt?: Date
 }
 
-export interface IReviewItem extends InstitutionId, Ids {
+export interface IReviewItem extends EstablishmentId, Ids {
     createdBy: Schema.Types.ObjectId,
     text: {
         like: string,
@@ -297,13 +318,14 @@ export interface IReviewItem extends InstitutionId, Ids {
     review: Schema.Types.ObjectId,
 }
 
-export interface IReview extends InstitutionId, Ids {
+export interface IReview extends EstablishmentId, Ids {
     reviews: Schema.Types.ObjectId[],
 }
 
 export interface IUser extends Document, DocumentResult<IUser> {
     name: string,
     email: string,
+    _id?: string | string & ObjectId | Schema.Types.ObjectId,
     status: "user" | "manager" | "admin",
     dOB: Date,
     registerBy: "Google" | "Email" | "GitHub" | "Facebook",
@@ -318,18 +340,13 @@ export interface IUser extends Document, DocumentResult<IUser> {
     phoneVerify: boolean,
     verifyCode: string,
     activationLink: string,
-    allInstitutions: IObjectIdArray,
-    favoritePlaces: string | string & ObjectId | Schema.Types.ObjectId,
-    favoriteNews?: Schema.Types.ObjectId[],
-    myRatings: IObjectIdArray,
+    favoritePlaces: string | string & ObjectId | Schema.Types.ObjectId | IObjectIdArray | IUserFavoritePlaces,
     blocked: {
         isBlocked: boolean,
         whyBlock: string
     },
-    myReviews?: Schema.Types.ObjectId[] | any,
     createdAt?: Date,
     updatedAt?: Date,
-
     [key: string]: any
 }
 export interface IGenericArray<T> extends Array<T> {
@@ -365,7 +382,7 @@ export interface IViews extends Document {
 
 export interface CreateReserve {
     _id?: string & ObjectId,
-    institution: string | string & ObjectId,
+    establishment: string | string & ObjectId,
     date: Date,
     seats: {
         table: number,
@@ -374,7 +391,7 @@ export interface CreateReserve {
     },
     userStatus: ICapl['userStatus'],
     isAllowedEdit: boolean,
-    institutionStatus: ICapl['institutionStatus'],
+    establishmentStatus: ICapl['establishmentStatus'],
     writeMe: boolean,
     comment: string,
     fullName: string,
@@ -395,7 +412,7 @@ export interface ICityForCount extends Document {
     updatedAt?: Date,
 }
 
-export interface ISubscribe extends Document, InstitutionId {
+export interface ISubscribe extends Document, EstablishmentId {
     _id: string & ObjectId | string,
     subscriberId: Schema.Types.ObjectId,
     createdAt?: Date,
@@ -426,12 +443,12 @@ export interface INotification extends UserId, Document {
     type: "newReservation" | "newMessage" | "newNews" |"newFunctional" | "newEstablishment" | "newUser"
 }
 
-export type TTypeNotification = ICapl | IMessage | IInstitutionNews | IInstitution | IUser
+export type TTypeNotification = ICapl | IMessage | IEstablishmentNews | IEstablishment | IUser
 
 export interface IReaction extends Document {
     _id: Ids['_id'],
-    item: string | IInstitution | IInstitutionNews | IComment,
-    field: 'institution' | 'institutionNew' | 'commentItem',
+    item: string | IEstablishment | IEstablishmentNews | IComment,
+    field: 'establishment' | 'establishmentNews' | 'commentItem',
     likes: string[],
     unLikes: string[],
     createdAt: Date,

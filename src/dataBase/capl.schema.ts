@@ -17,9 +17,9 @@ const Capl = new Schema({
         type: String,
         required: true
     },
-    institution: {
+    establishment: {
         type: Schema.Types.ObjectId,
-        ref: 'institution',
+        ref: 'establishment',
         required: true
     },
     eventType: {
@@ -59,7 +59,7 @@ const Capl = new Schema({
         type: Boolean,
         default: true
     },
-    institutionStatus: {
+    establishmentStatus: {
         value: {
             type: String,
             default: 'draft' // draft | rejected | accepted

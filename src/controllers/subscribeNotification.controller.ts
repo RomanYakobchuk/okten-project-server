@@ -17,15 +17,15 @@ class SubscribeNotificationController {
 
     async updateSubscribe(req: CustomRequest, res: Response, next: NextFunction) {
         const subscribe = req.subscribe as ISubscribe;
-        const {institutionId, subscriberId} = req.body;
+        const {establishmentId, subscriberId} = req.body;
 
         try {
             let isSubscribe: boolean;
             if (subscribe?._id) {
-                await this.subscribeNotificationService.deleteSubscribe(institutionId, subscriberId);
+                await this.subscribeNotificationService.deleteSubscribe(establishmentId, subscriberId);
                 isSubscribe = false;
             } else {
-                await this.subscribeNotificationService.createSubscribe(institutionId, subscriberId);
+                await this.subscribeNotificationService.createSubscribe(establishmentId, subscriberId);
                 isSubscribe = true;
             }
             res.status(200).json({message: `${!isSubscribe ? 'Unfollowed' : 'Followed'}`, isSubscribe})

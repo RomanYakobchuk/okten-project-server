@@ -2,18 +2,18 @@ import {Request} from "express";
 import {
     ICapl, ICityForCount,
     IComment, IConversation,
-    IInstitution,
-    IInstitutionNews, INotification,
+    IEstablishment,
+    IEstablishmentNews, INotification,
     IOauth, IReaction, ISubscribe,
-    IUser,
+    IUser, IUserAgent,
     IUserFavoritePlaces
 } from "./common";
 import {UserModel} from "./model";
 
 export interface CustomRequest extends Request {
     user?: IUser | IOauth | UserModel,
-    data_info?: IInstitution,
-    news?: IInstitutionNews,
+    data_info?: IEstablishment,
+    news?: IEstablishmentNews,
     newStatus?: "admin" | "manager" | "user",
     tokenInfo?: IOauth,
     subscribe?: ISubscribe | null,
@@ -32,5 +32,7 @@ export interface CustomRequest extends Request {
         items: IUserFavoritePlaces[],
         count: number
     },
-    notification?: INotification
+    notification?: INotification,
+    userAgent?: IUserAgent,
+    sessions?: IOauth[]
 }

@@ -11,6 +11,7 @@ router.post('/login',
     authMiddleware.isLoginBodyValid,
     authMiddleware.isUserPresentForAuth,
     authMiddleware.checkStatus('login'),
+    authMiddleware.checkUserAgent,
     // userFavoritePlacesMiddleware.getSavedPlaces,
     // userFavoritePlacesMiddleware.checkUserFavPlaces('user', 'byUser', false),
     authController.login
@@ -30,16 +31,33 @@ router.post('/register',
 
 router.post('/refreshToken',
     authMiddleware.checkRefreshToken,
+    authMiddleware.checkUserAgent,
     // userFavoritePlacesMiddleware.checkUserFavPlaces("tokenInfo", "byUser", true),
     authController.refreshToken);
 
-router.get('/logout',
+router.post('/logout',
     authMiddleware.checkAccessToken,
-    authController.logout);
+    authController.logout
+);
 
 router.post('/logoutAllDevices',
     authMiddleware.checkAccessToken,
-    authController.logoutAllDevices);
+    authController.logoutAllDevices
+);
+router.post('/logoutSpecificDevices/:id',
+    authMiddleware.checkAccessToken,
+    authMiddleware.checkStatus("check"),
+    authMiddleware.checkSpecificSession,
+    authController.logoutSpecificDevices
+);
+
+router.get('/userSessions/:id',
+    authMiddleware.checkAccessToken,
+    authMiddleware.checkStatus("check"),
+    userMiddleware.isUserPresent("userId"),
+    authMiddleware.userSessions,
+    authController.getUserSessions
+);
 
 router.post('/forgotPassword',
     authMiddleware.isEmailValid,

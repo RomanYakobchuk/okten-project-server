@@ -2,15 +2,16 @@ import {NextFunction, Response} from "express";
 import {ObjectId} from "mongoose";
 import {CustomRequest} from "../interfaces/func";
 import Joi from "joi";
+import UAParser from "ua-parser-js";
 
-import {OauthSchema, UserSchema, ManagerSchema, AdminSchema} from "../dataBase";
+import {AdminSchema, ManagerSchema, OauthSchema, UserSchema} from "../dataBase";
 
 import {CustomError} from '../errors';
-import {UserService, PasswordService, TokenService} from '../services';
+import {PasswordService, TokenService, UserService} from '../services';
 import {authValidator} from '../validators';
 import {tokenTypeEnum} from '../enums';
 import {constants} from '../configs';
-import {IInstitution, IManager, IOauth, IUser} from "../interfaces/common";
+import {IManager, IOauth, IUser, IUserAgent} from "../interfaces/common";
 import {getFacebookUserInfo, getGitHubUserData, getGoogleUserInfo} from "../clients";
 
 
@@ -31,6 +32,9 @@ class AuthMiddleware {
         this.isEmailValid = this.isEmailValid.bind(this);
         this.isUserPresentByEmail = this.isUserPresentByEmail.bind(this);
         this.checkStatus = this.checkStatus.bind(this);
+        this.checkUserAgent = this.checkUserAgent.bind(this);
+        this.checkSpecificSession = this.checkSpecificSession.bind(this);
+        this.userSessions = this.userSessions.bind(this);
     }
 
     async checkAccessToken(req: CustomRequest, _: Response, next: NextFunction) {
@@ -51,6 +55,42 @@ class AuthMiddleware {
             }
 
             req.user = tokenInfo;
+            next();
+        } catch (e) {
+            next(e);
+        }
+    }
+
+    async checkSpecificSession(req: CustomRequest, _: Response, next: NextFunction) {
+        const {id} = req.params;
+        const {userId} = req.user as IOauth;
+        const status = req.newStatus;
+        try {
+            if (!id) {
+                return next(new CustomError('Session not found', 404));
+            }
+            const session = await OauthSchema.findOne({_id: id}).populate('userId');
+            if (!session) {
+                return next(new CustomError('Session not found', 404));
+            }
+            const {_id} = userId as IUser;
+            const {userId: userSessionData} = session as IOauth;
+            const {_id: userSessionId} = userSessionData as IUser;
+            if (userSessionId?.toString() !== _id?.toString() && status !== 'admin') {
+                return next(new CustomError('Access denied', 403));
+            }
+            req.tokenInfo = session as IOauth;
+            next();
+
+        } catch (e) {
+            next(e);
+        }
+    }
+    async userSessions(req: CustomRequest, _: Response, next: NextFunction) {
+        const {_id} = req.userExist as IUser;
+        try {
+            const sessions = await OauthSchema.find({userId: _id}).exec();
+            req.sessions = sessions || [];
             next();
         } catch (e) {
             next(e);
@@ -112,6 +152,41 @@ class AuthMiddleware {
             }
 
             req.user = user;
+            next();
+        } catch (e) {
+            next(e);
+        }
+    }
+
+    async checkUserAgent(req: CustomRequest, _: Response, next: NextFunction) {
+        const userAgent = req.get(constants.USER_AGENT);
+        try {
+            if (!userAgent) {
+                console.error('Error notification: User agent not found \n Status: 404');
+                return next(new CustomError("Something went wrong", 400));
+            }
+            const parserUA = new UAParser(userAgent);
+            const reqUserAgent = parserUA.getResult() as IOauth['userAgent'];
+            req.userAgent = {
+                browser: {
+                    name: reqUserAgent?.browser?.name || "undefined",
+                    version: reqUserAgent?.browser?.version || "undefined",
+                    major: reqUserAgent?.browser?.major || "undefined",
+                },
+                device: {
+                    type: reqUserAgent?.device?.type || "undefined",
+                    model: reqUserAgent?.device?.model || "undefined",
+                    vendor: reqUserAgent?.device?.vendor || "undefined"
+                },
+                engine: {
+                    name: reqUserAgent?.engine?.name || "undefined",
+                    version: reqUserAgent?.engine?.version || "undefined",
+                },
+                os: {
+                    name: reqUserAgent?.os?.name || "undefined",
+                    version: reqUserAgent?.os?.version || "undefined",
+                }
+            };
             next();
         } catch (e) {
             next(e);
@@ -229,11 +304,11 @@ class AuthMiddleware {
             }
             if (type === 'login') {
                 const user = req.user as IUser;
-                await statusHandler(user.status, user._id);
+                await statusHandler(user.status, user._id as string);
             } else if (type === 'check') {
                 const {userId} = req.user as IOauth;
                 const user = userId as IUser;
-                await statusHandler(user.status, user._id);
+                await statusHandler(user.status, user._id as string);
             }
         } catch (e) {
             next(e)

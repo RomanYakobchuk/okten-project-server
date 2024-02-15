@@ -26,7 +26,7 @@ const Conversation = new Schema({
         field: {
             name: {
                 type: String,
-                enum: ['institution', 'user', 'capl']
+                enum: ['establishment', 'user', 'capl']
             },
             id: {
                 type: Schema.Types.ObjectId,

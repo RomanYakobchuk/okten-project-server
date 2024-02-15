@@ -12,7 +12,7 @@ import compression from  "compression";
 import {
     authRouter,
     userRouter,
-    institutionRouter,
+    establishmentRouter,
     newsRouter,
     reviewRouter,
     commentRouter,
@@ -61,7 +61,7 @@ app.use('/api/v1/users', userRouter);
 app.use('/api/v1/managers', managerRouter);
 app.use('/api/v1/conversation', conversationRouter);
 app.use('/api/v1/message', messageRouter);
-app.use('/api/v1/institution', institutionRouter);
+app.use('/api/v1/establishment', establishmentRouter);
 app.use('/api/v1/news', newsRouter);
 app.use('/api/v1/review', reviewRouter);
 app.use('/api/v1/comment', commentRouter);
@@ -86,13 +86,19 @@ app.use((err: any, _: any, res: Response, __: NextFunction) => {
 });
 
 mongoose.Promise = Promise;
-mongoose.connect(configs.MONGO_URL as string).then(() => {
+mongoose.connect(configs.MONGO_URL as string).then(async () => {
     console.log("|-------------------------------------------")
     console.log('| Connect: success')
+    let db = mongoose.connection.db;
     app.listen(Number(configs.PORT)!, configs.HOST!, () => {
         console.log(`| Started on port http://localhost:${configs.PORT}`);
         console.log("|___________________________________________")
     });
+    // return db.collection('conversations').updateMany({'chatInfo.field.name': 'institution'}, {"$set": {'chatInfo.field.name': 'establishment'}});
+    // return db.collection('commentitems').updateMany({'refFieldCreate': 'institution'}, {"$set": {'refFieldCreate': 'establishment'}});
+    // return db.collection('establishmentsSimple').rename('establishments')
+    // return db.collection('establishmentNews').rename('establishmentnews')
+    // return db.collection('reviewitems').updateMany({}, {$rename: {"institutionId": "establishmentId"}})
 }).catch(err => {
     console.log(err)
     console.log('connect: error')

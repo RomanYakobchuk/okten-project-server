@@ -4,7 +4,6 @@ import {conversationController} from "../controllers";
 import {
     authMiddleware,
     userMiddleware,
-    institutionMiddleware,
     conversationMiddleware,
     commonMiddleware
 } from "../middlewares";

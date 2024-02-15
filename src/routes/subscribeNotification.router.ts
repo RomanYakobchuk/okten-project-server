@@ -1,5 +1,5 @@
 import {Router} from "express";
-import {authMiddleware, institutionMiddleware, subscribeNotificationMiddleware} from "../middlewares";
+import {authMiddleware, establishmentMiddleware, subscribeNotificationMiddleware} from "../middlewares";
 import {subscribeNotificationController} from "../controllers";
 
 const router = Router();
@@ -7,7 +7,7 @@ const router = Router();
 router.get(
     `/findOne/:id`,
     authMiddleware.checkAccessToken,
-    institutionMiddleware.checkInstitution,
+    establishmentMiddleware.checkEstablishment('info'),
     subscribeNotificationMiddleware.checkSubscribe,
     subscribeNotificationController.getOneSubscribe
 )
@@ -15,7 +15,7 @@ router.get(
 router.post(
     `/updateOne/:id`,
     authMiddleware.checkAccessToken,
-    institutionMiddleware.checkInstitution('info'),
+    establishmentMiddleware.checkEstablishment('info'),
     subscribeNotificationMiddleware.checkSubscribe,
     subscribeNotificationController.updateSubscribe
 )

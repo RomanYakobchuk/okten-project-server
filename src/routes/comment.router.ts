@@ -1,6 +1,6 @@
 import {Router} from 'express';
 
-import {authMiddleware, institutionMiddleware, commentMiddleware, userMiddleware} from "../middlewares";
+import {authMiddleware, establishmentMiddleware, commentMiddleware, userMiddleware} from "../middlewares";
 import {commentController} from "../controllers";
 
 const router = Router();
@@ -9,16 +9,16 @@ const router = Router();
 router.post(
     `/create`,
     authMiddleware.checkAccessToken,
-    institutionMiddleware.checkInstitution('info'),
+    establishmentMiddleware.checkEstablishment('info'),
     commentMiddleware.checkCreatorIsExist,
     commentController.createComment
 )
 
-// all institution`s comments
+// all Establishment`s comments
 router.get(
-    `/allByInstitutionId/:id`,
+    `/allByEstablishmentId/:id`,
     authMiddleware.checkAccessToken,
-    institutionMiddleware.checkInstitution('info'),
+    establishmentMiddleware.checkEstablishment('info'),
     commentController.allCommentsByEstablishment
 )
 
@@ -29,7 +29,6 @@ router.get(
     authMiddleware.checkStatus("check"),
     // userMiddleware.isUserPresent,
     commentController.allCommentsByUserId
-    // commentController.allCommentsByInstitutionUserId('createdBy')
 )
 
 // all comments
@@ -53,7 +52,7 @@ router.get(
     `/allAnsweredCommentById/:id`,
     authMiddleware.checkAccessToken,
     commentMiddleware.checkCommentById,
-    institutionMiddleware.checkInstitution('info'),
+    establishmentMiddleware.checkEstablishment('info'),
     commentController.allAnsweredCommentById
 )
 

@@ -5,7 +5,7 @@ import {IFreeSeatsModel} from "../interfaces/model";
 const FreeSeats = new Schema({
     establishmentId: {
         type: Schema.Types.ObjectId,
-        ref: 'institution',
+        ref: 'establishment',
         unique: true
     },
     list: [

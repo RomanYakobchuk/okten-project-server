@@ -2,7 +2,7 @@ import {NextFunction, Response} from "express";
 
 import {CustomRequest} from "../interfaces/func";
 import {CloudService, ConversationService, MessageService} from "../services";
-import {ICapl, IConversation, IConvMembers, IInstitution, ILastConvMessage, IOauth, IUser} from "../interfaces/common";
+import {ICapl, IConversation, IConvMembers, IEstablishment, ILastConvMessage, IOauth, IUser} from "../interfaces/common";
 import {CustomError} from "../errors";
 import {userPresenter} from "../presenters/user.presenter";
 import {filterObjectByType} from "../services/other/validateObjectByType";
@@ -37,13 +37,13 @@ class ConversationController {
                 members: members,
                 chatInfo: {
                     status: status,
-                    creator: user?._id,
+                    creator: user?._id as string,
                     type: chatType,
                     chatName: chatName,
                     picture: '',
                     field: {
                         name: 'user',
-                        id: user?._id
+                        id: user?._id as string
                     }
                 }
             });
@@ -89,7 +89,7 @@ class ConversationController {
                     members: members as IConvMembers[],
                     chatInfo: {
                         status: status,
-                        creator: user?._id,
+                        creator: user?._id as string,
                         field: {
                             name: chatFieldName,
                             id: chatFieldId
@@ -119,7 +119,7 @@ class ConversationController {
     }
 
     async getConvByUserId(req: CustomRequest, res: Response, next: NextFunction) {
-        const {_end, _start, _sort, _order, title_like, institutionId} = req.query;
+        const {_end, _start, _sort, _order, title_like, establishmentId} = req.query;
         const user = req.userExist as IUser;
         const status = req.newStatus;
 
@@ -128,7 +128,7 @@ class ConversationController {
             const {
                 items,
                 count
-            } = await this.conversationService.getAllByUser(Number(_end), Number(_start), _sort, _order, status, title_like as string, user?._id as string, institutionId as string);
+            } = await this.conversationService.getAllByUser(Number(_end), Number(_start), _sort, _order, status, title_like as string, user?._id as string, establishmentId as string);
 
             const updated = items?.map((item) => validateChatInfoField({item: item?._doc || item, user: user}));
 
@@ -143,10 +143,10 @@ class ConversationController {
 
     async getConvTwoUserId(req: CustomRequest, res: Response, next: NextFunction) {
         try {
-            const {userId, institutionId} = req.body;
+            const {userId, establishmentId} = req.body;
 
             const conv = await this.conversationService
-                .getOne({members: {$elemMatch: {user: userId}}, institutionId})
+                .getOne({members: {$elemMatch: {user: userId}}, establishmentId: establishmentId})
                 .populate([
                     {path: 'members.user', select: '_id avatar name uniqueIndicator'},
                     {path: 'chatInfo.field.id'}
@@ -167,7 +167,7 @@ class ConversationController {
             //     conversation.userName = newName
             // }
             // if (status === 'admin' || status === 'user') {
-            //     conversation.institutionTitle = newTitle
+            //     conversation.establishmentTitle = newTitle
             // }
             await conversation.save();
 
@@ -225,7 +225,7 @@ class ConversationController {
 
 export default new ConversationController();
 
-const variantInstitution = ({item, members, user}: { item: IInstitution, members: IConvMembers[], user: IUser }) => {
+const variantEstablishment = ({item, members, user}: { item: IEstablishment, members: IConvMembers[], user: IUser }) => {
     const currentMember = members?.find((member) => {
         const m = member?.user as IUser;
         return m?._id?.toString() === user?._id?.toString();
@@ -310,28 +310,28 @@ export const checkNewChatByMembers = async ({members, type}: {
 export const validateChatInfoField = ({user, item}: { item: IConversation, user: IUser }) => {
     const model = item?.chatInfo?.field?.id;
     const validateByType = {
-        institution: model,
+        establishment: model,
         user: (() => {
             type allowedType = Omit<IUser, "password | registerBy | email | dOB | isActivated | phone | phoneVerify | status">;
             const fieldsArray: (keyof IUser)[] = Object.keys({} as allowedType);
 
-            const user = userPresenter(model as IUser);
+            const user = userPresenter(model as IUser) as IUser;
 
             return filterObjectByType({
                 ...user,
                 uniqueIndicator: {
                     type: user?.uniqueIndicator?.type,
                     value: user?.uniqueIndicator?.type === 'public' ? user?.uniqueIndicator?.value : null
-                }
+                },
             } as IUser, fieldsArray);
         })(),
         capl: model
     }
 
     const variant = {
-        institution: variantInstitution({
+        establishment: variantEstablishment({
             user: user,
-            item: model as IInstitution,
+            item: model as IEstablishment,
             members: item?.members
         }),
         user: variantUser({currentUser: user, conversation: item}),

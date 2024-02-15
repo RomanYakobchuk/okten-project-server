@@ -1,6 +1,6 @@
 import {UserSchema} from "./user.schema";
 
-import {UserFavPlaces} from "./user_favorite_places.schema";
+import {UserFavPlaces} from "./userFavoritePlaces.schema";
 
 import {CitySchema} from "./city.schema";
 
@@ -16,9 +16,9 @@ import {ManagerSchema} from "./managers.schema";
 
 import {CaplSchema} from "./capl.schema";
 
-import {InstitutionSchema} from "./institution.schema";
+import {EstablishmentSchema} from "./establishment.schema";
 
-import {InstitutionNewsSchema} from "./institutionNews.schema";
+import {EstablishmentNewsSchema} from "./establishmentNews.schema";
 
 import {ReviewItemSchema} from "./reviewItem.schema";
 
@@ -55,8 +55,8 @@ export {
     UserFavPlaces,
     MenuItem,
     ReviewItemSchema,
-    InstitutionSchema,
-    InstitutionNewsSchema,
+    EstablishmentSchema,
+    EstablishmentNewsSchema,
     CityForCount,
     SubscribeSchema,
     NotificationSubscribeSchema,

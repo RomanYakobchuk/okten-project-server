@@ -16,6 +16,35 @@ const OAuth = new Schema({
         type: String,
         required: true
     },
+    userAgent: {
+        browser: {
+            name: String,
+            version: String,
+            major: String
+        },
+        device: {
+            model: {
+                type: String,
+                default: 'undefined'
+            },
+            type: {
+                type: String,
+                default: 'undefined'
+            },
+            vendor: {
+                type: String,
+                default: 'undefined'
+            },
+        },
+        engine: {
+            name: String,
+            version: String,
+        },
+        os: {
+            name: String,
+            version: String
+        }
+    }
 }, { timestamps: true });
 
 

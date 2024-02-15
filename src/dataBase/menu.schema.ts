@@ -2,9 +2,9 @@ import {Schema, model} from "mongoose";
 import {IMenu} from "../interfaces/common";
 
 const Menu = new Schema<IMenu>({
-    institutionId: {
+    establishmentId: {
         type: Schema.Types.ObjectId,
-        ref: 'institution'
+        ref: 'establishment'
     },
     items: [{
         type: Schema.Types.ObjectId,

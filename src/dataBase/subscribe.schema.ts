@@ -3,9 +3,9 @@ import {INotificationSubscribe, ISubscribe} from "../interfaces/common";
 import {INotificationSubscribeModel, ISubscribeModel} from "../interfaces/model";
 
 const Subscribe = new Schema({
-    institutionId: {
+    establishmentId: {
         type: Schema.Types.ObjectId,
-        ref: 'institution',
+        ref: 'establishment',
     },
     subscriberId: {
         type: Schema.Types.ObjectId,
@@ -20,7 +20,7 @@ const Notification = new Schema({
     },
     newsId: {
         type: Schema.Types.ObjectId,
-        ref: 'institutionNews'
+        ref: 'establishmentNews'
     }
 }, {timestamps: true});
 

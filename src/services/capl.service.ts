@@ -11,7 +11,7 @@ interface Repository {
 
     updateOne(params: any, newData: any): Promise<ICapl | null>,
 
-    findByPagination(institution_like: string, day: any, _end: number, _order: any | number, _start: number, _sort: any, search_like: string, userStatus: string, institutionStatus: string, userId: string, type: string, active: "" | "true" | "false"): Promise<{
+    findByPagination(establishment_like: string, day: any, _end: number, _order: any | number, _start: number, _sort: any, search_like: string, userStatus: string, establishmentStatus: string, userId: string, type: string, active: "" | "true" | "false"): Promise<{
         count: number,
         items: ICapl[]
     }>
@@ -34,14 +34,14 @@ class CaplService implements Repository {
         return CaplSchema.findByIdAndUpdate(params, newData, {new: true});
     }
 
-    async findByPagination(institution_like: string = '', day = null as any, _end: number, _order: any | number, _start: number, _sort: any, search_like = '', userStatus: string = '', institutionStatus: string = '', userId: string = '', type: string = '', active: "" | "true" | "false") {
+    async findByPagination(establishment_like: string = '', day = null as any, _end: number, _order: any | number, _start: number, _sort: any, search_like = '', userStatus: string = '', establishmentStatus: string = '', userId: string = '', type: string = '', active: "" | "true" | "false") {
 
         const filterQuery = _getFilterQuery({
-            institution_like,
+            establishment_like: establishment_like,
             day,
             search_like: search_like?.trim(),
             userStatus,
-            institutionStatus,
+            establishmentStatus: establishmentStatus,
             active
         }, userId, type);
 
@@ -55,7 +55,7 @@ class CaplService implements Repository {
 
         const items = await CaplSchema
             .find(filterQuery)
-            .populate([{path: 'institution', select: '_id pictures title type place'}])
+            .populate([{path: 'establishment', select: '_id pictures title type place'}])
             .limit(_end - _start)
             .skip(_start)
             .sort({[_sort]: _order})
@@ -64,7 +64,7 @@ class CaplService implements Repository {
         for (const item of items) {
             const myDate = new Date(item?.date);
             const currentDate = new Date();
-            if (((item?.userStatus?.value === 'accepted' && myDate < currentDate) || (item?.userStatus?.value === 'rejected' && item?.institutionStatus?.reasonRefusal)) && item?.institutionStatus?.value === 'rejected') {
+            if (((item?.userStatus?.value === 'accepted' && myDate < currentDate) || (item?.userStatus?.value === 'rejected' && item?.establishmentStatus?.reasonRefusal)) && item?.establishmentStatus?.value === 'rejected') {
                 item.isActive = false;
                 await item.save();
             }
@@ -89,14 +89,14 @@ class CaplService implements Repository {
 //     updateOne: (params: any, newData: any) => {
 //         return CaplSchema.findByIdAndUpdate(params, newData, {new: true});
 //     },
-//     findByPagination: async (institution_like: string = '', day = null as any, _end: number, _order: any | number, _start: number, _sort: any, search_like = '', userStatus: string = '', institutionStatus: string = '', userId: string = '', type: string = '', query: {} = {}, active: boolean) => {
+//     findByPagination: async (establishment_like: string = '', day = null as any, _end: number, _order: any | number, _start: number, _sort: any, search_like = '', userStatus: string = '', establishmentStatus: string = '', userId: string = '', type: string = '', query: {} = {}, active: boolean) => {
 //
 //         const filterQuery = _getFilterQuery({
-//             institution_like,
+//             establishment_like,
 //             day,
 //             search_like,
 //             userStatus,
-//             institutionStatus,
+//             establishmentStatus,
 //             active
 //         }, userId, type);
 //
@@ -110,7 +110,7 @@ class CaplService implements Repository {
 //
 //         const items = await CaplSchema
 //             .find(filterQuery)
-//             .populate([{path: 'institution', select: '_id mainPhoto title type place'}])
+//             .populate([{path: 'establishment', select: '_id mainPhoto title type place'}])
 //             .limit(_end - _start)
 //             .skip(_start)
 //             .sort({[_sort]: _order})
@@ -144,15 +144,15 @@ function _getFilterQuery(otherFilter: any, userId: string, type: string) {
             ]
         })
     }
-    if (otherFilter.institutionStatus) {
+    if (otherFilter.establishmentStatus) {
         filters.push({
             $or: [
-                {'institutionStatus.value': {$regex: otherFilter.institutionStatus, $options: 'i'}}
+                {'establishmentStatus.value': {$regex: otherFilter.establishmentStatus, $options: 'i'}}
             ]
         },)
     }
-    if (otherFilter.institution_like) {
-        filters.push({institution: otherFilter.institution_like})
+    if (otherFilter.establishment_like) {
+        filters.push({establishment: otherFilter.establishment_like})
     }
     // if (otherFilter.active) {
     //     filters.push({

@@ -10,7 +10,7 @@ const UserFavoritePlaces = new Schema({
     },
     type: {
         type: String,
-        enum: ['institution', 'institutionNews']
+        enum: ['establishment', 'establishmentNews']
     },
     item: {
         type: Schema.Types.ObjectId,

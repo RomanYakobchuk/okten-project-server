@@ -1,11 +1,11 @@
 import {Schema, model} from "mongoose";
-import {IInstitutionNews} from "../interfaces/common";
-import {IInstitutionNewsModel} from "../interfaces/model";
+import {IEstablishmentNews} from "../interfaces/common";
+import {IEstablishmentNewsModel} from "../interfaces/model";
 
-const InstitutionNews = new Schema<IInstitutionNews>({
-    institutionId: {
+const EstablishmentNews = new Schema<IEstablishmentNews>({
+    establishmentId: {
         type: Schema.Types.ObjectId,
-        ref: 'institution',
+        ref: 'establishment',
         required: true,
     },
     title: {
@@ -78,8 +78,8 @@ const InstitutionNews = new Schema<IInstitutionNews>({
     },
 }, {timestamps: true});
 
-const InstitutionNewsSchema: IInstitutionNewsModel = model<IInstitutionNews, IInstitutionNewsModel>('institutionNews', InstitutionNews);
+const EstablishmentNewsSchema: IEstablishmentNewsModel = model<IEstablishmentNews, IEstablishmentNewsModel>('establishmentNews', EstablishmentNews);
 
 export {
-    InstitutionNewsSchema
+    EstablishmentNewsSchema
 }

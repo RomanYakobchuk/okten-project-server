@@ -21,7 +21,7 @@ const Reaction = new Schema({
     },
     field: {
         type: String,
-        enum: ['institution', 'commentItem', 'institutionNews']
+        enum: ['establishment', 'commentItem', 'establishmentNews']
     }
 }, {timestamps: true})
 

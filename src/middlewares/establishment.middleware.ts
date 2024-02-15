@@ -1,53 +1,53 @@
 import {NextFunction, Response} from "express";
 
-import {InstitutionService} from "../services";
+import {EstablishmentService} from "../services";
 import {CustomError} from "../errors";
 import {CitySchema} from "../dataBase";
 import {CustomRequest} from "../interfaces/func";
-import {IInstitution, IInstitutionNews, IOauth, IUser} from "../interfaces/common";
+import {IEstablishment, IEstablishmentNews, IOauth, IUser} from "../interfaces/common";
 
-class InstitutionMiddleware {
-    private institutionService: InstitutionService;
+class EstablishmentMiddleware {
+    private establishmentService: EstablishmentService;
 
     constructor() {
-        this.institutionService = new InstitutionService();
+        this.establishmentService = new EstablishmentService();
 
-        this.checkInstitution = this.checkInstitution.bind(this);
+        this.checkEstablishment = this.checkEstablishment.bind(this);
         this.existCity = this.existCity.bind(this);
         this.getAllInfoById = this.getAllInfoById.bind(this);
     }
 
-    checkInstitution = (type: "all_info" | "info" = 'info') => async (req: CustomRequest, _: Response, next: NextFunction) => {
-        const news = req.news as IInstitutionNews;
+    checkEstablishment = (type: "all_info" | "info" = 'info') => async (req: CustomRequest, _: Response, next: NextFunction) => {
+        const news = req.news as IEstablishmentNews;
         try {
-            const {placeId, institutionId, refPath} = req.body;
+            const {placeId, establishmentId, refPath} = req.body;
             const {id} = req.params;
 
-            if (refPath === 'institutionNews') {
+            if (refPath === 'establishmentNews') {
                 next();
             } else {
-                const currentId = placeId || institutionId || id || "";
+                const currentId = placeId || establishmentId || id || "";
 
-                if (news?.institutionId && news?.institutionId === placeId) {
+                if (news?.establishmentId && news?.establishmentId === placeId) {
                     next();
                 }
                 if (!currentId) {
                     return next(new CustomError('Establishment not found!', 404))
                 }
-                let institution: IInstitution;
+                let establishment: IEstablishment;
 
-                const query = await this.institutionService.getOneInstitution({_id: currentId}) as IInstitution;
+                const query = await this.establishmentService.getOneEstablishment({_id: currentId}) as IEstablishment;
                 if (type === 'all_info' && query) {
                     await query.populate([{
                         path: 'views',
                         select: 'viewsNumber _id'
                     }]);
                 }
-                institution = query as IInstitution;
-                if (!institution) {
-                    return next(new CustomError("InstitutionSchema not found", 404))
+                establishment = query as IEstablishment;
+                if (!establishment) {
+                    return next(new CustomError("EstablishmentSchema not found", 404))
                 }
-                req.data_info = institution;
+                req.data_info = establishment;
                 next();
             }
         } catch (e) {
@@ -75,14 +75,14 @@ class InstitutionMiddleware {
 
         const user = userId as IUser;
 
-        const institution = req.data_info as IInstitution;
+        const establishment = req.data_info as IEstablishment;
         try {
 
-            if (user?._id !== institution?.createdBy && institution?.verify !== "published" && user?.status !== 'admin') {
-                return next(new CustomError("InstitutionSchema not found", 404))
+            if (user?._id !== establishment?.createdBy && establishment?.verify !== "published" && user?.status !== 'admin') {
+                return next(new CustomError("EstablishmentSchema not found", 404))
             }
 
-            req.data_info = institution;
+            req.data_info = establishment;
             next();
         } catch (e) {
             next(e)
@@ -90,4 +90,4 @@ class InstitutionMiddleware {
     }
 }
 
-export default new InstitutionMiddleware();
+export default new EstablishmentMiddleware();

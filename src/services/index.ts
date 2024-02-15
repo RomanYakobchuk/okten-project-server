@@ -7,7 +7,7 @@ import {UserService} from  './user.service';
 import {TokenService} from  './token.service';
 import {ManagerService} from  './manager.service';
 import {PasswordService} from  './password.service';
-import {InstitutionService} from  './institution.service';
+import {EstablishmentService} from './establishment.service';
 import {NewsService} from  './news.service';
 import {ReviewService} from  './review.service';
 import {CommentService} from  './comment.service';
@@ -33,7 +33,7 @@ export {
     CommentService,
     ReviewService,
     NewsService,
-    InstitutionService,
+    EstablishmentService,
     PasswordService,
     ManagerService,
     UserService,

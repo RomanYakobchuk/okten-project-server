@@ -16,9 +16,9 @@ const ReviewItem = new Schema<IReviewItem>({
         min: 1,
         max: 5
     },
-    institutionId: {
+    establishmentId: {
         type: Schema.Types.ObjectId,
-        ref: "institution"
+        ref: "establishment"
     },
 }, {timestamps: true});
 

@@ -3,7 +3,7 @@ import {NextFunction, Response} from "express";
 import {CustomRequest} from "../interfaces/func";
 import {MenuSchema, MenuItem} from "../dataBase";
 import {CloudService} from "../services";
-import {IInstitution, IMenuItem} from "../interfaces/common";
+import {IEstablishment, IMenuItem} from "../interfaces/common";
 
 class MenuController {
     private cloudService: CloudService;
@@ -11,14 +11,14 @@ class MenuController {
     constructor() {
         this.cloudService = new CloudService();
 
-        this.menuByInstitutionId = this.menuByInstitutionId.bind(this);
+        this.menuByEstablishmentId = this.menuByEstablishmentId.bind(this);
         this.createMenu = this.createMenu.bind(this);
     }
-    menuByInstitutionId = async (req: CustomRequest, res: Response, next: NextFunction) => {
+    menuByEstablishmentId = async (req: CustomRequest, res: Response, next: NextFunction) => {
         try {
-            const institution = req.data_info as IInstitution;
+            const establishment = req.data_info as IEstablishment;
 
-            const menu = await MenuSchema.findOne({institutionId: institution?._id}).populate("items");
+            const menu = await MenuSchema.findOne({establishmentId: establishment?._id}).populate("items");
 
             let category: any[] = [];
             if (menu) {
@@ -40,10 +40,10 @@ class MenuController {
             const menuFile = req.files.menu;
             console.log(menuFile)
             // const {userId: user} = req.user;
-            // const institution = req.data_info;
+            // const establishment = req.data_info;
             //
             // const menu = await MenuSchema.create({
-            //     institutionId: institution?._id,
+            //     establishmentId: establishment?._id,
             //     createdBy: user?._id,
             //     items: [],
             //     fileMenu: ''
@@ -51,12 +51,12 @@ class MenuController {
             //
             // if (items?.length > 0) {
             //     for (const item of items) {
-            //         const {url} = await cloudService.uploadFile(item?.image, `institution/${institution?._id}/menu/items`)
+            //         const {url} = await cloudService.uploadFile(item?.image, `establishment/${establishment?._id}/menu/items`)
             //         const menuItem = await MenuItem.create({
             //             title: item.title,
             //             description: item.description,
             //             image: url,
-            //             institutionId: institution?._id,
+            //             establishmentId: establishment?._id,
             //             price: item.price,
             //             weight: item.weight,
             //             category: item.category
@@ -65,7 +65,7 @@ class MenuController {
             //     }
             // }
             // if (req.files.menu) {
-            //     const {url} = await cloudService.uploadFile(menuFile, `institution/${institution?._id}/menu/file`)
+            //     const {url} = await cloudService.uploadFile(menuFile, `establishment/${establishment?._id}/menu/file`)
             //     menu.fileMenu = url;
             // }
             //

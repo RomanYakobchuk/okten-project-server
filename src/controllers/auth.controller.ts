@@ -14,10 +14,10 @@ import {emailActionTypeEnum, smsActionTypeEnum, tokenTypeEnum} from '../enums';
 import {userPresenter} from "../presenters/user.presenter";
 import {authMiddleware} from "../middlewares";
 import {configs} from "../configs";
-import {smsTemplateBuilder} from "../common";
+import {generateOTP, smsTemplateBuilder} from "../common";
 import {CustomError} from "../errors";
 import {CustomRequest} from "../interfaces/func";
-import {IOauth, IUser} from "../interfaces/common";
+import {IOauth, IUser, IUserAgent} from "../interfaces/common";
 import {Schema} from "mongoose";
 
 
@@ -54,16 +54,18 @@ class AuthController {
         this.verifyNumber = this.verifyNumber.bind(this)
         this.checkAuth = this.checkAuth.bind(this)
         this.checkAuthAdmin = this.checkAuthAdmin.bind(this)
+        this.logoutSpecificDevices = this.logoutSpecificDevices.bind(this)
+        this.getUserSessions = this.getUserSessions.bind(this)
     }
 
     async login(req: CustomRequest, res: Response, next: NextFunction) {
         const isAuth = req.isAuth as boolean;
         const newStatus = req.newStatus;
+        const userAgent = req.userAgent as IUserAgent;
         try {
             if (!isAuth) {
                 const {password: hashPassword} = req.user as IUser;
                 const {password} = req.body;
-
                 await this.passwordService.comparePassword(hashPassword, password);
             }
 
@@ -72,13 +74,14 @@ class AuthController {
             if (user?.blocked?.isBlocked) {
                 return next(new CustomError('Account is blocked', 403));
             }
-            const {items} = await this.userFavoritePlacesService.findWithQuery(Number(100), Number(0), "", user?._id, "withoutData");
+            const {items} = await this.userFavoritePlacesService.findWithQuery(Number(100), Number(0), "", user?._id as string, "withoutData");
 
             const tokens = await this.tokenService.generateAuthTokens();
 
             await OauthSchema.create({
                 userId: user?._id as Schema.Types.ObjectId,
-                ...tokens
+                userAgent: userAgent,
+                ...tokens,
             });
 
             let resultUser = userPresenter(user);
@@ -87,7 +90,7 @@ class AuthController {
 
             const {token} = await this.tokenService.tokenWithData(resultUser, "3h");
 
-            const {countIsNotRead} = await this.notificationService.getUserCount({id: user?._id, status: newStatus})
+            const {countIsNotRead} = await this.notificationService.getUserCount({id: user?._id as string, status: newStatus})
 
             res.status(200).json({
                 user: token,
@@ -185,7 +188,7 @@ class AuthController {
         }
     }
 
-    async sendVerifyCodeAgain(req: CustomRequest, res: Response, next: NextFunction) {
+    async sendVerifyCodeAgain(req: CustomRequest, _: Response, next: NextFunction) {
         try {
             const {userId} = req.body;
 
@@ -193,7 +196,7 @@ class AuthController {
             if (!currentUser) {
                 return next(new CustomError("User not found"))
             }
-            let code = Math.floor(Math.random() * 90000) + 10000;
+            const code = generateOTP({length: 5}) as number;
 
             const verifyCode = await this.passwordService.hashVerifyCode(code.toString());
 
@@ -213,22 +216,27 @@ class AuthController {
 
     async refreshToken(req: CustomRequest, res: Response, next: NextFunction) {
         // const favoritePlaces = req.favPlaces;
-
+        const userAgent = req.userAgent as IOauth['userAgent'];
         const {userId} = req.tokenInfo as IOauth;
         const user = userId as IUser;
 
         try {
+
             const {userId, refresh_token} = req.tokenInfo as IOauth;
 
             await OauthSchema.deleteOne({refresh_token});
 
             const tokens = await this.tokenService.generateAuthTokens();
 
-            await OauthSchema.create({userId, ...tokens});
+            await OauthSchema.create({
+                userId,
+                userAgent,
+                ...tokens
+            });
 
             const {token} = await this.tokenService.tokenWithData({...userId}, "3h");
 
-            const {items} = await this.userFavoritePlacesService.findWithQuery(Number(100), Number(0), "", user?._id, "withoutData");
+            const {items} = await this.userFavoritePlacesService.findWithQuery(Number(100), Number(0), "", user?._id as string, "withoutData");
 
 
             res.json({
@@ -270,6 +278,32 @@ class AuthController {
             // ])
 
             res.sendStatus(204);
+        } catch (e) {
+            next(e);
+        }
+    }
+
+    async logoutSpecificDevices(req: CustomRequest, res: Response, next: NextFunction) {
+        const {userId, _id} = req.tokenInfo as IOauth;
+        try {
+            const {_id: currentUserId} = userId as IUser;
+
+            await OauthSchema.deleteOne({
+                userId: currentUserId,
+                _id: _id
+            });
+            res.sendStatus(204);
+        } catch (e) {
+            next(e);
+        }
+    }
+
+    async getUserSessions(req: CustomRequest, res: Response, next: NextFunction) {
+        const sessions = req.sessions as IOauth[];
+        try {
+            res.status(200).json({
+                sessions: sessions
+            })
         } catch (e) {
             next(e);
         }
@@ -395,6 +429,7 @@ class AuthController {
             next(e);
         }
     }
+
     async checkAuth(req: CustomRequest, res: Response, next: NextFunction) {
 
         const {userId} = req.user as IOauth;

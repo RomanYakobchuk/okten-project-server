@@ -21,7 +21,7 @@ const createNews = Joi.object({
         place: placeValidator,
         isPlace: booleanValidator
     }),
-    institutionId: stringValidator
+    establishmentId: stringValidator
 })
 const updateNews = Joi.object({
     title: stringValidator,
@@ -38,7 +38,7 @@ const updateNews = Joi.object({
         isPlace: booleanValidator
     }),
     pictures: picturesValidator,
-    institutionId: stringValidator
+    establishmentId: stringValidator
 })
 export {
     createNews,

@@ -1,6 +1,6 @@
 import {NextFunction, Response} from "express";
 
-import {ConversationService, InstitutionService} from "../services";
+import {ConversationService, EstablishmentService} from "../services";
 import {CustomError} from "../errors";
 import {CustomRequest} from "../interfaces/func";
 import {IConversation, IConvMembers, IOauth, IUser} from "../interfaces/common";
@@ -8,11 +8,11 @@ import {checkNewChatByMembers, validateChatInfoField} from "../controllers/conve
 
 class ConversationMiddleware {
     private conversationService: ConversationService;
-    private institutionService: InstitutionService;
+    private establishmentService: EstablishmentService;
 
     constructor() {
         this.conversationService = new ConversationService();
-        this.institutionService = new InstitutionService();
+        this.establishmentService = new EstablishmentService();
 
         this.checkConversation = this.checkConversation.bind(this);
     }

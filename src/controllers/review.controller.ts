@@ -5,13 +5,13 @@ import {CustomRequest} from "../interfaces/func";
 import {isProfaneText, ReviewService} from "../services";
 import {CustomError} from "../errors";
 import {ReviewItemSchema} from "../dataBase";
-import {IInstitution, IOauth, IUser} from "../interfaces/common";
+import {IEstablishment, IOauth, IUser} from "../interfaces/common";
 
-async function calculateAverageRating(institution: IInstitution) {
+async function calculateAverageRating(establishment: IEstablishment) {
     try {
         const pipeline = [
             {
-                $match: {institutionId: institution?._id}
+                $match: {establishmentId: establishment?._id}
             },
             {
                 $group: {
@@ -24,9 +24,9 @@ async function calculateAverageRating(institution: IInstitution) {
         const result = await ReviewItemSchema.aggregate(pipeline);
 
         if (result?.length > 0) {
-            institution.rating = result[0].averageRating;
-            institution.reviewsLength++;
-            await institution.save();
+            establishment.rating = result[0].averageRating;
+            establishment.reviewsLength++;
+            await establishment.save();
         }
     } catch (e) {
         console.log(e)
@@ -41,7 +41,7 @@ class ReviewController {
         this.reviewService = new ReviewService();
 
         this.allReviews = this.allReviews.bind(this);
-        this.allReviewByInstitutionId = this.allReviewByInstitutionId.bind(this);
+        this.allReviewByEstablishmentId = this.allReviewByEstablishmentId.bind(this);
         this.latestUserReview = this.latestUserReview.bind(this);
         this.allReviewByUserId = this.allReviewByUserId.bind(this);
         this.createReview = this.createReview.bind(this);
@@ -55,8 +55,8 @@ class ReviewController {
         }
     }
 
-    async allReviewByInstitutionId(req: CustomRequest, res: Response, next: NextFunction) {
-        const institution = req.data_info;
+    async allReviewByEstablishmentId(req: CustomRequest, res: Response, next: NextFunction) {
+        const establishment = req.data_info;
 
         const {_order, _sort, _end, _start} = req.query;
 
@@ -65,7 +65,7 @@ class ReviewController {
             const {
                 items,
                 count
-            } = await this.reviewService.getAllByPlaceWithPagination(institution?._id as string, Number(_end), Number(_start), _sort, _order, "institutionId", 'createdBy', '_id avatar name');
+            } = await this.reviewService.getAllByPlaceWithPagination(establishment?._id as string, Number(_end), Number(_start), _sort, _order, "establishmentId", 'createdBy', '_id avatar name');
 
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
@@ -77,12 +77,12 @@ class ReviewController {
     }
 
     latestUserReview = (type: string) => async (req: CustomRequest, res: Response, next: NextFunction) => {
-        const institution = req.data_info as IInstitution;
+        const establishment = req.data_info as IEstablishment;
         const {userId} = req.user as IOauth;
         const user = userId as IUser;
         try {
             const userLatestReview = await this.reviewService
-                .getOneByParams({institutionId: institution?._id, createdBy: user?._id})
+                .getOneByParams({establishmentId: establishment?._id, createdBy: user?._id})
                 .sort({createdAt: -1});
 
             let isAllowedNewReview: boolean;
@@ -142,15 +142,15 @@ class ReviewController {
         const {grade, text} = req.body;
         const {userId} = req.user as IOauth;
         const user = userId as IUser;
-        const institution = req.data_info as IInstitution;
+        const establishment = req.data_info as IEstablishment;
         const isAllowedNewReview = req.isAllowedNewReview;
         try {
 
             if (!isAllowedNewReview) {
                 return next(new CustomError("Allowed block", 403))
             }
-            if (institution.createdBy?.toString() === user?._id?.toString()) {
-                return next(new CustomError("You cannot evaluate your own institution", 403))
+            if (establishment.createdBy?.toString() === user?._id?.toString()) {
+                return next(new CustomError("You cannot evaluate your own establishment", 403))
             }
             const isProfane1 = isProfaneText(text.like);
             const isProfane2 = isProfaneText(text.notLike);
@@ -161,11 +161,11 @@ class ReviewController {
             await this.reviewService.createReview({
                 text: text,
                 grade,
-                createdBy: user?._id,
-                institutionId: institution?._id as string
+                createdBy: user?._id as string,
+                establishmentId: establishment?._id as string
             })
 
-            await calculateAverageRating(institution);
+            await calculateAverageRating(establishment);
 
             res.status(200).json({message: 'Review added successfully'})
         } catch (e) {
