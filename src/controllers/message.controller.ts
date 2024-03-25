@@ -24,7 +24,8 @@ class MessageController {
                 conversationId,
                 sender,
                 text,
-                replyTo
+                replyTo,
+                read: []
             });
             // const mes = await messageService.findOne({_id: message?._id}).populate({path: 'sender', select: '_id name avatar'});
 
@@ -52,8 +53,6 @@ class MessageController {
                 .skip(Number(_start))
                 .sort({createdAt: -1})
                 .exec();
-
-
 
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');

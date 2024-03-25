@@ -42,6 +42,7 @@ router.patch(
     '/userInfo/:id',
     commonMiddleware.isIdValid,
     authMiddleware.checkAccessToken,
+    authMiddleware.checkStatus("check"),
     commonMiddleware.parseJsonStrings,
     fileMiddleware.checkUserAvatar,
     userController.updateUserById
@@ -99,8 +100,9 @@ router.get(
     userController.checkUniqueIndicator
 )
 router.post(
-    `/findUserByIndicator/:id`,
+    `/findUserByIndicator/:indicator`,
     authMiddleware.checkAccessToken,
+    authMiddleware.checkStatus("check"),
     userMiddleware.isUserPresent('userId'),
     userMiddleware.checkUniqueIndicator({type: 'find'}),
     userController.findUserByIndicator

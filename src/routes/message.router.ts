@@ -15,7 +15,7 @@ router.get(
     `/find/:id`,
     authMiddleware.checkAccessToken,
     authMiddleware.checkStatus("check"),
-    conversationMiddleware.checkConversation('someInfo'),
+    conversationMiddleware.checkConversation,
     messageController.getMessagesBySenderId
 )
 

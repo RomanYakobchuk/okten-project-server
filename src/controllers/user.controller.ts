@@ -38,9 +38,9 @@ class UserController {
     }
 
     async getUserInfo(req: CustomRequest, res: Response, next: NextFunction) {
-            const {id} = req.params;
-            const userStatus = req.newStatus;
-            const currentUser = req.userExist as IUser;
+        const {id} = req.params;
+        const userStatus = req.newStatus;
+        const currentUser = req.userExist as IUser;
         try {
 
             const user = await this.userService
@@ -62,7 +62,7 @@ class UserController {
     async updateUserById(req: CustomRequest, res: Response, next: NextFunction) {
         try {
             const {id} = req.params;
-
+            const status = req.newStatus;
             const {userId} = req.user as IOauth;
             const user = userId as IUser;
             const {avatar, phone, name, dOB, currentId} = req.body;
@@ -73,11 +73,17 @@ class UserController {
 
             const updatedUser = await this.userService.updateOneUser({_id: id}, {name, avatar, phone, dOB}) as IUser;
 
-            await managerController.updateManagersFromUserChanges(updatedUser._id as string, updatedUser);
+            if (status === 'manager') {
+                await managerController.updateManagersFromUserChanges(updatedUser._id as string, updatedUser);
+            }
 
             const userForResponse = userPresenter(updatedUser);
 
-            const {token} = await this.tokenService.tokenWithData(userForResponse, "12h");
+            const data = {
+                ...userForResponse,
+                status: status || "user"
+            }
+            const {token} = await this.tokenService.tokenWithData(data, "12h");
 
             res.status(201).json({user: token, message: 'UserSchema data updated successfully'});
         } catch (e) {
@@ -173,6 +179,7 @@ class UserController {
             next(e);
         }
     }
+
     async findUserByIndicator(req: CustomRequest, res: Response, next: NextFunction) {
         const userExist = req.userExist as IUser;
         try {

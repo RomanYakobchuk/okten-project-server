@@ -84,11 +84,7 @@ class AuthController {
                 ...tokens,
             });
 
-            let resultUser = userPresenter(user);
-
-            resultUser.status = newStatus!;
-
-            const {token} = await this.tokenService.tokenWithData(resultUser, "3h");
+            const {token} = await this.tokenService.tokenWithData({...user?.toObject(), status: newStatus}, "3h");
 
             const {countIsNotRead} = await this.notificationService.getUserCount({id: user?._id as string, status: newStatus})
 
@@ -110,7 +106,7 @@ class AuthController {
             let hash: string = '', activationLink: string = '';
             if (!userData?.email && registerBy === 'Email') {
                 hash = await this.passwordService.hashPassword(password);
-                activationLink = uuid.v4();
+                activationLink = uuid?.v4();
                 await this.userService.createUser({
                     email,
                     name,
@@ -126,6 +122,7 @@ class AuthController {
                     email: userData?.email,
                     name: userData?.name,
                     avatar: userData?.picture,
+                    status,
                     isActivated: userData?.email_verified,
                     registerBy
                 })
@@ -216,6 +213,7 @@ class AuthController {
 
     async refreshToken(req: CustomRequest, res: Response, next: NextFunction) {
         // const favoritePlaces = req.favPlaces;
+        const status = req.newStatus;
         const userAgent = req.userAgent as IOauth['userAgent'];
         const {userId} = req.tokenInfo as IOauth;
         const user = userId as IUser;
@@ -234,7 +232,7 @@ class AuthController {
                 ...tokens
             });
 
-            const {token} = await this.tokenService.tokenWithData({...userId}, "3h");
+            const {token} = await this.tokenService.tokenWithData({...userId, status: status || "user"}, "3h");
 
             const {items} = await this.userFavoritePlacesService.findWithQuery(Number(100), Number(0), "", user?._id as string, "withoutData");
 

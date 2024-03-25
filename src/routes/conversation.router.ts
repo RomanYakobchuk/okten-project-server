@@ -26,13 +26,13 @@ router.post(
     conversationController.createOwnChat
 )
 
-router.patch(
-    `/updateTitleName/:id`,
-    authMiddleware.checkAccessToken,
-    authMiddleware.checkStatus('check'),
-    conversationMiddleware.checkConversation('someInfo'),
-    conversationController.updateTitleName
-)
+// router.patch(
+//     `/updateTitleName/:id`,
+//     authMiddleware.checkAccessToken,
+//     authMiddleware.checkStatus('check'),
+//     conversationMiddleware.checkConversation('someInfo'),
+//     conversationController.updateTitleName
+// )
 
 router.get(
     `/findChat/:id`,
@@ -52,7 +52,7 @@ router.get(
     `/findById/:id`,
     authMiddleware.checkAccessToken,
     authMiddleware.checkStatus('check'),
-    conversationMiddleware.checkConversation('allInfo'),
+    conversationMiddleware.checkConversation,
     conversationController.getConvById
 )
 
@@ -60,7 +60,7 @@ router.delete(
     `/deleteChat/:id`,
     authMiddleware.checkAccessToken,
     authMiddleware.checkStatus('check'),
-    conversationMiddleware.checkConversation('someInfo'),
+    conversationMiddleware.checkConversation,
     conversationController.deleteChat
 )
 

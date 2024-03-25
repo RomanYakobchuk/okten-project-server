@@ -77,6 +77,10 @@ const Establishment = new Schema({
         type: String,
         required: true,
     },
+    cuisine: {
+        type: String,
+        default: undefined
+    },
     description: {
         type: String,
         required: true

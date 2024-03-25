@@ -2,10 +2,14 @@ import {NextFunction, Response} from "express";
 
 import {CustomRequest} from "../interfaces/func";
 import {CloudService, ConversationService, MessageService} from "../services";
-import {ICapl, IConversation, IConvMembers, IEstablishment, ILastConvMessage, IOauth, IUser} from "../interfaces/common";
+import {
+    IConversation,
+    IConvMembers,
+    IOauth,
+    IUser
+} from "../interfaces/common";
 import {CustomError} from "../errors";
-import {userPresenter} from "../presenters/user.presenter";
-import {filterObjectByType} from "../services/other/validateObjectByType";
+import {dependPopulate, reformatChat} from "../services/conversation.service";
 
 class ConversationController {
     private conversationService: ConversationService;
@@ -29,31 +33,38 @@ class ConversationController {
     async createOwnChat(req: CustomRequest, res: Response, next: NextFunction) {
         const {userId} = req.user as IOauth;
         const user = userId as IUser;
-        const {chatName, members, chatType, status} = req.body;
-        const picture = req.files?.picture;
+        const {chatName, members, type, access, dependItem, dependId, picture} = req.body;
+        const pictureFile = req.files?.picture;
         try {
 
             const chat = await this.conversationService.createConv({
                 members: members,
-                chatInfo: {
-                    status: status,
-                    creator: user?._id as string,
-                    type: chatType,
-                    chatName: chatName,
-                    picture: '',
-                    field: {
-                        name: 'user',
-                        id: user?._id as string
-                    }
-                }
+                access: access,
+                admin: user?._id as string,
+                type: type,
+                chatName: chatName,
+                picture: picture || '',
+                depend: {
+                    item: dependItem,
+                    id: dependId as string
+                },
             });
             if (req.files?.picture) {
-                const {url} = await this.cloudService.uploadFile(picture, `chats/${chat?._id}/picture`);
-                chat.chatInfo.picture = url;
+                const {url} = await this.cloudService.uploadFile(pictureFile, `chats/${chat?._id}/picture`);
+                chat.picture = url;
                 await chat.save();
             }
+            const populated = await chat.populate([
+                ...dependPopulate,
+                {path: 'members.user', select: '_id avatar name uniqueIndicator'},
+                {
+                    path: 'members.showInfoAs.id',
+                    select: '_id title pictures'
+                }
+            ]);
+            const newInfo = reformatChat(populated?.toObject(), user);
 
-            res.status(200).json({chat, message: 'Chat created successfully'});
+            res.status(200).json({chat: newInfo, message: 'Chat created successfully'});
         } catch (e) {
             next(e);
         }
@@ -61,57 +72,40 @@ class ConversationController {
 
     createConv = () => async (req: CustomRequest, res: Response, next: NextFunction) => {
         const user = req.userExist as IUser;
-        const {chatName, status, members, chatType, chatFieldName, chatFieldId} = req.body;
-        const picture = req.files?.picture;
+        const {userId} = req.user as IOauth;
+        const currentUser = userId as IUser;
+        const {type, dependItem, dependId, members} = req.body;
 
         try {
+            const byType = await checkNewChatByMembers({members: members, type: type});
+
+            if (!byType.isAccess) {
+                return next(new CustomError(byType.message, 400));
+            }
             const filters = {
-                members: {$elemMatch: {user: user?._id}},
-                'chatInfo.type': chatType,
-                'chatInfo.field.name': chatFieldName,
-                'chatInfo.field.id': chatFieldId
+                members: {$elemMatch: {user: currentUser?._id}},
+                'type': type,
+                'depend.item': dependItem,
+                'depend.id': dependId
             }
             const conv = await this.conversationService.getOne(filters)
                 .populate([
-                    {path: 'chatInfo.field.id'},
-                    {path: 'members.user', select: '_id avatar name uniqueIndicator'}
+                    ...dependPopulate,
+                    {path: 'members.user', select: '_id avatar name uniqueIndicator'},
+                    {
+                        path: 'members.showInfoAs.id',
+                        select: '_id title pictures'
+                    }
                 ]);
 
             if (conv) {
-                const newInfo = validateChatInfoField({user: user, item: conv as IConversation});
-                return res.status(200).json({message: 'Conversation is exist', chat: newInfo});
+                const chat = conv?.toObject();
+                const formattedChat = reformatChat(chat, user);
+                return res.status(200).json({message: 'Conversation is exist', chat: formattedChat});
             } else {
-                const byType = await checkNewChatByMembers({members: members, type: chatType});
-                if (!byType.isAccess) {
-                    return next(new CustomError(byType.message, 400));
-                }
-                const newConv = await this.conversationService.createConv({
-                    members: members as IConvMembers[],
-                    chatInfo: {
-                        status: status,
-                        creator: user?._id as string,
-                        field: {
-                            name: chatFieldName,
-                            id: chatFieldId
-                        },
-                        chatName,
-                        picture: '',
-                        type: chatType,
-                    },
-                    lastMessage: {} as ILastConvMessage,
-                });
-                if (req.files?.picture) {
-                    const {url} = await this.cloudService.uploadFile(picture, `chats/${newConv?._id}/picture`);
-                    newConv.chatInfo.picture = url;
-                    await newConv.save();
-                }
-                const populated = await newConv.populate([
-                    {path: 'chatInfo.field.id'},
-                    {path: 'members.user', select: '_id avatar name uniqueIndicator'}
-                ]);
-                const newInfo = validateChatInfoField({user: user, item: populated as IConversation});
 
-                return res.status(200).json({message: 'Chat created successfully', chat: newInfo});
+                await this.createOwnChat(req, res, next);
+                return;
             }
         } catch (e) {
             next(e)
@@ -119,23 +113,32 @@ class ConversationController {
     }
 
     async getConvByUserId(req: CustomRequest, res: Response, next: NextFunction) {
-        const {_end, _start, _sort, _order, title_like, establishmentId} = req.query;
+        const {_end, _start, _sort, _order, title_like, establishmentId, dependItem} = req.query;
         const user = req.userExist as IUser;
         const status = req.newStatus;
 
         try {
-
             const {
                 items,
                 count
-            } = await this.conversationService.getAllByUser(Number(_end), Number(_start), _sort, _order, status, title_like as string, user?._id as string, establishmentId as string);
+            } = await this.conversationService.getAllByUser(
+                Number(_end),
+                Number(_start),
+                _sort,
+                _order,
+                status,
+                title_like as string,
+                user?._id as string,
+                establishmentId as string,
+                user,
+                dependItem as string
+            );
 
-            const updated = items?.map((item) => validateChatInfoField({item: item?._doc || item, user: user}));
 
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
 
-            res.status(200).json(updated);
+            res.status(200).json(items);
         } catch (e) {
             next(e)
         }
@@ -211,7 +214,7 @@ class ConversationController {
                     oneByOne: await deleteChatOneByOne(),
                     group: deleteChatByGroup()
                 }
-                await deleteByType[conversation?.chatInfo?.type];
+                await deleteByType[conversation?.type];
 
                 return res.status(200);
             } else {
@@ -225,59 +228,9 @@ class ConversationController {
 
 export default new ConversationController();
 
-const variantEstablishment = ({item, members, user}: { item: IEstablishment, members: IConvMembers[], user: IUser }) => {
-    const currentMember = members?.find((member) => {
-        const m = member?.user as IUser;
-        return m?._id?.toString() === user?._id?.toString();
-    });
-    const receiverMember = members?.find((member) => {
-        const m = member?.user as IUser;
-        return m?._id?.toString() !== user?._id?.toString();
-    });
-    const receiverMemberUser = receiverMember?.user as IUser;
-    const name = currentMember?.conversationTitle || item?.title;
-    const image = currentMember?.role === 'user' ? (item?.pictures?.length && item?.pictures[0]?.url) : receiverMemberUser?.avatar;
-    return {
-        _id: item?._id,
-        avatar: image,
-        name: name,
-        createdBy: item?.createdBy || null
-    }
-}
-const variantUser = ({currentUser, conversation}: { currentUser: IUser, conversation: IConversation }) => {
-
-    const receiverType = {
-        group: {
-            _id: conversation?._id,
-            avatar: conversation?.chatInfo?.picture,
-            name: conversation?.chatInfo?.chatName,
-        },
-        oneByOne: conversation?.members?.find((member) => {
-            const user = member?.user as IUser;
-            if (conversation?.members?.length > 1) {
-                return user?._id?.toString() !== currentUser?._id?.toString()
-            } else {
-                return user?._id?.toString() === currentUser?._id?.toString()
-            }
-        })?.user as IUser
-    }
-    const item = receiverType[conversation?.chatInfo?.type]
-    return {
-        _id: item?._id,
-        avatar: item?.avatar,
-        name: item?.name
-    }
-}
-const variantCapl = (item: ICapl) => {
-    return {
-        _id: item?._id,
-        avatar: '',
-        name: item?.fullName + ' ' + item?.eventType
-    }
-}
 export const checkNewChatByMembers = async ({members, type}: {
     members: IConvMembers[],
-    type: IConversation['chatInfo']['type']
+    type: IConversation['type']
 }) => {
     let message = 'Access';
     const byType = {
@@ -285,7 +238,7 @@ export const checkNewChatByMembers = async ({members, type}: {
             value: members?.length > 0,
             message: members?.length > 0 ? 'Access' : 'Numbers of Users are wrong'
         },
-        oneByOne: {
+        private: {
             value: members?.length === 2,
             message: members?.length === 2 ? 'Access' : 'You need to find user'
         }
@@ -305,64 +258,4 @@ export const checkNewChatByMembers = async ({members, type}: {
         isAccess: byType[type]?.value && isUnique,
         message: message
     };
-}
-
-export const validateChatInfoField = ({user, item}: { item: IConversation, user: IUser }) => {
-    const model = item?.chatInfo?.field?.id;
-    const validateByType = {
-        establishment: model,
-        user: (() => {
-            type allowedType = Omit<IUser, "password | registerBy | email | dOB | isActivated | phone | phoneVerify | status">;
-            const fieldsArray: (keyof IUser)[] = Object.keys({} as allowedType);
-
-            const user = userPresenter(model as IUser) as IUser;
-
-            return filterObjectByType({
-                ...user,
-                uniqueIndicator: {
-                    type: user?.uniqueIndicator?.type,
-                    value: user?.uniqueIndicator?.type === 'public' ? user?.uniqueIndicator?.value : null
-                },
-            } as IUser, fieldsArray);
-        })(),
-        capl: model
-    }
-
-    const variant = {
-        establishment: variantEstablishment({
-            user: user,
-            item: model as IEstablishment,
-            members: item?.members
-        }),
-        user: variantUser({currentUser: user, conversation: item}),
-        capl: variantCapl(model as ICapl)
-    };
-    const info = variant[item?.chatInfo?.field?.name];
-    const updatedMembers = item?.members?.map((value) => {
-        const currentUserInfo = value.user as IUser;
-        const nV = value?._doc || value;
-        return {
-            ...nV,
-            user: {
-                avatar: currentUserInfo?.avatar,
-                name: currentUserInfo?.name,
-                _id: currentUserInfo?.id
-            },
-            indicator: currentUserInfo?.uniqueIndicator?.type === 'private' ? null : currentUserInfo?.uniqueIndicator?.value
-        }
-    });
-    const c = item?._doc || item;
-    return {
-        ...c,
-        members: updatedMembers,
-        chatInfo: {
-            ...item?.chatInfo,
-            field: {
-                name: item?.chatInfo?.field?.name,
-                id: validateByType[item?.chatInfo?.field?.name]
-            },
-            chatName: info?.name,
-            picture: info?.avatar
-        }
-    } as IConversation;
 }

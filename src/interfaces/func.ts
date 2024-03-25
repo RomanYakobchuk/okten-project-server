@@ -9,6 +9,7 @@ import {
     IUserFavoritePlaces
 } from "./common";
 import {UserModel} from "./model";
+import {reformatChat} from "../services/conversation.service";
 
 export interface CustomRequest extends Request {
     user?: IUser | IOauth | UserModel,
@@ -17,9 +18,9 @@ export interface CustomRequest extends Request {
     newStatus?: "admin" | "manager" | "user",
     tokenInfo?: IOauth,
     subscribe?: ISubscribe | null,
-    subscribes?: {count: number, items: ISubscribe[]} | null,
+    subscribes?: { count: number, items: ISubscribe[] } | null,
     reservation?: ICapl,
-    conversation?: IConversation,
+    conversation?: IConversation | ReturnType<typeof reformatChat>,
     comments?: IComment[]
     comment?: IComment,
     reaction?: IReaction,
@@ -34,5 +35,11 @@ export interface CustomRequest extends Request {
     },
     notification?: INotification,
     userAgent?: IUserAgent,
-    sessions?: IOauth[]
+    sessions?: IOauth[],
+    averageCheckMinMax?: IAverageCheckMinMax[]
+}
+
+export interface IAverageCheckMinMax {
+    minValue: number,
+    maxValue: number
 }

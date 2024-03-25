@@ -15,6 +15,7 @@ class EstablishmentMiddleware {
         this.checkEstablishment = this.checkEstablishment.bind(this);
         this.existCity = this.existCity.bind(this);
         this.getAllInfoById = this.getAllInfoById.bind(this);
+        this.checkAverageCheckMinMax = this.checkAverageCheckMinMax.bind(this);
     }
 
     checkEstablishment = (type: "all_info" | "info" = 'info') => async (req: CustomRequest, _: Response, next: NextFunction) => {
@@ -86,6 +87,18 @@ class EstablishmentMiddleware {
             next();
         } catch (e) {
             next(e)
+        }
+    }
+    async checkAverageCheckMinMax(req: CustomRequest, _: Response, next: NextFunction) {
+        const status = req.newStatus;
+        try {
+            const result = await this.establishmentService.getAverageCheckMinMax(status);
+
+            req.averageCheckMinMax = result;
+            next();
+
+        } catch (e) {
+            next(e);
         }
     }
 }

@@ -21,6 +21,12 @@ export interface IAdmin extends Ids {
     user: Schema.Types.ObjectId,
 }
 
+export type TRoles = "admin" | "manager" | "user" | undefined;
+export type TUpdateManyCapl = {
+    userStatus: TRoles,
+    userId: string
+}
+
 export interface ICapl extends Document, DocumentResult<ICapl> {
     _id: string | string & ObjectId,
     isAllowedEdit: boolean,
@@ -55,7 +61,7 @@ export interface ICity extends Ids {
 }
 
 export interface IComment extends Document, DocumentResult<IComment> {
-    createdBy: Schema.Types.ObjectId | IUser | IEstablishment | {_id: string, name: string, avatar: string},
+    createdBy: Schema.Types.ObjectId | IUser | IEstablishment | { _id: string, name: string, avatar: string },
     _id: string | string & ObjectId | ObjectId,
     text: string,
     repliesLength: number,
@@ -102,7 +108,6 @@ export interface IEstablishment extends Document {
         workDays: IWorkDays[],
         weekend: string
     },
-    reviewsLength: number,
     location: {
         lng: number,
         lat: number
@@ -126,18 +131,31 @@ export interface IEstablishment extends Document {
     features: [{
         value: string
     }],
+    reviewsLength: number,
+    properties: {
+        reviewStat: {
+            scoreLength: number
+            qualityLength: number
+            serviceLength: number
+            atmosphereLength: number
+        },
+        newsLength: number,
+        commentsLength: number,
+    },
     createdBy: Schema.Types.ObjectId | string,
     news: IObjectIdArray,
     freeSeats: Schema.Types.ObjectId | IFreeSeats,
     createdAt?: Date,
     updatedAt?: Date,
 }
+
 export interface IFreeSeatsList {
     table: number,
     numberOfSeats: number,
     status: "free" | "reserved" | "",
     description?: string
 }
+
 export interface IFreeSeats extends Document {
     _id: string | string & ObjectId,
     establishmentId: Schema.Types.ObjectId | IEstablishment,
@@ -226,55 +244,56 @@ interface UserId {
     userId: Schema.Types.ObjectId | IUser | UserModel
 }
 
+export interface DocumentResult<T> {
+    _doc?: T;
+}
 export interface ILastConvMessage {
     sender: Schema.Types.ObjectId,
     status?: string,
     text: string,
+    messageId: string | IMessage,
     updatedAt: Date
 }
 
-export interface IConvMembers extends DocumentResult<IConvMembers>{
+export interface IConvMembers extends DocumentResult<IConvMembers> {
     user: Schema.Types.ObjectId | IUser,
     connectedAt: Date,
     indicator?: null | string,
-    role: "admin" | "manager" | "user",
-    conversationTitle: string
-}
-export interface DocumentResult<T> {
-    _doc: T;
+    userId?: string,
+    showInfoAs: {
+        item: "establishment" | "user",
+        id: (ObjectId & string) | IEstablishment
+    },
 }
 export interface IConversation extends Document, DocumentResult<IConversation> {
     _id: string | string & ObjectId,
     lastMessage: ILastConvMessage,
     members: IConvMembers[],
-    chatInfo: {
-        status: "public" | "private",
-        type: "group" | "oneByOne",
-        field: {
-            name: "establishment" | "user" | "capl",
-            id: IEstablishment | IUser | ICapl | (ObjectId | string)
-        },
-        chatName: string,
-        picture: string,
-        creator: ObjectId | string
+    access: "public" | "private",
+    type: "group" | "private",
+    depend: {
+        item: "establishment" | "user" | "capl",
+        id: IEstablishment | IUser | ICapl | (ObjectId | string) | null
     },
+    reservation?: ICapl | null,
+    chatName: string,
+    picture: string,
+    admin: ObjectId | string | IUser,
     createdAt?: Date,
     updatedAt?: Date
 }
 
-
+export type TMessageStatus = 'sent' | 'read';
 export interface IMessage extends Document {
     _id: string | string & ObjectId,
     conversationId: Schema.Types.ObjectId,
     sender: Schema.Types.ObjectId,
-    replyTo?: Schema.Types.ObjectId,
-    pictures: string[],
+    replyTo?: Schema.Types.ObjectId | null,
     text: string,
+    type: 'info' | 'message',
+    status: TMessageStatus,
+    read: string[],
     files?: IPicture[],
-    isSent: boolean,
-    isDelivered: boolean,
-    isRead: boolean,
-    isError: boolean,
     createdAt?: Date,
     updatedAt?: Date
 }
@@ -299,6 +318,7 @@ export interface IUserAgent {
         version: string
     }
 }
+
 export interface IOauth extends UserId, Document {
     access_token: string,
     refresh_token: string,
@@ -308,14 +328,18 @@ export interface IOauth extends UserId, Document {
     updatedAt?: Date
 }
 
-export interface IReviewItem extends EstablishmentId, Ids {
+export interface IReviewItem extends Document, EstablishmentId {
+    _id?: string | string & ObjectId | Schema.Types.ObjectId,
     createdBy: Schema.Types.ObjectId,
-    text: {
-        like: string,
-        notLike: string
-    },
-    grade: number,
+    text: string,
+    title: string,
+    quality: number,
+    service: number,
+    atmosphere: number,
+    score: number,
     review: Schema.Types.ObjectId,
+    createdAt?: Date,
+    updatedAt?: Date
 }
 
 export interface IReview extends EstablishmentId, Ids {
@@ -326,7 +350,7 @@ export interface IUser extends Document, DocumentResult<IUser> {
     name: string,
     email: string,
     _id?: string | string & ObjectId | Schema.Types.ObjectId,
-    status: "user" | "manager" | "admin",
+    status: TRoles,
     dOB: Date,
     registerBy: "Google" | "Email" | "GitHub" | "Facebook",
     password: string,
@@ -347,15 +371,19 @@ export interface IUser extends Document, DocumentResult<IUser> {
     },
     createdAt?: Date,
     updatedAt?: Date,
+
     [key: string]: any
 }
+
 export interface IGenericArray<T> extends Array<T> {
     pull(...items: T[]): this;
 }
+
 export interface IFavPlaces {
     type: string,
     item: Schema.Types.ObjectId
 }
+
 export interface IUserFavoritePlaces extends UserId, Document {
     _id: string | string & ObjectId,
     type: string,
@@ -437,10 +465,10 @@ export interface INotification extends UserId, Document {
     isRead: boolean,
     status: "usual" | "accepted" | "rejected",
     forUser: {
-        role: 'manager' | 'admin' | 'user',
+        role: TRoles,
         userId: string | string & ObjectId,
     },
-    type: "newReservation" | "newMessage" | "newNews" |"newFunctional" | "newEstablishment" | "newUser"
+    type: "newReservation" | "newMessage" | "newNews" | "newFunctional" | "newEstablishment" | "newUser"
 }
 
 export type TTypeNotification = ICapl | IMessage | IEstablishmentNews | IEstablishment | IUser

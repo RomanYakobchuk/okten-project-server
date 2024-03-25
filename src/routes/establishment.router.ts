@@ -148,4 +148,10 @@ router.get(
     establishmentController.getNumberOfEstablishmentProperties
 )
 
+router.get(
+    `/getAverageCheck`,
+    authMiddleware.checkAccessToken,
+    establishmentMiddleware.checkAverageCheckMinMax,
+    establishmentController.getAverageCheckMinMax
+)
 export default router;

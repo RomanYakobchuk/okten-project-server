@@ -1,9 +1,9 @@
- import {NextFunction, Router, Response} from 'express';
+import {NextFunction, Router, Response} from 'express';
 
 import {authController} from '../controllers';
 import {authMiddleware, commonMiddleware, userMiddleware} from '../middlewares';
- import userFavoritePlacesMiddleware from "../middlewares/userFavoritePlaces.middleware";
- import {CustomRequest} from "../interfaces/func";
+import userFavoritePlacesMiddleware from "../middlewares/userFavoritePlaces.middleware";
+import {CustomRequest} from "../interfaces/func";
 
 const router = Router();
 
@@ -32,8 +32,10 @@ router.post('/register',
 router.post('/refreshToken',
     authMiddleware.checkRefreshToken,
     authMiddleware.checkUserAgent,
+    authMiddleware.checkStatus("check"),
     // userFavoritePlacesMiddleware.checkUserFavPlaces("tokenInfo", "byUser", true),
-    authController.refreshToken);
+    authController.refreshToken
+);
 
 router.post('/logout',
     authMiddleware.checkAccessToken,
@@ -89,16 +91,16 @@ router.post(
     authController.sendVerifyCodeAgain
 )
 
- router.get(
-     `/check_auth`,
-     authMiddleware.checkAccessToken,
-     authController.checkAuthAdmin
- )
- router.get(
-     `/check_auth_user`,
-     authMiddleware.checkAccessToken,
-     authController.checkAuth
- )
- export default router;
+router.get(
+    `/check_auth`,
+    authMiddleware.checkAccessToken,
+    authController.checkAuthAdmin
+)
+router.get(
+    `/check_auth_user`,
+    authMiddleware.checkAccessToken,
+    authController.checkAuth
+)
+export default router;
 
 

@@ -20,6 +20,7 @@ import {userPresenter} from "../presenters/user.presenter";
 import {establishmentMiddleware} from "../middlewares";
 import {IEstablishment, IOauth, IUser} from "../interfaces/common";
 
+
 class EstablishmentController {
 
     private userService: UserService;
@@ -51,6 +52,7 @@ class EstablishmentController {
         this.allByUserId = this.allByUserId.bind(this);
         this.establishmentNearby = this.establishmentNearby.bind(this);
         this.getNumberOfEstablishmentProperties = this.getNumberOfEstablishmentProperties.bind(this);
+        this.getAverageCheckMinMax = this.getAverageCheckMinMax.bind(this);
     }
 
     async allEstablishmentByVerify(req: CustomRequest, res: Response, next: NextFunction) {
@@ -70,8 +72,8 @@ class EstablishmentController {
             typeOfFreeSeats
         } = req.query;
 
-        const userStatus = req.newStatus;
 
+        let userStatus = req.newStatus;
 
         let placeStatus: string;
         if (userStatus === 'admin') {
@@ -103,10 +105,11 @@ class EstablishmentController {
             for (const item of items) {
                 item.pictures = [item.pictures[0]]
             }
+
             res.header('x-total-count', `${count}`);
             res.header('Access-Control-Expose-Headers', 'x-total-count');
 
-            res.status(200).json(items)
+            res.status(200).json(items);
         } catch (e) {
             next(e)
         }
@@ -512,6 +515,15 @@ class EstablishmentController {
                 commentCount,
                 newsCount
             })
+        } catch (e) {
+            next(e);
+        }
+    }
+
+    async getAverageCheckMinMax(req: CustomRequest, res: Response, next: NextFunction) {
+        const averageCheck = req.averageCheckMinMax;
+        try {
+            res.status(200).json(averageCheck);
         } catch (e) {
             next(e);
         }

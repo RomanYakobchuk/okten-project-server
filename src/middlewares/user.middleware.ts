@@ -66,7 +66,7 @@ class UserMiddleware {
 
                 commonMiddleware.isDateValid(userValidator.newUserValidator);
 
-                const user = await this.userService.findOneUser({email, registerBy}) as IUser;
+                const user = await this.userService.findOneUser({email}) as IUser;
                 if (user) {
                     return next(new CustomError(`User with email [ ${email} ] is exist`, 409));
                 }
@@ -87,7 +87,7 @@ class UserMiddleware {
                 req.body.userData = ticket;
                 commonMiddleware.isDateValid(authValidator.googleLogin);
 
-                const user = await this.userService.findOneUser({email: ticket?.email, registerBy}) as IUser;
+                const user = await this.userService.findOneUser({email: ticket?.email}) as IUser;
                 if (user) {
                     return next(new CustomError(`User with email [ ${ticket?.email} ] is exist`, 409));
                 }
@@ -107,7 +107,7 @@ class UserMiddleware {
 
                 const userData = await getFacebookUserInfo(userId, access_token);
 
-                const user = await this.userService.findOneUser({email: userData.email, registerBy}) as IUser;
+                const user = await this.userService.findOneUser({email: userData.email}) as IUser;
                 if (user) {
                     return next(new CustomError(`User with email [ ${userData.email} ] is exist`, 409));
                 }
@@ -127,11 +127,25 @@ class UserMiddleware {
     checkUniqueIndicator = ({type}: {
         type: "find" | "create"
     }) => async (req: CustomRequest, _: Response, next: NextFunction) => {
-        const {indicator} = req.body;
+        const {indicator: indicatorBody} = req.body;
+        const {indicator: indicatorParams} = req.params;
         const user = req.userExist as IUser;
+        const status = req.newStatus;
         try {
+            const indicator = indicatorBody || indicatorParams;
+            const filter: Array<any> = [
+                {'uniqueIndicator.value': indicator},
+                {_id: {$ne: user?._id}}
+            ];
+            if (status !== 'admin') {
+                filter.push(
+                    {"uniqueIndicator.type": "public"},
+                )
+            }
             const userExist = await this.userService.findOneUser({
-                'uniqueIndicator.value': indicator
+                $and: [
+                    ...filter
+                ]
             });
             if (type === 'create' && userExist) {
                 if (user?._id?.toString() !== userExist?._id?.toString()) {

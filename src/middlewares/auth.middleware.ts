@@ -289,8 +289,8 @@ class AuthMiddleware {
             }
             let statusHandler = async (status: IUser['status'], _id: string | string & ObjectId) => {
                 if (status === 'manager') {
-                    const isManager = await ManagerSchema.findOne({user: _id}) as IManager;
-                    req.newStatus = isManager.verify?.isVerify ? status : 'user';
+                    const isManager = await ManagerSchema.findOne({user: _id});
+                    req.newStatus = isManager ? status : 'user';
                 } else if (status === 'admin') {
                     const isAdmin = await AdminSchema.findOne({user: _id});
                     req.newStatus = isAdmin ? status : 'user';
@@ -300,13 +300,13 @@ class AuthMiddleware {
                     next(new CustomError('Something is wrong', 500))
                     return;
                 }
-                next();
+                return next();
             }
             if (type === 'login') {
                 const user = req.user as IUser;
                 await statusHandler(user.status, user._id as string);
-            } else if (type === 'check') {
-                const {userId} = req.user as IOauth;
+            } else {
+                const {userId} = req.user as IOauth || req.tokenInfo as IOauth;
                 const user = userId as IUser;
                 await statusHandler(user.status, user._id as string);
             }

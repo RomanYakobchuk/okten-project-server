@@ -28,7 +28,7 @@ interface Repository {
         items: IComment[]
     }>
 
-    getEstablishmentTopLevelComments(id: string, by: "byUser" | "byEstablishment", _end: number, _start: number, _sort: any, _order: any,  parentId: string | null, refFieldCreate: string | null): Promise<{
+    getEstablishmentTopLevelComments(id: string, by: "byUser" | "byEstablishment", _end: number, _start: number, _sort: any, _order: any, parentId: string | null, refFieldCreate: string | null): Promise<{
         count: number,
         items: IComment[],
         currentSize: number
@@ -41,39 +41,33 @@ class CommentService implements Repository {
         let newComment = await CommentItemSchema.create(comment);
         let parentReviewsLength = 0;
         if (newComment?.parentId) {
-            const parent = await CommentItemSchema.findOne({_id: newComment?.parentId, establishmentId: newComment?.establishmentId});
+            const parent = await CommentItemSchema.findOne({
+                _id: newComment?.parentId,
+                establishmentId: newComment?.establishmentId
+            });
             if (parent) {
                 parent.repliesLength += 1;
                 await parent?.save();
                 parentReviewsLength = parent.repliesLength;
             }
         }
+
         const populate: TPopulate = [{path: 'createdBy', select: newComment?.refFieldCreate === 'user' ? '_id name avatar' : '_id title pictures'}];
 
-        let dataWithCreatedBy = await newComment.populate(populate);
+        let dataWithCreatedBy = (await newComment.populate(populate))?.toObject();
 
         if (newComment?.refFieldCreate === 'establishment') {
             const creatorEstablishment = dataWithCreatedBy?.createdBy as IEstablishment;
             if (creatorEstablishment?.pictures?.length > 0 && creatorEstablishment?.title) {
                 dataWithCreatedBy = {
+                    ...dataWithCreatedBy,
                     createdBy: {
                         _id: creatorEstablishment?._id,
                         name: creatorEstablishment?.title,
                         avatar: creatorEstablishment?.pictures[0]?.url || ''
                     },
-                    parentId: dataWithCreatedBy?.parentId,
-                    establishmentId: dataWithCreatedBy?.establishmentId,
-                    createdAt: dataWithCreatedBy?.createdAt,
-                    _id: dataWithCreatedBy?._id,
-                    refFieldCreate: dataWithCreatedBy?.refFieldCreate,
-                    text: dataWithCreatedBy?.text,
                 } as IComment;
             }
-        } else {
-            const p = {...{...newComment?._doc}} ?? {};
-            dataWithCreatedBy = {
-                ...p,
-            } as IComment;
         }
 
         return {
@@ -98,6 +92,7 @@ class CommentService implements Repository {
         }
         return;
     }
+
     async deleteByParent(parentId: string) {
 
         const recursiveDelete = async (commentId: string) => {
@@ -197,11 +192,11 @@ class CommentService implements Repository {
         }
         const newSort = _sort?.split('_')[0];
 
-
         const skip = _start;
         const limit = _end - _start;
 
         let countFilter = {};
+
         const aggregationPipeline: AggregationPipeline[] = [];
         if (by === 'byEstablishment') {
             aggregationPipeline.push(
@@ -226,14 +221,7 @@ class CommentService implements Repository {
                 parentId: parentId ? new Types.ObjectId(parentId) : parentId
             }
         }
-        const count = await CommentItemSchema.countDocuments(countFilter);
         aggregationPipeline.push(
-            // {
-            //     $skip: _start
-            // },
-            // {
-            //     $limit: _end - _start
-            // },
             {
                 $sort: {
                     [_sort]: _order
@@ -288,21 +276,6 @@ class CommentService implements Repository {
                     }
                 }
             },
-            // {
-            //     $lookup: {
-            //         from: 'commentitems',
-            //         localField: '_id',
-            //         foreignField: 'answerTo',
-            //         as: 'answerCommentTo'
-            //     }
-            // },
-            // {
-            //     $addFields: {
-            //         commentAnswerTo: {
-            //             $arrayElemAt: ['$answerCommentTo', 0],
-            //         }
-            //     }
-            // },
             {
                 $lookup: {
                     from: 'users',
@@ -319,12 +292,6 @@ class CommentService implements Repository {
                     as: 'answerToCreatedByEstablishments'
                 }
             },
-            // {
-            //     $addFields: {
-            //         answerToCreatedByEstablishments: {$arrayElemAt: ['$answerToCreatedByEstablishments', 0]},
-            //         answerToCreatedByUser: {$arrayElemAt: ['$answerToCreatedByUsers', 0]}
-            //     }
-            // },
             {
                 $group: {
                     _id: null,
@@ -401,10 +368,39 @@ class CommentService implements Repository {
                 }
             },
         )
+        const count = await CommentItemSchema.countDocuments(countFilter);
 
+        // const result = await CommentItemSchema
+        //     .find({$and: filter})
+        //     .populate("owner.user owner.establishment")
+        //     .select([
+        //         {
+        //             path: 'owner.user', select: '_id name avatar'
+        //         },
+        //         {
+        //             path: 'owner.establishment', select: '_id title pictures'
+        //         }
+        //     ])
+        //     .limit(limit)
+        //     .skip(skip)
+        //     .sort({[_sort]: _order})
+        //
+        //     .exec();
         const result = await CommentItemSchema.aggregate(aggregationPipeline).exec();
 
         const [aggregationResult] = result;
+        // const items = result?.map((item) => {
+        //     const v = item?.toObject() as IComment;
+        //     if (v?.owner?.establishment && !v?.owner?.user) {
+        //         const e = v?.owner?.establishment;
+        //         v?.owner = {
+        //             ...v?.owner,
+        //             user: {
+        //                 _id: v?.owner?.establishment?.
+        //             }
+        //         }
+        //     }
+        // });
 
         return {
             items: aggregationResult?.topLevelComments ?? [],
@@ -414,9 +410,7 @@ class CommentService implements Repository {
     }
 }
 
-function
-
-_getFilterQuery(otherFilter: any) {
+function _getFilterQuery(otherFilter: any) {
     const searchObject = {};
     const filterConditions: any[] = [];
 
@@ -460,3 +454,31 @@ _getFilterQuery(otherFilter: any) {
 export {
     CommentService
 }
+// const filter: Array<FilterQuery<IComment>> = [];
+// if (by === 'byEstablishment') {
+//     filter.push({
+//         $match: {establishmentId: id, parentId: parentId ? new Types.ObjectId(parentId) : parentId}
+//     })
+//     countFilter = {establishmentId: id, parentId: parentId};
+// }
+// if (by === 'byUser' && refFieldCreate) {
+//     filter.push({
+//         $or: [
+//             {"owner.user": new Types.ObjectId(id)},
+//             {"owner.establishment": new Types.ObjectId(id)},
+//         ]
+//     })
+//     countFilter = {
+//         $and: [
+//             {
+//                 $or: [
+//                     {"owner.user": new Types.ObjectId(id)},
+//                     {"owner.establishment": new Types.ObjectId(id)},
+//                 ],
+//             },
+//             {
+//                 parentId: parentId ? new Types.ObjectId(parentId) : parentId
+//             }
+//         ]
+//     }
+// }

@@ -53,6 +53,7 @@
     "@types/email-templates": "^10.0.1",
     "@types/express": "^4.17.17",
     "@types/express-fileupload": "^1.4.1",
+    "@types/ioredis": "^5.0.0",
     "@types/jsonwebtoken": "^9.0.2",
     "@types/mongoose": "^5.11.97",
     "@types/node": "^20.4.6",

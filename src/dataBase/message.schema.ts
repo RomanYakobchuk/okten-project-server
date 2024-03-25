@@ -12,47 +12,71 @@ const Conversation = new Schema({
         },
         updatedAt: {
             type: Date
-        }
-    },
-    chatInfo: {
-        type: {
-            type: String,
-            enum: ['group', 'oneByOne']
         },
         status: {
             type: String,
-            enum: ["public", "private"]
+            enum: ['sent', "read"],
+            default: 'sent'
         },
-        field: {
-            name: {
-                type: String,
-                enum: ['establishment', 'user', 'capl']
-            },
-            id: {
-                type: Schema.Types.ObjectId,
-                refPath: 'chatInfo.field.name',
-                required: false
-            },
-        },
-        chatName: {
-            type: String
-        },
-        picture: {
-            type: String
-        },
-        creator: {
+        messageId: {
             type: Schema.Types.ObjectId,
-            ref: 'user'
+            ref: 'message'
         }
+    },
+    admin: {
+        type: Schema.Types.ObjectId,
+        ref: 'user'
+    },
+    type: {
+        type: String,
+        enum: ['group', 'private'],
+        default: 'private'
+    },
+    access: {
+        type: String,
+        enum: ["public", "private"],
+        default: 'private'
+    },
+    depend: {
+        id: {
+            type: Schema.Types.ObjectId,
+            refPath: 'chatInfo.depend.item',
+            required: true
+        },
+        item: {
+            type: String,
+            enum: ['establishment', 'user', 'capl']
+        },
+    },
+    chatName: {
+        type: String
+    },
+    isAttached: {
+        type: Boolean,
+        default: false
+    },
+    picture: {
+        type: String
     },
     members: [{
         user: {
             type: Schema.Types.ObjectId,
-            ref: 'user'
+            ref: 'user',
+        },
+        showInfoAs: {
+            item: {
+                type: String,
+                enum: ['establishment', 'user'],
+                default: 'user'
+            },
+            id: {
+                type: Schema.Types.ObjectId,
+                refPath: 'members.showInfoAs.item',
+                required: false,
+                default: null
+            }
         },
         connectedAt: Date,
-        conversationTitle: String,
-        role: String
     }]
 }, {timestamps: true});
 
@@ -60,7 +84,6 @@ const Message = new Schema({
     conversationId: {
         type: Schema.Types.ObjectId,
         ref: 'conversation',
-        unique: true
     },
     sender: {
         type: Schema.Types.ObjectId,
@@ -69,13 +92,9 @@ const Message = new Schema({
     replyTo: {
         type: Schema.Types.ObjectId,
         ref: 'message',
-        required: false
+        required: false,
+        default: null
     },
-    pictures: [
-        {
-            type: String
-        }
-    ],
     type: {
         type: String,
         enum: ['info', 'message'],
@@ -94,22 +113,16 @@ const Message = new Schema({
             }
         }
     ],
-    isSent: {
-        type: Boolean,
-        default: false,
+    status: {
+        type: String,
+        enum: ['sent', 'delivered', 'read', 'error']
     },
-    isDelivered: {
-        type: Boolean,
-        default: false,
-    },
-    isRead: {
-        type: Boolean,
-        default: false,
-    },
-    isError: {
-        type: Boolean,
-        default: false,
-    },
+    read: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'user'
+        }
+    ]
     // reactions: {
     //
     // }

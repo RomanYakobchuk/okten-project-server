@@ -1,6 +1,6 @@
 import {CaplSchema} from "../dataBase";
-import {CreateReserve, ICapl} from "../interfaces/common";
-
+import {CreateReserve, ICapl, TRoles, TUpdateManyCapl} from "../interfaces/common";
+import {_getFilterQueryCapl, _getUpdateManyQueryCapl} from "./filters";
 
 interface Repository {
     createReserve(params: CreateReserve): Promise<ICapl>,
@@ -14,7 +14,9 @@ interface Repository {
     findByPagination(establishment_like: string, day: any, _end: number, _order: any | number, _start: number, _sort: any, search_like: string, userStatus: string, establishmentStatus: string, userId: string, type: string, active: "" | "true" | "false"): Promise<{
         count: number,
         items: ICapl[]
-    }>
+    }>,
+
+    updateMany({userId, userStatus}: TUpdateManyCapl): Promise<void>
 }
 
 class CaplService implements Repository {
@@ -34,9 +36,17 @@ class CaplService implements Repository {
         return CaplSchema.findByIdAndUpdate(params, newData, {new: true});
     }
 
+    async updateMany({userId, userStatus}: TUpdateManyCapl) {
+        const filterQuery = _getUpdateManyQueryCapl({
+            userId,
+            userStatus
+        });
+        await CaplSchema.updateMany(filterQuery, {$set: {isActive: false}});
+    }
+
     async findByPagination(establishment_like: string = '', day = null as any, _end: number, _order: any | number, _start: number, _sort: any, search_like = '', userStatus: string = '', establishmentStatus: string = '', userId: string = '', type: string = '', active: "" | "true" | "false") {
 
-        const filterQuery = _getFilterQuery({
+        const filterQuery = _getFilterQueryCapl({
             establishment_like: establishment_like,
             day,
             search_like: search_like?.trim(),
@@ -52,6 +62,11 @@ class CaplService implements Repository {
             _order = -1
         }
         _sort = _sort?.split('_')[0];
+
+        await this.updateMany({
+            userId: userId,
+            userStatus: userStatus as TRoles
+        });
 
         const items = await CaplSchema
             .find(filterQuery)
@@ -122,71 +137,6 @@ class CaplService implements Repository {
 //         }
 //     }
 // }
-
-function _getFilterQuery(otherFilter: any, userId: string, type: string) {
-    const searchObject = {};
-    const filters: any[] = [];
-
-    if (otherFilter.search_like) {
-        filters.push({
-            $or: [
-                {fullName: {$regex: otherFilter.search_like, $options: 'i'}},
-                {description: {$regex: otherFilter.search_like, $options: 'i'}},
-                {whoPay: {$regex: otherFilter.search_like, $options: 'i'}},
-                {eventType: {$regex: otherFilter.search_like, $options: 'i'}},
-            ]
-        },)
-    }
-    if (otherFilter.userStatus) {
-        filters.push({
-            $or: [
-                {'userStatus.value': {$regex: otherFilter.userStatus, $options: 'i'}}
-            ]
-        })
-    }
-    if (otherFilter.establishmentStatus) {
-        filters.push({
-            $or: [
-                {'establishmentStatus.value': {$regex: otherFilter.establishmentStatus, $options: 'i'}}
-            ]
-        },)
-    }
-    if (otherFilter.establishment_like) {
-        filters.push({establishment: otherFilter.establishment_like})
-    }
-    // if (otherFilter.active) {
-    //     filters.push({
-    //         $or: [
-    //             {"isActive": {$regex: otherFilter.active, $options: 'i'}}
-    //         ]
-    //     },)
-    // }
-    if (otherFilter.day && otherFilter.day !== "[object Object]") {
-        const date = new Date(otherFilter.day);
-        const searchDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-        const nextDay = new Date(searchDay.getTime() + 24 * 60 * 60 * 1000);
-        filters.push({
-            date: {$gte: searchDay, $lt: nextDay}
-        })
-    }
-    if (otherFilter.active === "true" || otherFilter.active === "false") {
-        filters.push({
-            isActive: otherFilter.active === 'true'
-        })
-    }
-
-    if (filters.length > 0) {
-        Object.assign(searchObject, {$and: filters});
-    }
-
-    if (userId && type === 'user') {
-        Object.assign(searchObject, {user: userId});
-    } else if (userId && type === 'manager') {
-        Object.assign(searchObject, {manager: userId})
-    }
-
-    return searchObject
-}
 
 export {
     CaplService

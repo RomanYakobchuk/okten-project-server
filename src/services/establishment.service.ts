@@ -1,7 +1,7 @@
 import {PipelineStage} from "mongoose";
 
 import {EstablishmentSchema} from "../dataBase";
-import {IEstablishment} from "../interfaces/common";
+import {IEstablishment, IUser} from "../interfaces/common";
 import {_freeSeatsFilterQuery, _getFilterQuery} from "./filters";
 import {_getByUserFilter} from "./filters/establishmentFilters.service";
 
@@ -21,6 +21,25 @@ interface NearbyFilter {
 }
 
 class EstablishmentService {
+    async getAverageCheckMinMax(userStatus: IUser['status'] | undefined) {
+        const aggregate: AggregationPipeline[] = [];
+
+        if (userStatus !== 'admin') {
+            aggregate.push({
+                $match: {verify: 'published'}
+            })
+        }
+        aggregate.push(
+            {
+                $group: {_id: null, minValue: {$min: "$averageCheck"}, maxValue: {$max: "$averageCheck"}}
+            },
+            {
+                $project: {_id: 0, minValue: 1, maxValue: 1}
+            }
+        )
+
+        return await EstablishmentSchema.aggregate(aggregate).exec();
+    }
     async getWithPagination(
         _end: number,
         _order: any,
@@ -73,7 +92,8 @@ class EstablishmentService {
             averageCheck: 1,
             freeSeats: 1,
             verify: 1,
-            workSchedule: 1
+            workSchedule: 1,
+            location: 1
         };
         const adminFieldsToInclude = {
             'viewsContainer': 1,
@@ -311,7 +331,7 @@ class EstablishmentService {
                     {_id: {$ne: establishment._id}}
                 ]
             })
-            .select('_id title type pictures createdBy reviewsLength rating place workSchedule')
+            .select('_id title type pictures createdBy reviewsLength rating place averageCheck workSchedule')
             .limit(5)
             .exec();
 

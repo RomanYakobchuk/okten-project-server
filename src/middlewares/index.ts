@@ -25,5 +25,5 @@ export {
     subscribeNotificationMiddleware,
     cityMiddleware,
     notificationMiddleware,
-    reactionMiddleware
+    reactionMiddleware,
 }

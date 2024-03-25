@@ -1,31 +1,30 @@
 import {NextFunction, Response} from "express";
 
-import {ConversationService, EstablishmentService} from "../services";
+import {ConversationService} from "../services";
 import {CustomError} from "../errors";
 import {CustomRequest} from "../interfaces/func";
 import {IConversation, IConvMembers, IOauth, IUser} from "../interfaces/common";
-import {checkNewChatByMembers, validateChatInfoField} from "../controllers/conversation.controller"
+import {checkNewChatByMembers} from "../controllers/conversation.controller"
+import {dependPopulate, reformatChat} from "../services/conversation.service";
 
 class ConversationMiddleware {
     private conversationService: ConversationService;
-    private establishmentService: EstablishmentService;
 
     constructor() {
         this.conversationService = new ConversationService();
-        this.establishmentService = new EstablishmentService();
 
         this.checkConversation = this.checkConversation.bind(this);
     }
 
     conversationOneByOneExist = () => async (req: CustomRequest, _: Response, next: NextFunction) => {
-        const {members, chatType} = req.body;
+        const {members, type} = req.body;
         try {
-            const byType = await checkNewChatByMembers({members: members, type: chatType});
+            const byType = await checkNewChatByMembers({members: members, type: type});
             if (!byType.isAccess) {
                 return next(new CustomError(byType.message, 400));
             }
             const ids = members?.map((member: IConvMembers) => member?.user);
-             if (chatType === 'oneByOne' && members?.length === 2) {
+            if (type === 'private' && members?.length === 2) {
                 const exist = await this.conversationService.getOne({
                     members: {
                         $all: [
@@ -34,51 +33,58 @@ class ConversationMiddleware {
                         ],
                         $size: 2
                     },
-                    "chatInfo.type": "oneByOne"
+                    "type": "private"
                 });
                 if (exist) {
                     return next(new CustomError('Chat is exist', 409))
                 }
-             }
-             next();
+            }
+            next();
         } catch (e) {
             next(e);
         }
     }
-    checkConversation = (type: "allInfo" | "someInfo") => async (req: CustomRequest, res: Response, next: NextFunction) => {
-
+    checkConversation = async (req: CustomRequest, res: Response, next: NextFunction) => {
         const {userId} = req.user as IOauth;
         const user = userId as IUser;
         const {id} = req.params;
         const status = req.newStatus;
 
         try {
-            let conversation = {} as IConversation;
-            const chatInfo = {
-                allInfo: validateChatInfoField({item: await this.conversationService
-                        .getOne({_id: id})
-                        .populate([
-                            {path: 'members.user', select: '_id name avatar uniqueIndicator'},
-                            {path: 'chatInfo.field.id'}
-                        ]) as IConversation, user: user}),
-                someInfo: await this.conversationService.getOne({_id: id}) as IConversation
-            };
-            conversation = chatInfo[type];
 
-            const isExist = conversation.members.some((member) => {
-                const memberUser = member?.user as IUser;
-                return memberUser?._id?.toString() === user._id?.toString()
-            })
-            if (!isExist && status !== 'admin') {
-                return next(new CustomError('Access denied', 403))
-            }
+            const conversation = await this.conversationService
+                .getOne({_id: id})
+                .populate([
+                    {path: 'members.user', select: '_id name avatar uniqueIndicator'},
+                    ...dependPopulate,
+                    {
+                        path: 'members.showInfoAs.id',
+                        // match: {'showInfoAs.item': "establishment"},
+                        select: '_id title pictures',
+                    }
+                ])
+                .exec();
 
             if (!conversation) {
                 return next(new CustomError("Conversation not found", 404));
-            } else {
-                req.conversation = conversation;
-                next();
             }
+
+            user.status = status;
+            const formattedChat = reformatChat(conversation?.toObject() as IConversation, user);
+            const isExist = formattedChat?.members?.some((member, index) => {
+                return member?.userId?.toString() === user._id?.toString()
+            })
+            if (!isExist && status !== 'admin') {
+                const isUserCanJoin = !isExist && formattedChat.access === 'public';
+                res.status(403).json({
+                    message: 'Access denied',
+                    isUserCanJoin,
+                })
+                return;
+            }
+
+            req.conversation = formattedChat;
+            next();
         } catch (e) {
             next(e)
         }

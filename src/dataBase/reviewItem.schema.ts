@@ -1,17 +1,34 @@
 import {Schema, model} from "mongoose";
 import {IReviewItem} from "../interfaces/common";
+import {IReviewItemModel} from "../interfaces/model";
 
-const ReviewItem = new Schema<IReviewItem>({
+const ReviewItem = new Schema({
     createdBy: {
         type: Schema.Types.ObjectId,
         ref: "user"
     },
     text: {
-        type: Object,
-        like: String,
-        notLike: String
+        type: String,
     },
-    grade: {
+    title: {
+        type: String
+    },
+    score: {
+        type: Number,
+        min: 1,
+        max: 5
+    },
+    atmosphere: {
+        type: Number,
+        min: 1,
+        max: 5
+    },
+    service: {
+        type: Number,
+        min: 1,
+        max: 5
+    },
+    quality: {
         type: Number,
         min: 1,
         max: 5
@@ -22,7 +39,7 @@ const ReviewItem = new Schema<IReviewItem>({
     },
 }, {timestamps: true});
 
-const ReviewItemSchema = model('reviewItem', ReviewItem);
+const ReviewItemSchema = model<IReviewItem, IReviewItemModel>('reviewItem', ReviewItem);
 
 export {
     ReviewItemSchema

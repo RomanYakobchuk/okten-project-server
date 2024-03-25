@@ -146,7 +146,7 @@ class CaplController {
 
             const reservation = await this.caplService
                 .findOneReserve({_id: id})
-                .populate({path: 'establishment', select: '_id pictures title place createdBy type'});
+                .populate({path: 'establishment', select: '_id pictures location title place createdBy type'});
 
             if (!reservation) {
                 return next(new CustomError('Reservation not found', 404))
